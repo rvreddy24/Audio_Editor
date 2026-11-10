@@ -29,13 +29,13 @@ interface HomeHubProps {
 export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio, onOpenCalc }) => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      {/* Official Brand Banner */}
+      {/* Official Brand Banner (Transparent PNG - No dark box needed) */}
       <div className="flex justify-center mb-6 sm:mb-8">
-        <div className="relative group overflow-hidden rounded-2xl bg-slate-950 border border-slate-800 shadow-md hover:shadow-xl hover:border-orange-500/40 transition-all duration-300 max-w-lg w-full p-2.5 sm:p-3.5">
+        <div className="max-w-md sm:max-w-lg w-full flex items-center justify-center">
           <img
             src="/rv-banner.png"
             alt="rajvarshith.com Official Studio Banner"
-            className="w-full h-auto object-contain transform group-hover:scale-[1.01] transition-transform duration-300"
+            className="w-full h-auto max-h-28 sm:max-h-36 object-contain hover:scale-[1.01] transition-transform duration-300"
           />
         </div>
       </div>

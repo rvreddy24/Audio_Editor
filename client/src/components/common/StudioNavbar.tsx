@@ -36,7 +36,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
               onClick={onNavigateHome}
               className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
             >
-              <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center shadow-xs border border-slate-800 p-1 group-hover:scale-105 group-hover:border-orange-500/50 transition-all">
+              <div className="w-9 h-9 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <img
                   src="/rv-logo.png"
                   alt="rajvarshith.com logo"

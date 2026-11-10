@@ -165,11 +165,13 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           {/* Column 4: Platform */}
           <div>
             <div className="mb-3">
-              <img
-                src="/rv-banner.png"
-                alt="rajvarshith.com"
-                className="h-10 w-auto rounded-lg object-contain border border-slate-800 shadow-xs"
-              />
+              <div className="bg-white rounded-xl p-2 inline-block shadow-xs">
+                <img
+                  src="/rv-banner.png"
+                  alt="rajvarshith.com"
+                  className="h-8 w-auto object-contain"
+                />
+              </div>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed mb-4">
               A private, fast, and 100% free web workstation suite for PDF manipulation, professional audio editing, and comprehensive calculators.
@@ -183,7 +185,9 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
         {/* Bottom copyright */}
         <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div className="flex items-center gap-2">
-            <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain" />
+            <div className="w-5 h-5 bg-white rounded-md p-0.5 flex items-center justify-center">
+              <img src="/rv-logo.png" alt="logo" className="w-full h-full object-contain" />
+            </div>
             <span>© {new Date().getFullYear()} rajvarshith.com. All rights reserved.</span>
           </div>
           <div className="flex items-center gap-6">

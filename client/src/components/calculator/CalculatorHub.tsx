@@ -142,10 +142,10 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ activeCalc, onSele
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
       {/* Hero Header */}
       <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-semibold mb-3 shadow-xs border border-slate-800">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-slate-800 text-xs font-semibold mb-3 shadow-2xs border border-slate-200">
           <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain" />
           <span>
-            rajvarshith<span className="text-orange-400 font-bold">.com</span> Calculator Suite
+            rajvarshith<span className="text-orange-500 font-bold">.com</span> Calculator Suite
           </span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
