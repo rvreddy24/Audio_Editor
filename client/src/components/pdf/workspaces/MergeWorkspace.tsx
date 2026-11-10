@@ -49,7 +49,7 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
       const buffers = files.map((f) => f.data);
       const result = await mergePdfs(buffers);
       setMergedBytes(result);
-      downloadBytes(result, 'ilovepdf_merged.pdf');
+      downloadBytes(result, 'merged_document.pdf');
     } catch (err) {
       console.error('Merge error:', err);
       alert('Failed to merge PDFs. Please try again.');
@@ -97,7 +97,7 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
             <p className="text-xs text-slate-500 mt-1">Your download should begin automatically.</p>
           </div>
           <button
-            onClick={() => downloadBytes(mergedBytes, 'ilovepdf_merged.pdf')}
+            onClick={() => downloadBytes(mergedBytes, 'merged_document.pdf')}
             className="bg-[#e5322d] hover:bg-[#d02824] text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
           >
             <Download className="w-4 h-4" />

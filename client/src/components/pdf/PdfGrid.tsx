@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { PDF_TOOLS, PdfToolKey, ToolMeta } from './types';
 
-interface ILovePdfGridProps {
+interface PdfGridProps {
   onSelectTool: (tool: PdfToolKey | 'audio') => void;
 }
 
@@ -39,7 +39,7 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   Music,
 };
 
-export const ILovePdfGrid: React.FC<ILovePdfGridProps> = ({ onSelectTool }) => {
+export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 

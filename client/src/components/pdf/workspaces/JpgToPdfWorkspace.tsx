@@ -81,7 +81,7 @@ export const JpgToPdfWorkspace: React.FC<JpgToPdfWorkspaceProps> = ({ onBack }) 
         pageSize,
         margin,
       });
-      downloadBytes(pdfBytes, 'ilovepdf_converted.pdf');
+      downloadBytes(pdfBytes, 'converted_document.pdf');
       setIsDone(true);
     } catch (err: any) {
       alert(err.message || 'Failed to convert images to PDF');

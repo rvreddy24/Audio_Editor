@@ -8,7 +8,14 @@ import {
   Tag,
   FileAudio,
   ArrowLeft,
+  Music,
+  FileText,
 } from 'lucide-react';
+
+// Common Components
+import { StudioNavbar } from './components/common/StudioNavbar';
+import { StudioFooter } from './components/common/StudioFooter';
+import { HomeHub } from './components/home/HomeHub';
 
 // Audio Studio Components
 import { Header } from './components/Header';
@@ -24,13 +31,11 @@ import { RecorderModal } from './components/RecorderModal';
 import { ResultModal } from './components/ResultModal';
 
 // PDF Components
-import { ILovePdfNavbar } from './components/pdf/ILovePdfNavbar';
-import { ILovePdfHero } from './components/pdf/ILovePdfHero';
-import { ILovePdfGrid } from './components/pdf/ILovePdfGrid';
-import { ILovePdfFooter } from './components/pdf/ILovePdfFooter';
-import { PdfToolKey } from './components/pdf/types';
+import { PdfHero } from './components/pdf/PdfHero';
+import { PdfGrid } from './components/pdf/PdfGrid';
+import { PdfToolKey, PDF_TOOLS } from './components/pdf/types';
 
-// Workspaces
+// PDF Workspaces
 import { MergeWorkspace } from './components/pdf/workspaces/MergeWorkspace';
 import { SplitWorkspace } from './components/pdf/workspaces/SplitWorkspace';
 import { CompressWorkspace } from './components/pdf/workspaces/CompressWorkspace';
@@ -51,8 +56,8 @@ import { formatTime, formatFileSize } from './utils/formatters';
 type TabKey = 'trim' | 'convert' | 'video' | 'effects' | 'merge' | 'tags';
 
 export function App() {
-  // Main view router: 'pdf' or 'audio'
-  const [viewMode, setViewMode] = useState<'pdf' | 'audio'>('pdf');
+  // Navigation Router: 'home' | 'pdf' | 'audio'
+  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio'>('home');
   const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>('home');
 
   // Audio state
@@ -79,13 +84,18 @@ export function App() {
     });
   }, []);
 
-  const handleSelectPdfTool = (tool: PdfToolKey | 'audio') => {
-    if (tool === 'audio') {
-      setViewMode('audio');
-    } else {
-      setViewMode('pdf');
-      setActivePdfTool(tool);
+  const handleOpenPdf = (specificTool: PdfToolKey = 'home') => {
+    setViewMode('pdf');
+    setActivePdfTool(specificTool);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenAudio = (tab?: string) => {
+    setViewMode('audio');
+    if (tab && ['trim', 'convert', 'video', 'effects', 'merge', 'tags'].includes(tab)) {
+      setActiveTab(tab as TabKey);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFileSelect = async (file: File) => {
@@ -146,22 +156,68 @@ export function App() {
     { id: 'tags', label: 'Tags & Info', icon: Tag, desc: 'Edit song ID3 metadata' },
   ];
 
+  // Lookup active tool title for breadcrumb
+  const currentPdfToolMeta = PDF_TOOLS.find((t) => t.key === activePdfTool);
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-[#e5322d] selection:text-white">
-      {/* Universal Top Navigation */}
-      <ILovePdfNavbar
-        activeTool={viewMode === 'audio' ? 'audio' : activePdfTool}
-        onSelectTool={handleSelectPdfTool}
-        onOpenAudioStudio={() => setViewMode('audio')}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+      {/* Universal Studio Navigation */}
+      <StudioNavbar
+        currentView={viewMode}
+        activePdfToolTitle={activePdfTool !== 'home' ? currentPdfToolMeta?.title : undefined}
+        onNavigateHome={() => {
+          setViewMode('home');
+          setActivePdfTool('home');
+        }}
+        onNavigatePdf={() => handleOpenPdf('home')}
+        onNavigateAudio={() => handleOpenAudio()}
       />
 
-      {/* Main Content Router */}
-      {viewMode === 'pdf' ? (
+      {/* VIEW 1: HOME HUB (Master Cards for PDF & Audio) */}
+      {viewMode === 'home' && (
         <main className="flex-1">
+          <HomeHub
+            onOpenPdf={(tool) => handleOpenPdf(tool || 'home')}
+            onOpenAudio={(tab) => handleOpenAudio(tab)}
+          />
+        </main>
+      )}
+
+      {/* VIEW 2: PDF WORKSTATION */}
+      {viewMode === 'pdf' && (
+        <main className="flex-1">
+          {/* PDF Section Subheader */}
+          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+            <button
+              onClick={() => setViewMode('home')}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-red-600 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Home Dashboard</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-red-700 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+                PDF Toolkit
+              </span>
+              <button
+                onClick={() => handleOpenAudio()}
+                className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200"
+              >
+                <Music className="w-3.5 h-3.5" />
+                <span>Switch to Audio Studio</span>
+              </button>
+            </div>
+          </div>
+
           {activePdfTool === 'home' && (
             <>
-              <ILovePdfHero />
-              <ILovePdfGrid onSelectTool={handleSelectPdfTool} />
+              <PdfHero />
+              <PdfGrid
+                onSelectTool={(tool) => {
+                  if (tool === 'audio') handleOpenAudio();
+                  else setActivePdfTool(tool);
+                }}
+              />
             </>
           )}
 
@@ -213,24 +269,32 @@ export function App() {
             <SignWorkspace onBack={() => setActivePdfTool('home')} />
           )}
         </main>
-      ) : (
-        /* Audio Workstation View */
+      )}
+
+      {/* VIEW 3: AUDIO STUDIO WORKSTATION */}
+      {viewMode === 'audio' && (
         <div className="flex-1 flex flex-col">
-          {/* Audio Navigation Bar */}
+          {/* Audio Section Subheader */}
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
-              onClick={() => {
-                setViewMode('pdf');
-                setActivePdfTool('home');
-              }}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-[#e5322d] transition-colors"
+              onClick={() => setViewMode('home')}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to iLovePDF Tools</span>
+              <span>Back to Home Dashboard</span>
             </button>
-            <span className="text-xs font-bold text-violet-700 bg-violet-50 px-3 py-1 rounded-full border border-violet-200">
-              SoundCraft Audio Workstation
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
+                SoundCraft Audio Studio
+              </span>
+              <button
+                onClick={() => handleOpenPdf('home')}
+                className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-lg border border-red-200"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Switch to PDF Tools</span>
+              </button>
+            </div>
           </div>
 
           <Header
@@ -438,8 +502,11 @@ export function App() {
         </div>
       )}
 
-      {/* Footer */}
-      <ILovePdfFooter onSelectTool={handleSelectPdfTool} />
+      {/* Universal Studio Footer */}
+      <StudioFooter
+        onSelectPdfTool={(tool) => handleOpenPdf(tool)}
+        onOpenAudio={() => handleOpenAudio()}
+      />
     </div>
   );
 }
