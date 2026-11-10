@@ -6,10 +6,18 @@ import {
   ArrowLeft,
   Loader2,
   Printer,
-  Grid,
-  CheckCircle2,
+  Move,
+  RotateCw,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
-  Palette,
+  Sliders,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   loadImage,
@@ -29,10 +37,17 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
 
   const [country, setCountry] = useState<keyof typeof PASSPORT_SPECS>('india');
   const [bgColor, setBgColor] = useState<string>('#FFFFFF');
-  const [zoom, setZoom] = useState<number>(1);
+  
+  // Adjusters
+  const [zoom, setZoom] = useState<number>(1.1);
   const [panX, setPanX] = useState<number>(0);
   const [panY, setPanY] = useState<number>(0);
+  const [rotation, setRotation] = useState<number>(0);
   const [showFaceGuide, setShowFaceGuide] = useState<boolean>(true);
+
+  // Mouse / Touch drag state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number; initialPanX: number; initialPanY: number } | null>(null);
 
   // Printable sheet mode
   const [sheetLayout, setSheetLayout] = useState<4 | 6 | 8 | 12>(6);
@@ -63,9 +78,10 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
       setSelectedFile(file);
       const img = await loadImage(file);
       setImgElement(img);
-      setZoom(1);
+      setZoom(1.1);
       setPanX(0);
       setPanY(0);
+      setRotation(0);
       setSingleResult(null);
       setSheetResult(null);
     }
@@ -75,30 +91,13 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
     if (!imgElement) return;
     setIsProcessing(true);
     try {
-      // Calculate crop rect considering zoom and pan
-      const srcW = imgElement.naturalWidth;
-      const srcH = imgElement.naturalHeight;
-      const spec = PASSPORT_SPECS[country];
-      const targetRatio = spec.widthMm / spec.heightMm;
-
-      let baseW = srcW;
-      let baseH = srcH;
-      if (srcW / srcH > targetRatio) {
-        baseW = srcH * targetRatio;
-      } else {
-        baseH = srcW / targetRatio;
-      }
-
-      // Apply zoom
-      const cropW = baseW / zoom;
-      const cropH = baseH / zoom;
-      const cropX = Math.max(0, Math.min(srcW - cropW, (srcW - cropW) / 2 + panX));
-      const cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) / 2 + panY));
-
       const single = await createPassportPhoto(imgElement, {
         country,
         bgColor,
-        crop: { x: cropX, y: cropY, width: cropW, height: cropH },
+        zoom,
+        panX,
+        panY,
+        rotation,
       });
       setSingleResult(single);
 
@@ -117,7 +116,75 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
     if (imgElement) {
       handleProcess();
     }
-  }, [imgElement, country, bgColor, zoom, panX, panY, sheetLayout, sheetPaper]);
+  }, [imgElement, country, bgColor, zoom, panX, panY, rotation, sheetLayout, sheetPaper]);
+
+  // Drag handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      initialPanX: panX,
+      initialPanY: panY,
+    };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !dragStartRef.current) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    const spec = PASSPORT_SPECS[country];
+    const wPx = Math.round((spec.widthMm / 25.4) * (spec.dpi || 300));
+    const scaleFactor = wPx / 256;
+    setPanX(Math.round(dragStartRef.current.initialPanX + dx * scaleFactor));
+    setPanY(Math.round(dragStartRef.current.initialPanY + dy * scaleFactor));
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        initialPanX: panX,
+        initialPanY: panY,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !dragStartRef.current || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - dragStartRef.current.x;
+    const dy = e.touches[0].clientY - dragStartRef.current.y;
+    const spec = PASSPORT_SPECS[country];
+    const wPx = Math.round((spec.widthMm / 25.4) * (spec.dpi || 300));
+    const scaleFactor = wPx / 256;
+    setPanX(Math.round(dragStartRef.current.initialPanX + dx * scaleFactor));
+    setPanY(Math.round(dragStartRef.current.initialPanY + dy * scaleFactor));
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
+
+  const handleNudge = (dx: number, dy: number) => {
+    setPanX((p) => p + dx);
+    setPanY((p) => p + dy);
+  };
+
+  const handleResetAll = () => {
+    setZoom(1.1);
+    setPanX(0);
+    setPanY(0);
+    setRotation(0);
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -137,7 +204,7 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
           <span>Passport Size Photo Maker</span>
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-xl mx-auto">
-          Create compliant passport and visa photos with standard dimensions (India, US, UK, Schengen) and print-ready multi-photo sheets.
+          Create compliant passport and visa photos with standard dimensions, interactive manual position adjusters, and print-ready multi-photo sheets.
         </p>
       </div>
 
@@ -151,7 +218,7 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
               Select or Drop Your Portrait Photo
             </span>
             <span className="text-xs text-slate-400 mt-1">
-              Supports selfies & camera photos • Automatic centering & background adjustment
+              Supports selfies & camera photos • Interactive zoom, drag pan & background tint
             </span>
             <input
               type="file"
@@ -209,42 +276,240 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
               </div>
             </div>
 
-            {/* Framing & Zoom Controls */}
-            <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                <span>Head Framing & Zoom</span>
-                <span>{Math.round(zoom * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0.8"
-                max="2.5"
-                step="0.05"
-                value={zoom}
-                onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="w-full accent-blue-600"
-              />
-
-              <div className="flex items-center justify-between pt-1">
-                <label className="text-xs text-slate-600 flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showFaceGuide}
-                    onChange={(e) => setShowFaceGuide(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 focus:ring-blue-500"
-                  />
-                  <span>Show Face Guide Oval</span>
-                </label>
+            {/* Manual Adjusters Suite */}
+            <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+              <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Position & Alignment Adjusters</span>
+                </span>
                 <button
-                  onClick={() => {
-                    setZoom(1);
-                    setPanX(0);
-                    setPanY(0);
-                  }}
+                  onClick={handleResetAll}
                   className="text-[11px] text-blue-600 font-bold hover:underline"
                 >
-                  Reset framing
+                  Reset All
                 </button>
+              </div>
+
+              {/* 1. Vertical Adjuster (Move Up / Down) */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1">
+                    <Move className="w-3 h-3 text-blue-600 rotate-90" />
+                    <span>Vertical Position (Up / Down)</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    {panY > 0 ? `+${panY}px (Down)` : panY < 0 ? `${panY}px (Up)` : 'Centered'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleNudge(0, -20)}
+                    title="Move Up"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="range"
+                    min="-300"
+                    max="300"
+                    step="5"
+                    value={panY}
+                    onChange={(e) => setPanY(parseInt(e.target.value))}
+                    className="w-full accent-blue-600 cursor-pointer"
+                  />
+                  <button
+                    onClick={() => handleNudge(0, 20)}
+                    title="Move Down"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Horizontal Adjuster (Move Left / Right) */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1">
+                    <Move className="w-3 h-3 text-blue-600" />
+                    <span>Horizontal Position (Left / Right)</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    {panX > 0 ? `+${panX}px (Right)` : panX < 0 ? `${panX}px (Left)` : 'Centered'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleNudge(-20, 0)}
+                    title="Move Left"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="range"
+                    min="-300"
+                    max="300"
+                    step="5"
+                    value={panX}
+                    onChange={(e) => setPanX(parseInt(e.target.value))}
+                    className="w-full accent-blue-600 cursor-pointer"
+                  />
+                  <button
+                    onClick={() => handleNudge(20, 0)}
+                    title="Move Right"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Head Framing & Zoom */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1">
+                    <ZoomIn className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Head Framing & Zoom</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setZoom((z) => Math.max(0.7, Math.round((z - 0.1) * 100) / 100))}
+                    title="Zoom Out"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="range"
+                    min="0.7"
+                    max="3.0"
+                    step="0.05"
+                    value={zoom}
+                    onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    className="w-full accent-blue-600 cursor-pointer"
+                  />
+                  <button
+                    onClick={() => setZoom((z) => Math.min(3.0, Math.round((z + 0.1) * 100) / 100))}
+                    title="Zoom In"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. Straighten & Tilt Angle */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1">
+                    <RotateCw className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Straighten & Tilt Angle</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    {rotation > 0 ? `+${rotation}°` : `${rotation}°`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setRotation((r) => Math.max(-15, r - 1))}
+                    title="Rotate Counter-Clockwise"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="range"
+                    min="-15"
+                    max="15"
+                    step="0.5"
+                    value={rotation}
+                    onChange={(e) => setRotation(parseFloat(e.target.value))}
+                    className="w-full accent-blue-600 cursor-pointer"
+                  />
+                  <button
+                    onClick={() => setRotation((r) => Math.min(15, r + 1))}
+                    title="Rotate Clockwise"
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Directional Nudge Pad & Center */}
+              <div className="pt-2 flex items-center justify-between">
+                <div className="grid grid-cols-3 gap-1 w-24">
+                  <div />
+                  <button
+                    onClick={() => handleNudge(0, -25)}
+                    title="Move Up"
+                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-400 text-slate-700 flex items-center justify-center font-bold shadow-2xs transition-colors"
+                  >
+                    ▲
+                  </button>
+                  <div />
+                  <button
+                    onClick={() => handleNudge(-25, 0)}
+                    title="Move Left"
+                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-400 text-slate-700 flex items-center justify-center font-bold shadow-2xs transition-colors"
+                  >
+                    ◀
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPanX(0);
+                      setPanY(0);
+                    }}
+                    title="Center Photo"
+                    className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 flex items-center justify-center font-black text-xs shadow-2xs transition-colors"
+                  >
+                    ●
+                  </button>
+                  <button
+                    onClick={() => handleNudge(25, 0)}
+                    title="Move Right"
+                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-400 text-slate-700 flex items-center justify-center font-bold shadow-2xs transition-colors"
+                  >
+                    ▶
+                  </button>
+                  <div />
+                  <button
+                    onClick={() => handleNudge(0, 25)}
+                    title="Move Down"
+                    className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-400 text-slate-700 flex items-center justify-center font-bold shadow-2xs transition-colors"
+                  >
+                    ▼
+                  </button>
+                  <div />
+                </div>
+
+                <div className="text-right space-y-1">
+                  <button
+                    onClick={() => {
+                      setPanX(0);
+                      setPanY(0);
+                    }}
+                    className="text-xs font-bold text-blue-600 hover:underline block"
+                  >
+                    Center Position
+                  </button>
+                  <label className="text-xs text-slate-600 flex items-center gap-1.5 cursor-pointer justify-end">
+                    <input
+                      type="checkbox"
+                      checked={showFaceGuide}
+                      onChange={(e) => setShowFaceGuide(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 focus:ring-blue-500"
+                    />
+                    <span>Face Guide Oval</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -318,18 +583,35 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
             {/* Single Photo Preview with Face Guide Overlay */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col items-center">
               <div className="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between w-full">
-                <span>Single Passport Photo</span>
+                <span className="flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-blue-600" />
+                  <span>Single Passport Photo Preview</span>
+                </span>
                 <span className="text-[11px] text-slate-400">
                   {PASSPORT_SPECS[country].widthMm} × {PASSPORT_SPECS[country].heightMm} mm (300 DPI)
                 </span>
               </div>
 
-              <div className="relative w-64 h-80 rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm flex items-center justify-center bg-slate-100">
+              {/* Interactive Drag Reposition Canvas / Preview */}
+              <div
+                className={`relative w-64 h-80 rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm flex items-center justify-center bg-slate-100 select-none transition-shadow ${
+                  isDragging ? 'cursor-grabbing ring-2 ring-blue-500' : 'cursor-grab hover:border-blue-400'
+                }`}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                title="Click and drag to position face inside the oval"
+              >
                 {singleResult ? (
                   <img
                     src={singleResult.dataUrl}
                     alt="Passport photo"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover pointer-events-none select-none"
+                    draggable={false}
                   />
                 ) : (
                   <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
@@ -338,16 +620,22 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
                 {/* Face Guide Oval Overlay */}
                 {showFaceGuide && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-36 h-48 border-2 border-dashed border-blue-500/80 rounded-[50%] flex flex-col items-center justify-between py-4 shadow-sm">
-                      <span className="text-[9px] font-bold text-blue-600 bg-white/80 px-1 rounded">
+                    <div className="w-36 h-48 border-2 border-dashed border-blue-500/80 rounded-[50%] flex flex-col items-center justify-between py-4 shadow-sm bg-blue-50/10">
+                      <span className="text-[9px] font-bold text-blue-600 bg-white/90 px-1.5 py-0.5 rounded shadow-2xs">
                         Top of Head
                       </span>
-                      <span className="text-[9px] font-bold text-blue-600 bg-white/80 px-1 rounded">
+                      <span className="text-[9px] font-bold text-blue-600 bg-white/90 px-1.5 py-0.5 rounded shadow-2xs">
                         Chin Line
                       </span>
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Helpful Hint under preview */}
+              <div className="text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1.5 mt-3">
+                <Move className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>Click & drag photo or use sliders to align head between guidelines</span>
               </div>
             </div>
 

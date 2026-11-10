@@ -253,6 +253,10 @@ export interface PassportPhotoOptions {
   bgColor?: string; // e.g. '#FFFFFF', '#E0F2FE' (light blue), '#FEE2E2' (light red), '#F3F4F6' (light grey)
   crop?: ImageCropRect;
   dpi?: number;
+  zoom?: number;
+  panX?: number;
+  panY?: number;
+  rotation?: number; // rotation in degrees (-45 to +45)
 }
 
 export const PASSPORT_SPECS = {
@@ -301,6 +305,34 @@ export async function createPassportPhoto(
       wPx,
       hPx
     );
+  } else if (
+    options.zoom !== undefined ||
+    options.panX !== undefined ||
+    options.panY !== undefined ||
+    options.rotation !== undefined
+  ) {
+    ctx.save();
+    // Translate to center of destination passport photo canvas
+    ctx.translate(wPx / 2, hPx / 2);
+
+    // Apply manual pan offset
+    const px = options.panX || 0;
+    const py = options.panY || 0;
+    ctx.translate(px, py);
+
+    // Apply tilt / rotation
+    if (options.rotation) {
+      ctx.rotate((options.rotation * Math.PI) / 180);
+    }
+
+    // Cover scale factor * user zoom
+    const zoom = options.zoom || 1.0;
+    const baseScale = Math.max(wPx / img.naturalWidth, hPx / img.naturalHeight);
+    const finalScale = baseScale * zoom;
+
+    ctx.scale(finalScale, finalScale);
+    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    ctx.restore();
   } else {
     // Center crop with aspect ratio
     const srcRatio = img.naturalWidth / img.naturalHeight;
