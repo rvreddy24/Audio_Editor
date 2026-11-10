@@ -1,6 +1,6 @@
-import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, degrees, StandardFonts, PDFName, PDFRawStream } from 'pdf-lib';
 import JSZip from 'jszip';
-import { Document as DocxDocument, Paragraph, TextRun, Packer } from 'docx';
+import { Document as DocxDocument, Paragraph, TextRun, ImageRun, Packer } from 'docx';
 import mammoth from 'mammoth';
 import { renderAllPagesToImages, renderPdfPageToDataUrl, extractPdfTextPages } from './pdfRenderer';
 
@@ -489,14 +489,51 @@ export function downloadBytes(bytes: Uint8Array, filename: string, mimeType = 'a
   downloadBlob(blob, filename);
 }
 
+export function dataUrlToUint8Array(dataUrl: string): Uint8Array {
+  const parts = dataUrl.split(',');
+  const base64 = parts[1] || parts[0];
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+export async function extractFirstImageFromPdf(buffer: ArrayBuffer): Promise<Uint8Array | null> {
+  try {
+    const pdfDoc = await PDFDocument.load(buffer.slice(0), { ignoreEncryption: true });
+    const enumerated = pdfDoc.context.enumerateIndirectObjects();
+    for (const [, obj] of enumerated) {
+      if (obj instanceof PDFRawStream) {
+        const subtype = obj.dict.get(PDFName.of('Subtype'));
+        if (subtype === PDFName.of('Image')) {
+          const b = obj.contents;
+          if (
+            (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) || // JPEG
+            (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) // PNG
+          ) {
+            return b;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Direct stream image extraction error:', err);
+  }
+  return null;
+}
+
 /**
  * 12. PDF TO WORD (.docx)
  */
 export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
-  const pagesText = await extractPdfTextPages(buffer);
+  const pagesText = await extractPdfTextPages(buffer.slice(0));
+  const embeddedImage = await extractFirstImageFromPdf(buffer.slice(0));
 
   const docChildren: Paragraph[] = [];
-  pagesText.forEach((pText, pIdx) => {
+  for (let pIdx = 0; pIdx < pagesText.length; pIdx++) {
+    const pText = pagesText[pIdx] || '';
     docChildren.push(
       new Paragraph({
         children: [
@@ -510,30 +547,66 @@ export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
       })
     );
 
-    const validLines = pText.split('\n').filter((l) => l.trim().length > 0);
+    const validLines = pText
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
     if (validLines.length === 0) {
-      docChildren.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: '(Document page contains graphical layout or scanned images)',
-              italics: true,
-              size: 20,
-              color: '888888',
-            }),
-          ],
-        })
-      );
+      // Scanned document or image-only page (e.g. e-EPIC card)
+      let imgBytes: Uint8Array | null = null;
+      if (typeof window !== 'undefined') {
+        try {
+          const pageImgDataUrl = await renderPdfPageToDataUrl(buffer.slice(0), pIdx + 1, 1.6);
+          imgBytes = dataUrlToUint8Array(pageImgDataUrl);
+        } catch (e) {
+          console.warn('Could not render page image:', e);
+        }
+      }
+      if (!imgBytes) {
+        imgBytes = embeddedImage;
+      }
+
+      if (imgBytes) {
+        const isPng = imgBytes[0] === 0x89 && imgBytes[1] === 0x50;
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new ImageRun({
+                data: imgBytes,
+                transformation: {
+                  width: 500,
+                  height: 700,
+                },
+                type: (isPng ? 'png' : 'jpg') as any,
+              } as any),
+            ],
+          })
+        );
+      } else {
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '(Scanned document page visual)',
+                italics: true,
+                size: 20,
+                color: '888888',
+              }),
+            ],
+          })
+        );
+      }
     } else {
       validLines.forEach((line) => {
         docChildren.push(
           new Paragraph({
-            children: [new TextRun({ text: line, size: 22 })],
+            children: [new TextRun({ text: sanitizeForPdfText(line), size: 22 })],
           })
         );
       });
     }
-  });
+  }
 
   const doc = new DocxDocument({
     sections: [
