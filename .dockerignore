@@ -1,0 +1,10 @@
+node_modules
+client/node_modules
+server/node_modules
+server/uploads/*
+server/outputs/*
+!server/uploads/.gitkeep
+!server/outputs/.gitkeep
+.git
+.github
+*.log
