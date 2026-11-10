@@ -77,10 +77,10 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             </ul>
           </div>
 
-          {/* Column 2: Image Studio (Pi7 Toolkit) */}
+          {/* Column 2: Image Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              Image Studio (Pi7)
+              Image Studio
             </h4>
             <ul className="space-y-2">
               <li>
@@ -206,7 +206,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </div>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed mb-4">
-              A private, fast, and 100% free web workstation suite for PDF manipulation, Pi7 image processing, professional audio editing, and comprehensive calculators.
+              A private, fast, and 100% free web workstation suite for PDF manipulation, client image processing, professional audio editing, and comprehensive calculators.
             </p>
             <div className="text-[11px] text-slate-500 font-mono">
               Running live on cloud container

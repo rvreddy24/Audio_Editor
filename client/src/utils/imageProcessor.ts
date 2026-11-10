@@ -49,13 +49,13 @@ export function loadImage(source: File | Blob | string): Promise<HTMLImageElemen
  * Strictly guarantees output is <= targetKb (or within a 2% margin).
  */
 export async function compressToTargetKb(
-  img: HTMLImageElement,
+  source: HTMLImageElement | HTMLCanvasElement,
   targetKb: number,
   mimeType: 'image/jpeg' | 'image/webp' = 'image/jpeg'
 ): Promise<{ blob: Blob; dataUrl: string; actualKb: number; width: number; height: number }> {
   const targetBytes = targetKb * 1024;
-  let curW = img.naturalWidth || img.width;
-  let curH = img.naturalHeight || img.height;
+  let curW = 'naturalWidth' in source ? (source.naturalWidth || source.width) : source.width;
+  let curH = 'naturalHeight' in source ? (source.naturalHeight || source.height) : source.height;
 
   // Max iterations
   let bestBlob: Blob | null = null;
@@ -72,9 +72,9 @@ export async function compressToTargetKb(
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
 
-    // Binary search quality between 0.05 and 0.95
+    // Binary search quality between 0.05 and 0.98
     let lowQ = 0.05;
     let highQ = 0.98;
     let localBestBlob: Blob | null = null;
@@ -94,20 +94,20 @@ export async function compressToTargetKb(
 
     if (localBestBlob && localBestBlob.size <= targetBytes) {
       bestBlob = localBestBlob;
-      // If we are within 20% of target or quality is decent, break
+      // If we are within 25% of target or quality is decent, break
       if (localBestBlob.size >= targetBytes * 0.75 || bestQuality > 0.6) {
         break;
       }
     }
 
     // If even lowest quality exceeds targetBytes, downscale dimensions
-    const testLowest = await canvasToBlob(canvas, mimeType, 0.08);
+    const testLowest = await canvasToBlob(canvas, mimeType, 0.05);
     if (testLowest.size > targetBytes) {
-      const ratio = Math.sqrt(targetBytes / testLowest.size) * 0.92;
+      const ratio = Math.sqrt(targetBytes / testLowest.size) * 0.90;
       curW = Math.max(30, Math.round(curW * ratio));
       curH = Math.max(30, Math.round(curH * ratio));
     } else {
-      bestBlob = testLowest;
+      if (!bestBlob) bestBlob = testLowest;
       break;
     }
   }
@@ -116,14 +116,14 @@ export async function compressToTargetKb(
     // Ultimate fallback: small canvas
     const fallbackCanvas = document.createElement('canvas');
     fallbackCanvas.width = 300;
-    fallbackCanvas.height = Math.round((300 / img.naturalWidth) * img.naturalHeight);
+    fallbackCanvas.height = Math.max(30, Math.round((300 / curW) * curH));
     const fCtx = fallbackCanvas.getContext('2d');
     if (fCtx) {
       if (mimeType === 'image/jpeg') {
         fCtx.fillStyle = '#FFFFFF';
         fCtx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
       }
-      fCtx.drawImage(img, 0, 0, fallbackCanvas.width, fallbackCanvas.height);
+      fCtx.drawImage(source, 0, 0, fallbackCanvas.width, fallbackCanvas.height);
       bestBlob = await canvasToBlob(fallbackCanvas, mimeType, 0.3);
     } else {
       throw new Error('Image compression failed to meet target constraints');
@@ -473,7 +473,7 @@ export async function processSignature(
   }
 
   // Compress to target KB (<= 20KB for portals)
-  const result = await compressToTargetKb(img, targetKb, 'image/jpeg');
+  const result = await compressToTargetKb(canvas, targetKb, 'image/jpeg');
   return {
     blob: result.blob,
     dataUrl: result.dataUrl,

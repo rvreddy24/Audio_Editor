@@ -685,7 +685,7 @@ export function App() {
             </button>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                Image Studio (Pi7 Toolkit)
+                Image Studio
               </span>
             </div>
           </div>

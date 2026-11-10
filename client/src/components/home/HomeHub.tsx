@@ -86,7 +86,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                     PDF & Office
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500">
-                    iLovePDF Suite
+                    PDF Workstation
                   </span>
                 </div>
               </div>
@@ -114,7 +114,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({
           </div>
         </div>
 
-        {/* CARD 2: IMAGE STUDIO (Pi7 Toolkit) */}
+        {/* CARD 2: IMAGE STUDIO */}
         <div
           onClick={() => onOpenImage && onOpenImage()}
           className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-emerald-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
@@ -132,12 +132,12 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                     Image Studio
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500">
-                    Pi7 Toolkit Suite
+                    Form & Photo Suite
                   </span>
                 </div>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
-                Pi7 Engine
+                Pro Engine
               </span>
             </div>
 

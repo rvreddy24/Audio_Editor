@@ -22,6 +22,7 @@ import { PassportPhotoMaker } from './PassportPhotoMaker';
 import { SignatureResizer } from './SignatureResizer';
 import { NameDatePhotoStamp } from './NameDatePhotoStamp';
 import { ImageJoinerWorkspace } from './ImageJoinerWorkspace';
+import { ConvertImageWorkspace } from '../pdf/workspaces/ConvertImageWorkspace';
 
 interface ImageStudioHubProps {
   initialTool?: ImageToolKey;
@@ -102,7 +103,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
     return <ImageJoinerWorkspace onBack={() => setActiveTool(null)} />;
   }
   if (activeTool === 'format-convert') {
-    return <TargetCompressor mode="compress" onBack={() => setActiveTool(null)} />;
+    return <ConvertImageWorkspace onBack={() => setActiveTool(null)} />;
   }
 
   // Otherwise render Image Studio Hub Dashboard
@@ -116,7 +117,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
             rajvarshith<span className="text-orange-500 font-bold">.com</span> Image Studio
           </span>
           <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-            Pi7 Engine
+            Pro Client Engine
           </span>
         </div>
 
