@@ -100,6 +100,10 @@ export async function convertPdfToExcelXlsx(buffer: ArrayBuffer): Promise<Blob> 
     });
   });
 
+  if (rows.length <= 1) {
+    rows.push(['(Document contains scanned image content or graphical layout)']);
+  }
+
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Extracted Data');

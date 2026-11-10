@@ -459,14 +459,29 @@ export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
       })
     );
 
-    const lines = pText.split('\n');
-    lines.forEach((line) => {
+    const validLines = pText.split('\n').filter((l) => l.trim().length > 0);
+    if (validLines.length === 0) {
       docChildren.push(
         new Paragraph({
-          children: [new TextRun({ text: line, size: 22 })],
+          children: [
+            new TextRun({
+              text: '(Document page contains graphical layout or scanned images)',
+              italics: true,
+              size: 20,
+              color: '888888',
+            }),
+          ],
         })
       );
-    });
+    } else {
+      validLines.forEach((line) => {
+        docChildren.push(
+          new Paragraph({
+            children: [new TextRun({ text: line, size: 22 })],
+          })
+        );
+      });
+    }
   });
 
   const doc = new DocxDocument({
@@ -715,9 +730,15 @@ export async function extractPdfToCsv(buffer: ArrayBuffer): Promise<string> {
     lines.forEach((line) => {
       // Split on tabs or multiple spaces (table columns)
       const cols = line.split(/\t|\s{2,}/).map((c) => `"${c.replace(/"/g, '""')}"`);
-      rows.push(cols.join(','));
+      if (cols.some((c) => c !== '""')) {
+        rows.push(cols.join(','));
+      }
     });
   });
+
+  if (rows.length === 0) {
+    rows.push('"Notice","Document contains graphical layout or scanned images"');
+  }
 
   return rows.join('\n');
 }

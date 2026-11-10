@@ -1,12 +1,17 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
-// Configure the worker src for browser execution
+// Configure the worker src for browser execution (local bundled worker)
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '4.0.379'}/build/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs`;
 }
 
 export async function getPdfDocument(data: ArrayBuffer) {
-  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(data) });
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(data),
+    cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
+    cMapPacked: true,
+  });
   return await loadingTask.promise;
 }
 
