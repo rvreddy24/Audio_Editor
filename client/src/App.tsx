@@ -518,7 +518,7 @@ export function App() {
                   onPlayStateChange={setIsPlaying}
                 />
 
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 scrollbar-none">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 no-scrollbar scrollbar-none">
                   {audioTabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
