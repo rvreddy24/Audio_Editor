@@ -1,0 +1,364 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { RotateCcw, Copy, Check, History, Trash2, ArrowLeft } from 'lucide-react';
+
+interface ScientificCalcProps {
+  onBack?: () => void;
+}
+
+export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
+  const [display, setDisplay] = useState<string>('0');
+  const [equation, setEquation] = useState<string>('');
+  const [isRad, setIsRad] = useState<boolean>(false);
+  const [memory, setMemory] = useState<number>(0);
+  const [history, setHistory] = useState<{ eq: string; res: string }[]>([]);
+  const [copied, setCopied] = useState<boolean>(false);
+  const [shouldResetDisplay, setShouldResetDisplay] = useState<boolean>(false);
+
+  // Handle number click
+  const handleDigit = (digit: string) => {
+    if (shouldResetDisplay || display === '0' || display === 'Error') {
+      setDisplay(digit);
+      setShouldResetDisplay(false);
+    } else {
+      setDisplay(display + digit);
+    }
+  };
+
+  const handleDecimal = () => {
+    if (shouldResetDisplay) {
+      setDisplay('0.');
+      setShouldResetDisplay(false);
+      return;
+    }
+    if (!display.includes('.')) {
+      setDisplay(display + '.');
+    }
+  };
+
+  const handleClear = () => {
+    setDisplay('0');
+    setEquation('');
+    setShouldResetDisplay(false);
+  };
+
+  const handleDelete = () => {
+    if (display.length > 1 && display !== 'Error') {
+      setDisplay(display.slice(0, -1));
+    } else {
+      setDisplay('0');
+    }
+  };
+
+  const handleOperator = (op: string) => {
+    setEquation(`${display} ${op} `);
+    setShouldResetDisplay(true);
+  };
+
+  const handleEqual = () => {
+    if (!equation) return;
+    try {
+      const fullExpression = equation + display;
+      // Sanitize expression for JS eval
+      const sanitized = fullExpression
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/\^/g, '**');
+
+      // Safely evaluate simple math expressions
+      const result = Function(`'use strict'; return (${sanitized})`)();
+      const formatted = Number.isFinite(result) ? String(Math.round(result * 1e12) / 1e12) : 'Error';
+      
+      setHistory((prev) => [{ eq: fullExpression, res: formatted }, ...prev.slice(0, 19)]);
+      setDisplay(formatted);
+      setEquation('');
+      setShouldResetDisplay(true);
+    } catch {
+      setDisplay('Error');
+      setEquation('');
+      setShouldResetDisplay(true);
+    }
+  };
+
+  // Scientific functions
+  const handleFunction = (fn: string) => {
+    const val = parseFloat(display);
+    if (isNaN(val)) return;
+
+    let res = 0;
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const toDeg = (rad: number) => (rad * 180) / Math.PI;
+
+    switch (fn) {
+      case 'sin':
+        res = Math.sin(isRad ? val : toRad(val));
+        break;
+      case 'cos':
+        res = Math.cos(isRad ? val : toRad(val));
+        break;
+      case 'tan':
+        res = Math.tan(isRad ? val : toRad(val));
+        break;
+      case 'asin':
+        res = isRad ? Math.asin(val) : toDeg(Math.asin(val));
+        break;
+      case 'acos':
+        res = isRad ? Math.acos(val) : toDeg(Math.acos(val));
+        break;
+      case 'atan':
+        res = isRad ? Math.atan(val) : toDeg(Math.atan(val));
+        break;
+      case 'ln':
+        res = Math.log(val);
+        break;
+      case 'log':
+        res = Math.log10(val);
+        break;
+      case 'sqrt':
+        res = Math.sqrt(val);
+        break;
+      case 'sqr':
+        res = val * val;
+        break;
+      case 'inv':
+        res = 1 / val;
+        break;
+      case 'fact':
+        if (val < 0 || !Number.isInteger(val)) {
+          setDisplay('Error');
+          return;
+        }
+        res = 1;
+        for (let i = 2; i <= Math.min(val, 170); i++) res *= i;
+        break;
+      case 'plusminus':
+        res = -val;
+        break;
+      case 'pi':
+        res = Math.PI;
+        break;
+      case 'e':
+        res = Math.E;
+        break;
+      default:
+        return;
+    }
+
+    const formatted = Number.isFinite(res) ? String(Math.round(res * 1e12) / 1e12) : 'Error';
+    setDisplay(formatted);
+    setShouldResetDisplay(true);
+  };
+
+  // Memory
+  const handleMemory = (action: 'mc' | 'mr' | 'm+' | 'm-') => {
+    const val = parseFloat(display) || 0;
+    if (action === 'mc') setMemory(0);
+    if (action === 'mr') {
+      setDisplay(String(memory));
+      setShouldResetDisplay(true);
+    }
+    if (action === 'm+') setMemory((m) => m + val);
+    if (action === 'm-') setMemory((m) => m - val);
+  };
+
+  const copyResult = () => {
+    navigator.clipboard.writeText(display);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>All Calculators</span>
+        </button>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Calculator */}
+        <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 text-white flex flex-col justify-between">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsRad(!isRad)}
+                className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                  isRad
+                    ? 'bg-orange-500/20 text-orange-400 border-orange-500/40'
+                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                }`}
+              >
+                {isRad ? 'RAD' : 'DEG'}
+              </button>
+              {memory !== 0 && (
+                <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/30">
+                  M = {memory}
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={copyResult}
+              className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+              title="Copy to clipboard"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+          </div>
+
+          {/* LCD Display */}
+          <div className="bg-slate-950/80 rounded-2xl p-4 sm:p-6 mb-6 border border-slate-800 text-right">
+            <div className="h-5 text-xs text-slate-500 font-mono tracking-wider overflow-hidden truncate">
+              {equation || ' '}
+            </div>
+            <div className="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono text-white mt-1 overflow-x-auto whitespace-nowrap">
+              {display}
+            </div>
+          </div>
+
+          {/* Keypad Grid */}
+          <div className="grid grid-cols-5 gap-2 sm:gap-2.5 text-xs sm:text-sm font-semibold">
+            {/* Row 1: Memory & Trig */}
+            <button onClick={() => handleMemory('mc')} className="calc-fn-btn">MC</button>
+            <button onClick={() => handleMemory('mr')} className="calc-fn-btn">MR</button>
+            <button onClick={() => handleMemory('m+')} className="calc-fn-btn">M+</button>
+            <button onClick={() => handleMemory('m-')} className="calc-fn-btn">M-</button>
+            <button onClick={handleClear} className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 p-2.5 sm:p-3 rounded-xl transition-all">AC</button>
+
+            {/* Row 2: Sci Functions */}
+            <button onClick={() => handleFunction('sin')} className="calc-fn-btn">sin</button>
+            <button onClick={() => handleFunction('cos')} className="calc-fn-btn">cos</button>
+            <button onClick={() => handleFunction('tan')} className="calc-fn-btn">tan</button>
+            <button onClick={() => handleFunction('sqr')} className="calc-fn-btn">x²</button>
+            <button onClick={() => handleOperator('^')} className="calc-fn-btn">xʸ</button>
+
+            {/* Row 3: More Functions & Division */}
+            <button onClick={() => handleFunction('sqrt')} className="calc-fn-btn">√x</button>
+            <button onClick={() => handleFunction('log')} className="calc-fn-btn">log</button>
+            <button onClick={() => handleFunction('ln')} className="calc-fn-btn">ln</button>
+            <button onClick={() => handleFunction('inv')} className="calc-fn-btn">1/x</button>
+            <button onClick={() => handleOperator('÷')} className="calc-op-btn">÷</button>
+
+            {/* Row 4: 7 8 9 & Multiply */}
+            <button onClick={() => handleFunction('pi')} className="calc-fn-btn">π</button>
+            <button onClick={() => handleDigit('7')} className="calc-num-btn">7</button>
+            <button onClick={() => handleDigit('8')} className="calc-num-btn">8</button>
+            <button onClick={() => handleDigit('9')} className="calc-num-btn">9</button>
+            <button onClick={() => handleOperator('×')} className="calc-op-btn">×</button>
+
+            {/* Row 5: 4 5 6 & Minus */}
+            <button onClick={() => handleFunction('e')} className="calc-fn-btn">e</button>
+            <button onClick={() => handleDigit('4')} className="calc-num-btn">4</button>
+            <button onClick={() => handleDigit('5')} className="calc-num-btn">5</button>
+            <button onClick={() => handleDigit('6')} className="calc-num-btn">6</button>
+            <button onClick={() => handleOperator('-')} className="calc-op-btn">−</button>
+
+            {/* Row 6: 1 2 3 & Plus */}
+            <button onClick={() => handleFunction('fact')} className="calc-fn-btn">n!</button>
+            <button onClick={() => handleDigit('1')} className="calc-num-btn">1</button>
+            <button onClick={() => handleDigit('2')} className="calc-num-btn">2</button>
+            <button onClick={() => handleDigit('3')} className="calc-num-btn">3</button>
+            <button onClick={() => handleOperator('+')} className="calc-op-btn">+</button>
+
+            {/* Row 7: 0 . DEL = */}
+            <button onClick={() => handleFunction('plusminus')} className="calc-fn-btn">±</button>
+            <button onClick={() => handleDigit('0')} className="calc-num-btn">0</button>
+            <button onClick={handleDecimal} className="calc-num-btn">.</button>
+            <button onClick={handleDelete} className="bg-slate-800 text-slate-300 hover:bg-slate-700 p-2.5 sm:p-3 rounded-xl transition-all">DEL</button>
+            <button onClick={handleEqual} className="bg-orange-500 hover:bg-orange-600 text-white font-bold p-2.5 sm:p-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all">=</button>
+          </div>
+        </div>
+
+        {/* Calculation History Panel */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-slate-400" />
+                <h3 className="text-sm font-bold text-slate-900">Calculation Log</h3>
+              </div>
+              {history.length > 0 && (
+                <button
+                  onClick={() => setHistory([])}
+                  className="text-xs text-slate-400 hover:text-red-500 transition-colors p-1"
+                  title="Clear History"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {history.length === 0 ? (
+              <div className="text-center py-12 text-xs text-slate-400">
+                No calculations recorded yet. Perform calculations to see results saved here.
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                {history.map((item, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setDisplay(item.res);
+                      setShouldResetDisplay(true);
+                    }}
+                    className="p-2.5 rounded-xl bg-slate-50 hover:bg-orange-50/60 border border-slate-100 cursor-pointer transition-colors text-right"
+                  >
+                    <div className="text-[11px] text-slate-400 font-mono truncate">{item.eq} =</div>
+                    <div className="text-sm font-bold text-slate-800 font-mono">{item.res}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
+            Click any history item to restore its value into the active calculator display.
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .calc-num-btn {
+          background-color: #1e293b;
+          color: #ffffff;
+          padding: 0.75rem;
+          border-radius: 0.75rem;
+          transition: all 150ms;
+        }
+        .calc-num-btn:hover {
+          background-color: #334155;
+          transform: scale(1.02);
+        }
+        .calc-fn-btn {
+          background-color: #0f172a;
+          color: #94a3b8;
+          border: 1px solid #1e293b;
+          padding: 0.75rem;
+          border-radius: 0.75rem;
+          transition: all 150ms;
+        }
+        .calc-fn-btn:hover {
+          background-color: #1e293b;
+          color: #ffffff;
+        }
+        .calc-op-btn {
+          background-color: #f97316;
+          color: #ffffff;
+          font-weight: 700;
+          padding: 0.75rem;
+          border-radius: 0.75rem;
+          transition: all 150ms;
+        }
+        .calc-op-btn:hover {
+          background-color: #ea580c;
+          transform: scale(1.02);
+        }
+      `}</style>
+    </div>
+  );
+};

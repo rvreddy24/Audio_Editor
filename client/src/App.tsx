@@ -35,6 +35,10 @@ import { PdfHero } from './components/pdf/PdfHero';
 import { PdfGrid } from './components/pdf/PdfGrid';
 import { PdfToolKey, PDF_TOOLS } from './components/pdf/types';
 
+// Calculator Studio
+import { CalculatorHub } from './components/calculator/CalculatorHub';
+import { CalculatorKey, ALL_CALCULATORS } from './components/calculator/types';
+
 // PDF Workspaces
 import { MergeWorkspace } from './components/pdf/workspaces/MergeWorkspace';
 import { SplitWorkspace } from './components/pdf/workspaces/SplitWorkspace';
@@ -77,9 +81,10 @@ import { formatTime, formatFileSize } from './utils/formatters';
 type TabKey = 'trim' | 'convert' | 'video' | 'effects' | 'merge' | 'tags';
 
 export function App() {
-  // Navigation Router: 'home' | 'pdf' | 'audio'
-  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio'>('home');
+  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc'
+  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc'>('home');
   const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>('home');
+  const [activeCalc, setActiveCalc] = useState<CalculatorKey>('home');
 
   // Audio state
   const [currentFile, setCurrentFile] = useState<LoadedFile | null>(null);
@@ -116,6 +121,12 @@ export function App() {
     if (tab && ['trim', 'convert', 'video', 'effects', 'merge', 'tags'].includes(tab)) {
       setActiveTab(tab as TabKey);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenCalc = (tool: CalculatorKey = 'home') => {
+    setViewMode('calc');
+    setActiveCalc(tool);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -179,6 +190,7 @@ export function App() {
 
   // Lookup active tool title for breadcrumb
   const currentPdfToolMeta = PDF_TOOLS.find((t) => t.key === activePdfTool);
+  const currentCalcMeta = ALL_CALCULATORS.find((c) => c.key === activeCalc);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
@@ -186,12 +198,15 @@ export function App() {
       <StudioNavbar
         currentView={viewMode}
         activePdfToolTitle={activePdfTool !== 'home' ? currentPdfToolMeta?.title : undefined}
+        activeCalcTitle={activeCalc !== 'home' ? currentCalcMeta?.name : undefined}
         onNavigateHome={() => {
           setViewMode('home');
           setActivePdfTool('home');
+          setActiveCalc('home');
         }}
         onNavigatePdf={() => handleOpenPdf('home')}
         onNavigateAudio={() => handleOpenAudio()}
+        onNavigateCalc={() => handleOpenCalc('home')}
       />
 
       {/* VIEW 1: HOME HUB (Master Cards for PDF & Audio) */}
@@ -200,6 +215,7 @@ export function App() {
           <HomeHub
             onOpenPdf={(tool) => handleOpenPdf(tool || 'home')}
             onOpenAudio={(tab) => handleOpenAudio(tab)}
+            onOpenCalc={(tool) => handleOpenCalc(tool || 'home')}
           />
         </main>
       )}
@@ -607,10 +623,40 @@ export function App() {
         </div>
       )}
 
+      {/* VIEW 4: CALCULATOR WORKSTATION */}
+      {viewMode === 'calc' && (
+        <main className="flex-1">
+          {/* Calculator Subheader Bar */}
+          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+            <button
+              onClick={() => {
+                if (activeCalc !== 'home') setActiveCalc('home');
+                else setViewMode('home');
+              }}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-orange-600 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{activeCalc !== 'home' ? 'Back to All Calculators' : 'Back to Home Dashboard'}</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-orange-700 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
+                Calculator Studio
+              </span>
+            </div>
+          </div>
+
+          <CalculatorHub
+            activeCalc={activeCalc}
+            onSelectCalc={(key) => setActiveCalc(key)}
+          />
+        </main>
+      )}
+
       {/* Universal Studio Footer */}
       <StudioFooter
         onSelectPdfTool={(tool) => handleOpenPdf(tool)}
         onOpenAudio={() => handleOpenAudio()}
+        onOpenCalc={(tool) => handleOpenCalc(tool)}
       />
     </div>
   );

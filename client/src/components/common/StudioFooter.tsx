@@ -1,15 +1,17 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
 import { PdfToolKey } from '../pdf/types';
+import { CalculatorKey } from '../calculator/types';
 
 interface StudioFooterProps {
   onSelectPdfTool: (tool: PdfToolKey) => void;
   onOpenAudio: () => void;
+  onOpenCalc?: (tool?: CalculatorKey) => void;
 }
 
 export const StudioFooter: React.FC<StudioFooterProps> = ({
   onSelectPdfTool,
   onOpenAudio,
+  onOpenCalc,
 }) => {
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
@@ -47,43 +49,10 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </li>
               <li>
                 <button
-                  onClick={() => onSelectPdfTool('organize')}
-                  className="hover:text-white transition-colors"
-                >
-                  Organize Pages
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('pdf-to-jpg')}
-                  className="hover:text-white transition-colors"
-                >
-                  PDF to JPG
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('jpg-to-pdf')}
-                  className="hover:text-white transition-colors"
-                >
-                  JPG to PDF
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 2: Security & Editing */}
-          <div>
-            <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              Security & Pages
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <button
                   onClick={() => onSelectPdfTool('pdf-to-word')}
                   className="hover:text-white transition-colors"
                 >
-                  PDF to Word
+                  PDF to Word (OCR)
                 </button>
               </li>
               <li>
@@ -96,88 +65,16 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </li>
               <li>
                 <button
-                  onClick={() => onSelectPdfTool('edit-pdf')}
-                  className="hover:text-white transition-colors"
-                >
-                  Edit PDF
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('redact')}
-                  className="hover:text-white transition-colors"
-                >
-                  Redact PDF
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('ocr-pdf')}
-                  className="hover:text-white transition-colors"
-                >
-                  OCR Text Recognition
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('compare')}
-                  className="hover:text-white transition-colors"
-                >
-                  Compare PDF
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('rotate')}
-                  className="hover:text-white transition-colors"
-                >
-                  Rotate PDF
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('watermark')}
-                  className="hover:text-white transition-colors"
-                >
-                  Watermark
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('page-numbers')}
-                  className="hover:text-white transition-colors"
-                >
-                  Page Numbers
-                </button>
-              </li>
-              <li>
-                <button
                   onClick={() => onSelectPdfTool('sign')}
                   className="hover:text-white transition-colors"
                 >
                   Sign PDF
                 </button>
               </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('protect')}
-                  className="hover:text-white transition-colors"
-                >
-                  Protect PDF
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onSelectPdfTool('unlock')}
-                  className="hover:text-white transition-colors"
-                >
-                  Unlock PDF
-                </button>
-              </li>
             </ul>
           </div>
 
-          {/* Column 3: Audio Studio */}
+          {/* Column 2: Audio Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
               Audio Studio
@@ -190,27 +87,76 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Format Converter (MP3, WAV, FLAC, AAC)
+                  Format Converter
                 </button>
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Bitrate Scaler (32k - 320k kbps)
+                  Video to Audio Extractor
                 </button>
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Video Soundtrack Extractor
+                  DSP Pitch & Speed
                 </button>
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  DSP Effects & 8D Audio
+                  8D Audio Effect
                 </button>
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Multi-Track Audio Merger
+                  ID3 Tag Editor
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Calculator Studio */}
+          <div>
+            <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
+              Calculator Studio
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <button onClick={() => onOpenCalc?.('scientific')} className="hover:text-white transition-colors">
+                  Scientific Calculator
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenCalc?.('mortgage')} className="hover:text-white transition-colors">
+                  Mortgage Calculator
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenCalc?.('loan')} className="hover:text-white transition-colors">
+                  Loan EMI Calculator
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenCalc?.('compound-interest')} className="hover:text-white transition-colors">
+                  Compound Interest
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenCalc?.('bmi')} className="hover:text-white transition-colors">
+                  BMI Calculator
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenCalc?.('calorie')} className="hover:text-white transition-colors">
+                  Daily Calorie (TDEE)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenCalc?.('percentage')} className="hover:text-white transition-colors">
+                  Percentage Calculator
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenCalc?.('unit-converter')} className="hover:text-white transition-colors">
+                  Universal Unit Converter
                 </button>
               </li>
             </ul>
@@ -226,7 +172,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               />
             </div>
             <p className="text-slate-400 text-xs leading-relaxed mb-4">
-              A private, fast, and 100% free web workstation for audio and PDF processing. Powered by native Web Audio and FFmpeg engines.
+              A private, fast, and 100% free web workstation suite for PDF manipulation, professional audio editing, and comprehensive calculators.
             </p>
             <div className="text-[11px] text-slate-500 font-mono">
               Running live on cloud container

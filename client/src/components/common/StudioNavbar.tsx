@@ -3,24 +3,28 @@ import {
   FileText,
   Music,
   LayoutGrid,
-  Sparkles,
+  Calculator,
   ChevronRight,
 } from 'lucide-react';
 
 interface StudioNavbarProps {
-  currentView: 'home' | 'pdf' | 'audio';
+  currentView: 'home' | 'pdf' | 'audio' | 'calc';
   activePdfToolTitle?: string;
+  activeCalcTitle?: string;
   onNavigateHome: () => void;
   onNavigatePdf: () => void;
   onNavigateAudio: () => void;
+  onNavigateCalc: () => void;
 }
 
 export const StudioNavbar: React.FC<StudioNavbarProps> = ({
   currentView,
   activePdfToolTitle,
+  activeCalcTitle,
   onNavigateHome,
   onNavigatePdf,
   onNavigateAudio,
+  onNavigateCalc,
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
@@ -54,15 +58,31 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
               <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-400">
                 <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
                 <button
-                  onClick={currentView === 'pdf' ? onNavigatePdf : onNavigateAudio}
-                  className="font-semibold text-slate-700 hover:text-indigo-600 transition-colors"
+                  onClick={
+                    currentView === 'pdf'
+                      ? onNavigatePdf
+                      : currentView === 'audio'
+                      ? onNavigateAudio
+                      : onNavigateCalc
+                  }
+                  className="font-semibold text-slate-700 hover:text-orange-600 transition-colors"
                 >
-                  {currentView === 'pdf' ? 'PDF Tools' : 'Audio Studio'}
+                  {currentView === 'pdf'
+                    ? 'PDF Tools'
+                    : currentView === 'audio'
+                    ? 'Audio Studio'
+                    : 'Calculator Studio'}
                 </button>
-                {activePdfToolTitle && (
+                {activePdfToolTitle && currentView === 'pdf' && (
                   <>
                     <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
                     <span className="font-bold text-slate-900">{activePdfToolTitle}</span>
+                  </>
+                )}
+                {activeCalcTitle && currentView === 'calc' && (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="font-bold text-slate-900">{activeCalcTitle}</span>
                   </>
                 )}
               </div>
@@ -70,7 +90,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
           </div>
 
           {/* Navigation Switchers */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {/* Home button */}
             <button
               onClick={onNavigateHome}
@@ -108,6 +128,19 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
             >
               <Music className="w-3.5 h-3.5 text-indigo-500" />
               <span>Audio Studio</span>
+            </button>
+
+            {/* Calculator Studio button */}
+            <button
+              onClick={onNavigateCalc}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                currentView === 'calc'
+                  ? 'bg-orange-600 text-white shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-orange-600 hover:bg-orange-50/60'
+              }`}
+            >
+              <Calculator className="w-3.5 h-3.5 text-orange-500" />
+              <span>Calculators</span>
             </button>
           </div>
         </div>

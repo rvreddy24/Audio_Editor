@@ -13,15 +13,20 @@ import {
   Film,
   Lock,
   PenTool,
+  Calculator,
+  DollarSign,
+  Scale,
 } from 'lucide-react';
 import { PdfToolKey } from '../pdf/types';
+import { CalculatorKey } from '../calculator/types';
 
 interface HomeHubProps {
   onOpenPdf: (specificTool?: PdfToolKey) => void;
   onOpenAudio: (tab?: string) => void;
+  onOpenCalc: (specificTool?: CalculatorKey) => void;
 }
 
-export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
+export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio, onOpenCalc }) => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Official Brand Banner */}
@@ -42,9 +47,9 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
           <span>Professional Web Workstation Suite</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-          Everything You Need to Edit <br className="hidden sm:inline" />
+          Everything You Need to Edit & Compute <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-indigo-600">
-            PDFs, Office & Audio Files
+            PDFs, Office, Audio & Calculators
           </span>
         </h1>
         <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
@@ -52,8 +57,8 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
         </p>
       </div>
 
-      {/* Primary Category Master Cards (Compact) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
+      {/* Primary Category Master Cards (Compact 3-Workstation Layout) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
         {/* CARD 1: PDF & OFFICE TOOLS */}
         <div
           onClick={() => onOpenPdf()}
@@ -73,7 +78,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
                     PDF & Office Studio
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500">
-                    PDF, Word, Excel, PowerPoint & Images
+                    PDF, Word, Excel & Images
                   </span>
                 </div>
               </div>
@@ -83,7 +88,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
             </div>
 
             <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed mb-3">
-              Merge, split, compress, convert Word/Excel/PPT, OCR scan, watermark, resize images, protect, and e-sign files.
+              Merge, split, compress, convert Word/Excel/PPT, OCR scan, watermark, resize images, and e-sign.
             </p>
 
             {/* Compact feature chips */}
@@ -93,9 +98,8 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
                 'Compress PDF',
                 'Word ⇄ PDF',
                 'Excel ⇄ PDF',
-                'PPT ⇄ PDF',
-                'Image Tools',
-                'Sign & Protect',
+                'OCR Scanner',
+                'Sign PDF',
               ].map((toolName) => (
                 <span
                   key={toolName}
@@ -105,7 +109,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
                 </span>
               ))}
               <span className="px-2 py-0.5 rounded-md bg-red-50 text-red-600 text-[11px] font-bold border border-red-100">
-                +25 More
+                +26 More
               </span>
             </div>
           </div>
@@ -138,7 +142,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
                     Audio Studio
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500">
-                    Visual Editor & DSP Sound Processing
+                    Visual Waveform & DSP
                   </span>
                 </div>
               </div>
@@ -182,6 +186,70 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
             <span className="text-[11px] text-slate-400 font-medium">Native Speed • 1 GB Limit</span>
           </div>
         </div>
+
+        {/* CARD 3: CALCULATOR STUDIO */}
+        <div
+          onClick={() => onOpenCalc()}
+          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-orange-500 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden md:col-span-2 lg:col-span-1"
+        >
+          {/* Subtle background glow */}
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-orange-100/50 blur-2xl group-hover:bg-orange-200/50 transition-colors pointer-events-none" />
+
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <Calculator className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-orange-600 transition-colors leading-tight">
+                    Calculator Studio
+                  </h2>
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Inspired by Calculator.net
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-700 bg-orange-50 border border-orange-200/80 px-2.5 py-0.5 rounded-full shrink-0">
+                22+ Tools
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed mb-3">
+              Scientific keypad, mortgage, auto loan, compound interest, BMI, calorie deficit, fractions, and unit conversion.
+            </p>
+
+            {/* Compact feature chips */}
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                'Scientific Calc',
+                'Mortgage & Loan',
+                'Compound Interest',
+                'BMI & Calorie',
+                'Percentages',
+                'Unit Converter',
+              ].map((toolName) => (
+                <span
+                  key={toolName}
+                  className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium group-hover:bg-orange-50 group-hover:text-orange-700 transition-colors"
+                >
+                  {toolName}
+                </span>
+              ))}
+              <span className="px-2 py-0.5 rounded-md bg-orange-50 text-orange-600 text-[11px] font-bold border border-orange-100">
+                +16 More
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-bold text-orange-600 flex items-center gap-1.5">
+              <span>Open Calculator Studio</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </span>
+            <span className="text-[11px] text-slate-400 font-medium">Instant • Private</span>
+          </div>
+        </div>
       </div>
 
       {/* Quick Launch Row */}
@@ -202,36 +270,6 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
           </button>
 
           <button
-            onClick={() => onOpenPdf('compress')}
-            className="bg-white hover:bg-emerald-50/50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 flex flex-col items-center gap-2 text-center transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Minimize2 className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Compress PDF</span>
-          </button>
-
-          <button
-            onClick={() => onOpenPdf('pdf-to-jpg')}
-            className="bg-white hover:bg-yellow-50/50 p-4 rounded-2xl border border-slate-200 hover:border-yellow-300 flex flex-col items-center gap-2 text-center transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Image className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-yellow-600">PDF to JPG</span>
-          </button>
-
-          <button
-            onClick={() => onOpenAudio('trim')}
-            className="bg-white hover:bg-indigo-50/50 p-4 rounded-2xl border border-slate-200 hover:border-indigo-300 flex flex-col items-center gap-2 text-center transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Scissors className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-600">Trim Audio</span>
-          </button>
-
-          <button
             onClick={() => onOpenAudio('convert')}
             className="bg-white hover:bg-indigo-50/50 p-4 rounded-2xl border border-slate-200 hover:border-indigo-300 flex flex-col items-center gap-2 text-center transition-all group"
           >
@@ -242,13 +280,43 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
           </button>
 
           <button
-            onClick={() => onOpenAudio('video')}
-            className="bg-white hover:bg-violet-50/50 p-4 rounded-2xl border border-slate-200 hover:border-violet-300 flex flex-col items-center gap-2 text-center transition-all group"
+            onClick={() => onOpenCalc('scientific')}
+            className="bg-white hover:bg-orange-50/50 p-4 rounded-2xl border border-slate-200 hover:border-orange-300 flex flex-col items-center gap-2 text-center transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Film className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Calculator className="w-5 h-5" />
             </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-violet-600">Video to Audio</span>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-orange-600">Scientific Calc</span>
+          </button>
+
+          <button
+            onClick={() => onOpenCalc('mortgage')}
+            className="bg-white hover:bg-emerald-50/50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 flex flex-col items-center gap-2 text-center transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Mortgage Calc</span>
+          </button>
+
+          <button
+            onClick={() => onOpenCalc('bmi')}
+            className="bg-white hover:bg-rose-50/50 p-4 rounded-2xl border border-slate-200 hover:border-rose-300 flex flex-col items-center gap-2 text-center transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Scale className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-rose-600">BMI & Health</span>
+          </button>
+
+          <button
+            onClick={() => onOpenCalc('unit-converter')}
+            className="bg-white hover:bg-purple-50/50 p-4 rounded-2xl border border-slate-200 hover:border-purple-300 flex flex-col items-center gap-2 text-center transition-all group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Scale className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-bold text-slate-800 group-hover:text-purple-600">Unit Converter</span>
           </button>
         </div>
       </div>
