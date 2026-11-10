@@ -83,12 +83,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Navigation Actions */}
         <div className="flex items-center gap-2.5">
-          {/* Engine Status Badge */}
-          <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>FFmpeg 8.1 Ready</span>
-          </div>
-
           {/* Record Microphone Button */}
           <button
             onClick={onOpenRecorder}

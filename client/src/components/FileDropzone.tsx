@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { UploadCloud, Music, Sparkles } from 'lucide-react';
-import { generateSampleAudioFile } from '../utils/sampleAudio';
+import { UploadCloud, Music } from 'lucide-react';
 
 interface FileDropzoneProps {
   onFileSelected: (file: File) => void;
@@ -14,7 +13,6 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   uploadProgress = 0
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -36,18 +34,6 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       onFileSelected(e.target.files[0]);
-    }
-  };
-
-  const handleLoadDemo = async () => {
-    setIsGeneratingDemo(true);
-    try {
-      const demoFile = await generateSampleAudioFile();
-      onFileSelected(demoFile);
-    } catch (e) {
-      console.error('Failed to generate demo track:', e);
-    } finally {
-      setIsGeneratingDemo(false);
     }
   };
 
@@ -104,24 +90,6 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
             onChange={handleFileChange}
           />
         </label>
-
-        <button
-          onClick={handleLoadDemo}
-          disabled={isGeneratingDemo}
-          className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2.5 rounded-xl border border-slate-200 flex items-center gap-2 text-xs transition-colors shadow-2xs"
-        >
-          {isGeneratingDemo ? (
-            <>
-              <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              Try Demo Audio Track
-            </>
-          )}
-        </button>
       </div>
 
       {/* Format badges */}
