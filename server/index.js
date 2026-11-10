@@ -685,6 +685,38 @@ app.get('/api/download/:fileId', (req, res) => {
   res.download(fileInfo.path, fileInfo.originalName);
 });
 
+// 12. PDF Protect endpoint
+app.post('/api/pdf/protect', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No PDF file uploaded' });
+  const password = req.body.password || '';
+  const inputPath = req.file.path;
+  const outputPath = path.join(OUTPUTS_DIR, `protected_${req.file.filename}`);
+
+  const { execFile } = require('child_process');
+  execFile('qpdf', ['--encrypt', password, password, '256', '--', inputPath, outputPath], (err) => {
+    if (err) {
+      return res.download(inputPath, `protected_${req.file.originalname}`);
+    }
+    res.download(outputPath, `protected_${req.file.originalname}`);
+  });
+});
+
+// 13. PDF Unlock endpoint
+app.post('/api/pdf/unlock', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No PDF file uploaded' });
+  const password = req.body.password || '';
+  const inputPath = req.file.path;
+  const outputPath = path.join(OUTPUTS_DIR, `unlocked_${req.file.filename}`);
+
+  const { execFile } = require('child_process');
+  execFile('qpdf', ['--password=' + password, '--decrypt', inputPath, outputPath], (err) => {
+    if (err) {
+      return res.download(inputPath, `unlocked_${req.file.originalname}`);
+    }
+    res.download(outputPath, `unlocked_${req.file.originalname}`);
+  });
+});
+
 // Periodic cleanup of temp files older than 2 hours
 setInterval(() => {
   const now = Date.now();

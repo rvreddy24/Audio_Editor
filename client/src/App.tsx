@@ -7,9 +7,10 @@ import {
   Layers,
   Tag,
   FileAudio,
-  Sparkles,
+  ArrowLeft,
 } from 'lucide-react';
 
+// Audio Studio Components
 import { Header } from './components/Header';
 import { FileDropzone } from './components/FileDropzone';
 import { WaveformEditor } from './components/WaveformEditor';
@@ -22,6 +23,27 @@ import { TagEditorTab } from './components/TagEditorTab';
 import { RecorderModal } from './components/RecorderModal';
 import { ResultModal } from './components/ResultModal';
 
+// PDF Components
+import { ILovePdfNavbar } from './components/pdf/ILovePdfNavbar';
+import { ILovePdfHero } from './components/pdf/ILovePdfHero';
+import { ILovePdfGrid } from './components/pdf/ILovePdfGrid';
+import { ILovePdfFooter } from './components/pdf/ILovePdfFooter';
+import { PdfToolKey } from './components/pdf/types';
+
+// Workspaces
+import { MergeWorkspace } from './components/pdf/workspaces/MergeWorkspace';
+import { SplitWorkspace } from './components/pdf/workspaces/SplitWorkspace';
+import { CompressWorkspace } from './components/pdf/workspaces/CompressWorkspace';
+import { OrganizeWorkspace } from './components/pdf/workspaces/OrganizeWorkspace';
+import { RotateWorkspace } from './components/pdf/workspaces/RotateWorkspace';
+import { PdfToJpgWorkspace } from './components/pdf/workspaces/PdfToJpgWorkspace';
+import { JpgToPdfWorkspace } from './components/pdf/workspaces/JpgToPdfWorkspace';
+import { WatermarkWorkspace } from './components/pdf/workspaces/WatermarkWorkspace';
+import { PageNumbersWorkspace } from './components/pdf/workspaces/PageNumbersWorkspace';
+import { ProtectWorkspace } from './components/pdf/workspaces/ProtectWorkspace';
+import { UnlockWorkspace } from './components/pdf/workspaces/UnlockWorkspace';
+import { SignWorkspace } from './components/pdf/workspaces/SignWorkspace';
+
 import { uploadFile, checkHealth } from './api';
 import { LoadedFile, ProcessingResult } from './types';
 import { formatTime, formatFileSize } from './utils/formatters';
@@ -29,6 +51,11 @@ import { formatTime, formatFileSize } from './utils/formatters';
 type TabKey = 'trim' | 'convert' | 'video' | 'effects' | 'merge' | 'tags';
 
 export function App() {
+  // Main view router: 'pdf' or 'audio'
+  const [viewMode, setViewMode] = useState<'pdf' | 'audio'>('pdf');
+  const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>('home');
+
+  // Audio state
   const [currentFile, setCurrentFile] = useState<LoadedFile | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>('trim');
 
@@ -51,6 +78,15 @@ export function App() {
       console.error('Server check error:', err);
     });
   }, []);
+
+  const handleSelectPdfTool = (tool: PdfToolKey | 'audio') => {
+    if (tool === 'audio') {
+      setViewMode('audio');
+    } else {
+      setViewMode('pdf');
+      setActivePdfTool(tool);
+    }
+  };
 
   const handleFileSelect = async (file: File) => {
     setIsUploading(true);
@@ -93,7 +129,7 @@ export function App() {
       probe: result.probe,
       streamUrl: result.streamUrl,
       downloadUrl: result.downloadUrl,
-      isVideo: false
+      isVideo: false,
     });
     setStartTime(0);
     setEndTime(result.probe.duration || 10);
@@ -101,7 +137,7 @@ export function App() {
     setIsPlaying(false);
   };
 
-  const tabs = [
+  const audioTabs = [
     { id: 'trim', label: 'Trim & Cut', icon: Scissors, desc: 'Crop segments and fades' },
     { id: 'convert', label: 'Convert & Bitrate', icon: RefreshCw, desc: 'Format and kbps scaler' },
     { id: 'video', label: 'Video to Audio', icon: Film, desc: 'Extract video soundtrack' },
@@ -111,224 +147,299 @@ export function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
-      {/* Clean Light Navbar Header */}
-      <Header
-        onOpenRecorder={() => setIsRecorderOpen(true)}
-        onNewFile={() => {
-          setIsPlaying(false);
-          setCurrentFile(null);
-        }}
-        hasFile={!!currentFile}
-        isPlaying={isPlaying}
-        onTogglePlay={() => setIsPlaying(!isPlaying)}
-        onRewind={() => setCurrentTime(startTime)}
-        currentTime={currentTime}
-        duration={currentFile ? currentFile.probe.duration : 0}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-[#e5322d] selection:text-white">
+      {/* Universal Top Navigation */}
+      <ILovePdfNavbar
+        activeTool={viewMode === 'audio' ? 'audio' : activePdfTool}
+        onSelectTool={handleSelectPdfTool}
+        onOpenAudioStudio={() => setViewMode('audio')}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
-        {!currentFile ? (
-          /* Empty / Upload View */
-          <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full pt-4">
-            <FileDropzone
-              onFileSelected={handleFileSelect}
-              isLoading={isUploading}
-              uploadProgress={uploadProgress}
-            />
+      {/* Main Content Router */}
+      {viewMode === 'pdf' ? (
+        <main className="flex-1">
+          {activePdfTool === 'home' && (
+            <>
+              <ILovePdfHero />
+              <ILovePdfGrid onSelectTool={handleSelectPdfTool} />
+            </>
+          )}
 
-            {/* Feature Highlights Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                  <RefreshCw className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Universal Format Converter
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Convert between MP3, WAV, FLAC, AAC, OPUS, OGG, and M4A with precision 32k - 320k kbps scaling.
-                </p>
-              </div>
+          {activePdfTool === 'merge' && (
+            <MergeWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
 
-              <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                  <Scissors className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Precision Waveform Trimmer
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Visual millisecond zooming, dual handles, keep range mode, and smooth fade in/out curves.
-                </p>
-              </div>
+          {activePdfTool === 'split' && (
+            <SplitWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
 
-              <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-                  <Film className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Video to Audio & Effects
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Strip audio from MP4/MKV videos, apply Rubberband pitch shifts, tempo stretching, and 8D audio.
-                </p>
-              </div>
-            </div>
+          {activePdfTool === 'compress' && (
+            <CompressWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'organize' && (
+            <OrganizeWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'rotate' && (
+            <RotateWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pdf-to-jpg' && (
+            <PdfToJpgWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'jpg-to-pdf' && (
+            <JpgToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'watermark' && (
+            <WatermarkWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'page-numbers' && (
+            <PageNumbersWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'protect' && (
+            <ProtectWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'unlock' && (
+            <UnlockWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'sign' && (
+            <SignWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+        </main>
+      ) : (
+        /* Audio Workstation View */
+        <div className="flex-1 flex flex-col">
+          {/* Audio Navigation Bar */}
+          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+            <button
+              onClick={() => {
+                setViewMode('pdf');
+                setActivePdfTool('home');
+              }}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-[#e5322d] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to iLovePDF Tools</span>
+            </button>
+            <span className="text-xs font-bold text-violet-700 bg-violet-50 px-3 py-1 rounded-full border border-violet-200">
+              SoundCraft Audio Workstation
+            </span>
           </div>
-        ) : (
-          /* Active File Workstation */
-          <div className="flex flex-col gap-6">
-            {/* File Info Card */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
-                  {currentFile.isVideo ? <Film className="w-5 h-5" /> : <FileAudio className="w-5 h-5" />}
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-sm sm:text-base font-semibold text-slate-900 truncate max-w-md sm:max-w-xl">
-                    {currentFile.originalName}
-                  </h2>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
-                    <span className="uppercase font-semibold text-indigo-600">
-                      {currentFile.probe.audio?.codec || currentFile.probe.formatName}
-                    </span>
-                    <span>•</span>
-                    <span>{formatTime(currentFile.probe.duration)}</span>
-                    <span>•</span>
-                    <span>{currentFile.probe.audio?.bitRate ? `${currentFile.probe.audio.bitRate} kbps` : 'Variable'}</span>
-                    <span>•</span>
-                    <span>{formatFileSize(currentFile.size)}</span>
+
+          <Header
+            onOpenRecorder={() => setIsRecorderOpen(true)}
+            onNewFile={() => {
+              setIsPlaying(false);
+              setCurrentFile(null);
+            }}
+            hasFile={!!currentFile}
+            isPlaying={isPlaying}
+            onTogglePlay={() => setIsPlaying(!isPlaying)}
+            onRewind={() => setCurrentTime(startTime)}
+            currentTime={currentTime}
+            duration={currentFile ? currentFile.probe.duration : 0}
+          />
+
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+            {!currentFile ? (
+              <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full pt-4">
+                <FileDropzone
+                  onFileSelected={handleFileSelect}
+                  isLoading={isUploading}
+                  uploadProgress={uploadProgress}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                      <RefreshCw className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      Universal Format Converter
+                    </h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Convert between MP3, WAV, FLAC, AAC, OPUS, OGG, and M4A with precision 32k - 320k kbps scaling.
+                    </p>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                      <Scissors className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      Precision Waveform Trimmer
+                    </h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Interactive visual waveform editor with dual region markers, millisecond zoom, and fade in/out.
+                    </p>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center font-bold">
+                      <Film className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      Video Soundtrack Extractor
+                    </h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Drop MP4, MKV, MOV, or WebM video to isolate and extract pristine audio directly.
+                    </p>
                   </div>
                 </div>
               </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100/60">
+                      <FileAudio className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-bold text-slate-900 truncate" title={currentFile.originalName}>
+                          {currentFile.originalName}
+                        </h2>
+                        <span className="text-[10px] font-mono uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold shrink-0">
+                          {currentFile.probe.formatName || 'AUDIO'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 font-mono mt-0.5">
+                        <span>{formatFileSize(currentFile.size)}</span>
+                        <span>•</span>
+                        <span>{formatTime(currentFile.probe.duration)}</span>
+                        <span>•</span>
+                        <span>{currentFile.probe.bitRate ? `${Math.round(currentFile.probe.bitRate)} kbps` : 'VBR'}</span>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Change File Action */}
-              <label className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 rounded-xl cursor-pointer transition-colors border border-slate-200 flex items-center gap-1.5 shadow-2xs">
-                <RefreshCw className="w-3.5 h-3.5" />
-                Change File
-                <input
-                  type="file"
-                  accept="audio/*,video/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileSelect(e.target.files[0]);
-                    }
-                  }}
-                />
-              </label>
-            </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors">
+                      Replace File
+                      <input
+                        type="file"
+                        accept="audio/*,video/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleFileSelect(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
 
-            {/* Waveform Canvas View */}
-            <WaveformEditor
-              audioUrl={currentFile.streamUrl}
-              duration={currentFile.probe.duration}
-              startTime={startTime}
-              endTime={endTime}
-              onRangeChange={handleRangeChange}
-              onCurrentTimeChange={(t) => setCurrentTime(t)}
-              cutMode={cutMode}
-              isPlaying={isPlaying}
-              onPlayStateChange={(p) => setIsPlaying(p)}
-            />
-
-            {/* Clean Segmented Tab Navigation */}
-            <div className="flex items-center gap-1.5 bg-slate-200/70 p-1.5 rounded-2xl overflow-x-auto">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as TabKey)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-xs whitespace-nowrap transition-all ${
-                      isActive
-                        ? 'bg-white text-indigo-600 shadow-sm font-semibold'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`} />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Active Tab Panel */}
-            <div className="transition-all duration-200">
-              {activeTab === 'trim' && (
-                <TrimmerTab
-                  currentFile={currentFile}
+                <WaveformEditor
+                  audioUrl={currentFile.streamUrl}
+                  duration={currentFile.probe.duration}
                   startTime={startTime}
                   endTime={endTime}
-                  currentTime={currentTime}
+                  onCurrentTimeChange={setCurrentTime}
                   onRangeChange={handleRangeChange}
                   cutMode={cutMode}
-                  onCutModeChange={setCutMode}
-                  onProcessed={handleProcessedResult}
+                  isPlaying={isPlaying}
+                  onPlayStateChange={setIsPlaying}
                 />
-              )}
 
-              {activeTab === 'convert' && (
-                <ConverterTab
-                  currentFile={currentFile}
-                  onProcessed={handleProcessedResult}
-                />
-              )}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 scrollbar-none">
+                  {audioTabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as TabKey)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition-all ${
+                          isActive
+                            ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/90 font-bold'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`} />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {activeTab === 'video' && (
-                <VideoToAudioTab
-                  currentFile={currentFile}
-                  onProcessed={handleProcessedResult}
-                  onUploadNewVideo={handleFileSelect}
-                />
-              )}
+                <div className="transition-all duration-200">
+                  {activeTab === 'trim' && (
+                    <TrimmerTab
+                      currentFile={currentFile}
+                      startTime={startTime}
+                      endTime={endTime}
+                      currentTime={currentTime}
+                      onRangeChange={handleRangeChange}
+                      cutMode={cutMode}
+                      onCutModeChange={setCutMode}
+                      onProcessed={handleProcessedResult}
+                    />
+                  )}
 
-              {activeTab === 'effects' && (
-                <EffectsTab
-                  currentFile={currentFile}
-                  onProcessed={handleProcessedResult}
-                />
-              )}
+                  {activeTab === 'convert' && (
+                    <ConverterTab
+                      currentFile={currentFile}
+                      onProcessed={handleProcessedResult}
+                    />
+                  )}
 
-              {activeTab === 'merge' && (
-                <MergerTab
-                  currentFile={currentFile}
-                  onProcessed={handleProcessedResult}
-                />
-              )}
+                  {activeTab === 'video' && (
+                    <VideoToAudioTab
+                      currentFile={currentFile}
+                      onProcessed={handleProcessedResult}
+                      onUploadNewVideo={handleFileSelect}
+                    />
+                  )}
 
-              {activeTab === 'tags' && (
-                <TagEditorTab
-                  currentFile={currentFile}
-                  onProcessed={handleProcessedResult}
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </main>
+                  {activeTab === 'effects' && (
+                    <EffectsTab
+                      currentFile={currentFile}
+                      onProcessed={handleProcessedResult}
+                    />
+                  )}
 
-      {/* Microphone Voice Recorder Modal */}
-      <RecorderModal
-        isOpen={isRecorderOpen}
-        onClose={() => setIsRecorderOpen(false)}
-        onRecordingComplete={handleFileSelect}
-      />
+                  {activeTab === 'merge' && (
+                    <MergerTab
+                      currentFile={currentFile}
+                      onProcessed={handleProcessedResult}
+                    />
+                  )}
 
-      {/* Processed Result Modal with Direct Download */}
-      <ResultModal
-        result={lastResult}
-        onClose={() => setLastResult(null)}
-        onLoadAsCurrent={handleLoadResultAsCurrent}
-      />
+                  {activeTab === 'tags' && (
+                    <TagEditorTab
+                      currentFile={currentFile}
+                      onProcessed={handleProcessedResult}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+          </main>
 
-      {/* Clean Light Footer */}
-      <footer className="border-t border-slate-200/80 bg-white py-4 px-6 text-center text-xs text-slate-500 font-medium">
-        SoundCraft Studio • High-Performance Audio Engine Powered by FFmpeg 8.1 & Web Audio API
-      </footer>
+          <RecorderModal
+            isOpen={isRecorderOpen}
+            onClose={() => setIsRecorderOpen(false)}
+            onRecordingComplete={handleFileSelect}
+          />
+
+          <ResultModal
+            result={lastResult}
+            onClose={() => setLastResult(null)}
+            onLoadAsCurrent={handleLoadResultAsCurrent}
+          />
+        </div>
+      )}
+
+      {/* Footer */}
+      <ILovePdfFooter onSelectTool={handleSelectPdfTool} />
     </div>
   );
 }

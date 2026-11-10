@@ -7,12 +7,12 @@ RUN npm install
 COPY client/ ./
 RUN npm run build
 
-# Stage 2: Production Server with FFmpeg
+# Stage 2: Production Server with FFmpeg & QPDF
 FROM node:20-alpine
 WORKDIR /app
 
-# Install FFmpeg
-RUN apk add --no-cache ffmpeg
+# Install FFmpeg and QPDF
+RUN apk add --no-cache ffmpeg qpdf
 
 # Install Server Dependencies
 COPY server/package*.json ./server/
