@@ -19,22 +19,28 @@ export const WordToPdfWorkspace: React.FC<WordToPdfWorkspaceProps> = ({ onBack }
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFilesSelected = (files: File[]) => {
     if (files.length > 0) {
       setFile(files[0]);
+      setErrorMessage(null);
     }
   };
 
   const handleConvert = async () => {
     if (!file) return;
     setIsProcessing(true);
+    setErrorMessage(null);
     try {
       const pdfBytes = await convertWordToPdf(file);
       downloadBytes(pdfBytes, `${file.name.replace(/\.docx?$/i, '')}.pdf`);
       setIsDone(true);
     } catch (err: any) {
-      alert(err.message || 'Failed to convert Word to PDF');
+      console.error('Word to PDF error:', err);
+      const msg = err.message || 'Failed to convert Word to PDF. Please ensure the document is a valid .docx file.';
+      setErrorMessage(msg);
+      alert(msg);
     } finally {
       setIsProcessing(false);
     }
@@ -117,6 +123,12 @@ export const WordToPdfWorkspace: React.FC<WordToPdfWorkspaceProps> = ({ onBack }
               <p className="text-xs text-slate-500 leading-relaxed">
                 Your Word file will be parsed, paginated, and formatted into standard A4 PDF pages with high typography fidelity.
               </p>
+
+              {errorMessage && (
+                <div className="text-[11px] text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 text-center font-medium">
+                  {errorMessage}
+                </div>
+              )}
             </div>
 
             <button

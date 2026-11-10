@@ -64,17 +64,28 @@ export async function convertExcelToPdf(file: File): Promise<Uint8Array> {
 
     for (let cIdx = 0; cIdx < row.length; cIdx++) {
       const rawVal = row[cIdx] !== undefined && row[cIdx] !== null ? String(row[cIdx]) : '';
-      const cellText = sanitizeForPdfText(rawVal).slice(0, 22);
+      const cellFont = isHeader ? boldFont : font;
+      const cellText = sanitizeForPdfText(rawVal, cellFont).slice(0, 22);
       const cellX = margin + cIdx * colWidth;
 
       if (cellX + colWidth <= pageWidth - margin) {
-        currentPage.drawText(cellText, {
-          x: cellX + 4,
-          y: y,
-          size: isHeader ? 10 : 9,
-          font: isHeader ? boldFont : font,
-          color: isHeader ? rgb(0.1, 0.1, 0.1) : rgb(0.25, 0.25, 0.25),
-        });
+        try {
+          currentPage.drawText(cellText, {
+            x: cellX + 4,
+            y: y,
+            size: isHeader ? 10 : 9,
+            font: cellFont,
+            color: isHeader ? rgb(0.1, 0.1, 0.1) : rgb(0.25, 0.25, 0.25),
+          });
+        } catch {
+          currentPage.drawText(cellText.replace(/[^\x20-\x7E]/g, ' '), {
+            x: cellX + 4,
+            y: y,
+            size: isHeader ? 10 : 9,
+            font: cellFont,
+            color: isHeader ? rgb(0.1, 0.1, 0.1) : rgb(0.25, 0.25, 0.25),
+          });
+        }
       }
     }
 

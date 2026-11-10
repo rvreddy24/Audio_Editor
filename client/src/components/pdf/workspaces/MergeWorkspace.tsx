@@ -22,8 +22,10 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
   const [files, setFiles] = useState<PdfFileInfo[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mergedBytes, setMergedBytes] = useState<Uint8Array | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFilesSelected = async (newFiles: File[]) => {
+    setErrorMessage(null);
     const parsed = await Promise.all(newFiles.map(parsePdfFile));
     setFiles((prev) => [...prev, ...parsed]);
   };
@@ -45,6 +47,7 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
   const handleMerge = async () => {
     if (files.length < 2) return;
     setIsProcessing(true);
+    setErrorMessage(null);
     try {
       const buffers = await Promise.all(files.map((f) => getBufferFromFile(f)));
       const result = await mergePdfs(buffers);
@@ -52,7 +55,9 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
       downloadBytes(result, 'merged_document.pdf');
     } catch (err: any) {
       console.error('Merge error:', err);
-      alert(`Failed to merge PDFs: ${err?.message || 'Please try again.'}`);
+      const msg = err?.message || 'Failed to merge PDFs. Please verify that the PDF files are valid and not password protected.';
+      setErrorMessage(msg);
+      alert(`Failed to merge PDFs: ${msg}`);
     } finally {
       setIsProcessing(false);
     }
@@ -230,6 +235,12 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
               {files.length < 2 && (
                 <div className="text-[11px] text-amber-600 bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-center">
                   Please select at least 2 PDF files to merge.
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="text-[11px] text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 text-center font-medium">
+                  {errorMessage}
                 </div>
               )}
             </div>

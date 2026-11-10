@@ -15,15 +15,21 @@ export interface PdfFileInfo {
 }
 
 export async function getBufferFromFile(fileInfo: PdfFileInfo): Promise<ArrayBuffer> {
+  if (fileInfo.file && typeof fileInfo.file.arrayBuffer === 'function') {
+    try {
+      const fresh = await fileInfo.file.arrayBuffer();
+      if (fresh && fresh.byteLength > 0) {
+        fileInfo.data = fresh;
+        return fresh.slice(0);
+      }
+    } catch (e) {
+      console.warn('Could not read fresh arrayBuffer from File:', e);
+    }
+  }
   if (fileInfo.data && fileInfo.data.byteLength > 0) {
     return fileInfo.data.slice(0);
   }
-  if (fileInfo.file) {
-    const fresh = await fileInfo.file.arrayBuffer();
-    fileInfo.data = fresh;
-    return fresh.slice(0);
-  }
-  throw new Error('PDF file buffer is empty or detached');
+  throw new Error(`PDF file "${fileInfo.name || 'document'}" could not be read or is empty.`);
 }
 
 export async function parsePdfFile(file: File): Promise<PdfFileInfo> {
@@ -54,24 +60,25 @@ export async function parsePdfFile(file: File): Promise<PdfFileInfo> {
   };
 }
 
-export function sanitizeForPdfText(text: string): string {
+export function sanitizeForPdfText(text: string, font?: any): string {
   if (!text) return '';
-  return text
-    // Arrows
-    .replace(/[\u2192\u2794\u279C\u279D]/g, '->')
-    .replace(/[\u2190]/g, '<-')
-    .replace(/[\u2194]/g, '<->')
-    .replace(/[\u21D2]/g, '=>')
-    .replace(/[\u21D0]/g, '<=')
+  const clean = text
+    // Arrows (all directions, thick, double, hollow, geometric triangles)
+    .replace(/[\u2190\u21E6\u2B05\u25C0\u25C4]/g, '<-')
+    .replace(/[\u2192\u21E8\u2794\u279C\u279D\u279E\u27A1\u25B6\u25BA]/g, '->')
+    .replace(/[\u2191\u21E7\u2B06\u25B2]/g, '^')
+    .replace(/[\u2193\u21E9\u2B07\u25BC]/g, 'v')
+    .replace(/[\u2194\u21AD\u21C4]/g, '<->')
+    .replace(/[\u21D0\u21D1\u21D2\u21D3\u21D4]/g, '=>')
     // Quotes & Apostrophes
     .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
     .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
     // Dashes & Hyphens
-    .replace(/[\u2013\u2014\u2015\u2212]/g, '-')
-    // Bullets
-    .replace(/[\u2022\u2023\u2043\u25E6\u2219\u25AA\u25AB\u25CF\u25CB]/g, '* ')
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+    // Bullets & List markers
+    .replace(/[\u2022\u2023\u2043\u25E6\u2219\u25AA\u25AB\u25CF\u25CB\u25C6\u25C7\u2713\u2714\u2611]/g, '* ')
     // Ellipsis
-    .replace(/\u2026/g, '...')
+    .replace(/[\u2026\u22EF]/g, '...')
     // Spaces & non-printable
     .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
     .replace(/[\u200B-\u200D\uFEFF]/g, '')
@@ -82,12 +89,28 @@ export function sanitizeForPdfText(text: string): string {
     .replace(/[\u00D7]/g, 'x')
     .replace(/[\u00F7]/g, '/')
     .replace(/[\u00B1]/g, '+/-')
+    .replace(/[\u2248\u2245]/g, '~')
     // Currency
-    .replace(/₹/g, 'Rs.')
-    .replace(/€/g, 'EUR')
-    .replace(/£/g, 'GBP')
-    // Safe standard printable range: keep safe ASCII (0x20 to 0x7E) plus common Latin-1 (0xA0 to 0xFF)
-    .replace(/[^\x20-\x7E\xA0-\xFF\r\n\t]/g, '');
+    .replace(/[\u20B9]/g, 'Rs.')
+    .replace(/[\u20AC]/g, 'EUR')
+    .replace(/[\u00A3]/g, 'GBP')
+    .replace(/[\u00A5]/g, 'JPY');
+
+  if (font && typeof font.encodeText === 'function') {
+    let result = '';
+    for (const char of clean) {
+      try {
+        font.encodeText(char);
+        result += char;
+      } catch {
+        result += '?';
+      }
+    }
+    return result;
+  }
+
+  // Safe standard printable range: keep safe ASCII (0x20 to 0x7E) plus common Latin-1 (0xA0 to 0xFF)
+  return clean.replace(/[^\x20-\x7E\xA0-\xFF\r\n\t]/g, ' ');
 }
 
 /**
@@ -96,16 +119,20 @@ export function sanitizeForPdfText(text: string): string {
 export async function mergePdfs(pdfBuffers: ArrayBuffer[]): Promise<Uint8Array> {
   const mergedPdf = await PDFDocument.create();
 
-  for (const buffer of pdfBuffers) {
+  for (let i = 0; i < pdfBuffers.length; i++) {
+    const buffer = pdfBuffers[i];
     if (!buffer || buffer.byteLength === 0) {
-      throw new Error('One of the PDF files could not be read or is empty.');
+      throw new Error(`PDF file #${i + 1} could not be read or is empty.`);
     }
-    const srcDoc = await PDFDocument.load(buffer.slice(0), { ignoreEncryption: true });
+    const srcDoc = await PDFDocument.load(buffer.slice(0), {
+      ignoreEncryption: true,
+      throwOnInvalidObject: false,
+    });
     const copiedPages = await mergedPdf.copyPages(srcDoc, srcDoc.getPageIndices());
     copiedPages.forEach((page) => mergedPdf.addPage(page));
   }
 
-  return await mergedPdf.save();
+  return await mergedPdf.save({ useObjectStreams: false });
 }
 
 /**
@@ -728,36 +755,75 @@ export async function convertWordToPdf(file: File): Promise<Uint8Array> {
   let lineCount = 0;
 
   // Title header
-  currentPage.drawText(sanitizeForPdfText(file.name.replace(/\.docx?$/i, '')), {
-    x: margin,
-    y: pageHeight - margin,
-    size: 16,
-    font: boldFont,
-    color: rgb(0.1, 0.1, 0.1),
-  });
+  const title = sanitizeForPdfText(file.name.replace(/\.docx?$/i, ''), boldFont);
+  try {
+    currentPage.drawText(title, {
+      x: margin,
+      y: pageHeight - margin,
+      size: 16,
+      font: boldFont,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+  } catch {
+    currentPage.drawText(title.replace(/[^\x20-\x7E]/g, ' '), {
+      x: margin,
+      y: pageHeight - margin,
+      size: 16,
+      font: boldFont,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
-    const lineText = sanitizeForPdfText(rawLine).slice(0, 95);
-    if (!lineText.trim()) continue;
+    const sanitizedLine = sanitizeForPdfText(rawLine, font);
+    if (!sanitizedLine.trim()) continue;
 
-    if (lineCount >= maxLinesPerPage) {
-      currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
-      lineCount = 0;
+    // Word wrap long lines into ~90 character chunks
+    const words = sanitizedLine.split(' ');
+    let currentChunk = '';
+    const wrappedChunks: string[] = [];
+
+    for (const word of words) {
+      if ((currentChunk + ' ' + word).trim().length > 90) {
+        if (currentChunk) wrappedChunks.push(currentChunk.trim());
+        currentChunk = word;
+      } else {
+        currentChunk = (currentChunk + ' ' + word).trim();
+      }
     }
+    if (currentChunk) wrappedChunks.push(currentChunk.trim());
 
-    const y = pageHeight - margin - 40 - lineCount * lineHeight;
-    currentPage.drawText(lineText, {
-      x: margin,
-      y,
-      size: fontSize,
-      font,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-    lineCount++;
+    for (const chunk of wrappedChunks) {
+      if (lineCount >= maxLinesPerPage) {
+        currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
+        lineCount = 0;
+      }
+
+      const y = pageHeight - margin - 40 - lineCount * lineHeight;
+      try {
+        currentPage.drawText(chunk, {
+          x: margin,
+          y,
+          size: fontSize,
+          font,
+          color: rgb(0.2, 0.2, 0.2),
+        });
+      } catch {
+        // Guaranteed fallback with standard ASCII only
+        currentPage.drawText(chunk.replace(/[^\x20-\x7E]/g, ' '), {
+          x: margin,
+          y,
+          size: fontSize,
+          font,
+          color: rgb(0.2, 0.2, 0.2),
+        });
+      }
+      lineCount++;
+    }
   }
 
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: false });
 }
 
 /**
