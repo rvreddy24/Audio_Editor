@@ -218,13 +218,12 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
 
           {/* Column 4: Platform */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-500 to-rose-500 flex items-center justify-center text-white">
-                <Sparkles className="w-4 h-4 fill-current" />
-              </div>
-              <span className="font-extrabold text-sm text-white tracking-tight">
-                rajvarshith.com
-              </span>
+            <div className="mb-3">
+              <img
+                src="/rv-banner.jpg"
+                alt="rajvarshith.com"
+                className="h-10 w-auto rounded-lg object-contain border border-slate-800 shadow-xs"
+              />
             </div>
             <p className="text-slate-400 text-xs leading-relaxed mb-4">
               A private, fast, and 100% free web workstation for audio and PDF processing. Powered by native Web Audio and FFmpeg engines.
@@ -237,7 +236,10 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
 
         {/* Bottom copyright */}
         <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <div>© {new Date().getFullYear()} rajvarshith.com. All rights reserved.</div>
+          <div className="flex items-center gap-2">
+            <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain" />
+            <span>© {new Date().getFullYear()} rajvarshith.com. All rights reserved.</span>
+          </div>
           <div className="flex items-center gap-6">
             <span>Client-side Private Processing</span>
             <span>No File Logging</span>

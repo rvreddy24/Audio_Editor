@@ -32,14 +32,18 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
               onClick={onNavigateHome}
               className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-rose-500 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
-                <Sparkles className="w-5 h-5 fill-current" />
+              <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center shadow-xs border border-slate-800 p-1 group-hover:scale-105 group-hover:border-orange-500/50 transition-all">
+                <img
+                  src="/rv-logo.png"
+                  alt="rajvarshith.com logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <div>
-                <span className="font-extrabold text-base tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
-                  rajvarshith<span className="text-indigo-600">.com</span>
+              <div className="flex items-baseline">
+                <span className="font-black text-base tracking-tight text-slate-900 group-hover:text-orange-500 transition-colors">
+                  rajvarshith<span className="text-orange-500">.com</span>
                 </span>
-                <span className="hidden sm:inline-block ml-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                <span className="hidden sm:inline-block ml-2 text-[10px] font-extrabold uppercase tracking-wider text-orange-600 bg-orange-50 border border-orange-200/80 px-1.5 py-0.5 rounded-md">
                   Studio
                 </span>
               </div>

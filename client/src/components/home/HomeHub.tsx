@@ -23,16 +23,27 @@ interface HomeHubProps {
 
 export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Official Brand Banner */}
+      <div className="flex justify-center mb-6 sm:mb-8">
+        <div className="relative group overflow-hidden rounded-2xl bg-black border border-slate-800/80 shadow-md hover:shadow-xl hover:border-orange-500/40 transition-all duration-300 max-w-lg w-full">
+          <img
+            src="/rv-banner.jpg"
+            alt="rajvarshith.com Official Studio Banner"
+            className="w-full h-auto object-cover transform group-hover:scale-[1.01] transition-transform duration-300"
+          />
+        </div>
+      </div>
+
       {/* Hero Header */}
       <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-semibold mb-3 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 fill-current" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200/80 text-orange-800 text-xs font-semibold mb-3 shadow-2xs">
+          <img src="/rv-logo.png" alt="logo" className="w-3.5 h-3.5 object-contain" />
           <span>Professional Web Workstation Suite</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
           Everything You Need to Edit <br className="hidden sm:inline" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-indigo-600 to-violet-600">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-indigo-600">
             PDFs, Office & Audio Files
           </span>
         </h1>

@@ -28,21 +28,21 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
         {/* Brand Logo & Name */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
-            <Radio className="w-5 h-5 stroke-[2.2]" />
+          <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center p-1.5 shadow-sm border border-slate-800">
+            <img src="/rv-logo.png" alt="rajvarshith.com logo" className="w-full h-full object-contain" />
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold tracking-tight text-slate-900 m-0 p-0 font-sans">
-                SoundCraft
+              <h1 className="text-base font-black tracking-tight text-slate-900 m-0 p-0 font-sans">
+                Audio Studio
               </h1>
-              <span className="bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-[11px] font-semibold px-2 py-0.5 rounded-md">
-                Studio
+              <span className="bg-orange-50 text-orange-700 border border-orange-200/60 text-[11px] font-bold px-2 py-0.5 rounded-md">
+                FFmpeg 8.1
               </span>
             </div>
             <p className="text-xs text-slate-500 m-0 p-0 font-normal">
-              Professional Audio Editor & Converter
+              rajvarshith.com Pro Audio Suite
             </p>
           </div>
         </div>
