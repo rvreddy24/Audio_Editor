@@ -54,6 +54,42 @@ export async function parsePdfFile(file: File): Promise<PdfFileInfo> {
   };
 }
 
+export function sanitizeForPdfText(text: string): string {
+  if (!text) return '';
+  return text
+    // Arrows
+    .replace(/[\u2192\u2794\u279C\u279D]/g, '->')
+    .replace(/[\u2190]/g, '<-')
+    .replace(/[\u2194]/g, '<->')
+    .replace(/[\u21D2]/g, '=>')
+    .replace(/[\u21D0]/g, '<=')
+    // Quotes & Apostrophes
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+    // Dashes & Hyphens
+    .replace(/[\u2013\u2014\u2015\u2212]/g, '-')
+    // Bullets
+    .replace(/[\u2022\u2023\u2043\u25E6\u2219\u25AA\u25AB\u25CF\u25CB]/g, '* ')
+    // Ellipsis
+    .replace(/\u2026/g, '...')
+    // Spaces & non-printable
+    .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    // Math symbols
+    .replace(/[\u2265]/g, '>=')
+    .replace(/[\u2264]/g, '<=')
+    .replace(/[\u2260]/g, '!=')
+    .replace(/[\u00D7]/g, 'x')
+    .replace(/[\u00F7]/g, '/')
+    .replace(/[\u00B1]/g, '+/-')
+    // Currency
+    .replace(/₹/g, 'Rs.')
+    .replace(/€/g, 'EUR')
+    .replace(/£/g, 'GBP')
+    // Safe standard printable range: keep safe ASCII (0x20 to 0x7E) plus common Latin-1 (0xA0 to 0xFF)
+    .replace(/[^\x20-\x7E\xA0-\xFF\r\n\t]/g, '');
+}
+
 /**
  * 1. MERGE PDF FILES
  */
@@ -315,7 +351,7 @@ export async function addWatermarkToPdf(
       y = 60;
     }
 
-    page.drawText(options.text, {
+    page.drawText(sanitizeForPdfText(options.text), {
       x,
       y,
       size: options.fontSize,
@@ -375,7 +411,7 @@ export async function addPageNumbersToPdf(
       y = height - 40;
     }
 
-    page.drawText(numText, {
+    page.drawText(sanitizeForPdfText(numText), {
       x,
       y,
       size: fontSize,
@@ -535,7 +571,7 @@ export async function convertWordToPdf(file: File): Promise<Uint8Array> {
   let lineCount = 0;
 
   // Title header
-  currentPage.drawText(file.name.replace(/\.docx?$/i, ''), {
+  currentPage.drawText(sanitizeForPdfText(file.name.replace(/\.docx?$/i, '')), {
     x: margin,
     y: pageHeight - margin,
     size: 16,
@@ -544,13 +580,16 @@ export async function convertWordToPdf(file: File): Promise<Uint8Array> {
   });
 
   for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const lineText = sanitizeForPdfText(rawLine).slice(0, 95);
+    if (!lineText.trim()) continue;
+
     if (lineCount >= maxLinesPerPage) {
       currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
       lineCount = 0;
     }
 
     const y = pageHeight - margin - 40 - lineCount * lineHeight;
-    const lineText = lines[i].slice(0, 95); // truncate line safely for page width
     currentPage.drawText(lineText, {
       x: margin,
       y,
@@ -642,7 +681,7 @@ export async function editPdf(
   for (const a of annotations) {
     if (a.pageIndex >= 0 && a.pageIndex < pdfDoc.getPageCount()) {
       const page = pdfDoc.getPage(a.pageIndex);
-      page.drawText(a.text, {
+      page.drawText(sanitizeForPdfText(a.text), {
         x: a.x,
         y: a.y,
         size: a.size || 14,
@@ -676,7 +715,7 @@ export async function htmlToPdf(htmlOrText: string, title = 'Document'): Promise
   let page = pdfDoc.addPage([pageWidth, pageHeight]);
   let lineCount = 0;
 
-  page.drawText(title, {
+  page.drawText(sanitizeForPdfText(title), {
     x: margin,
     y: pageHeight - margin,
     size: 16,
@@ -685,13 +724,14 @@ export async function htmlToPdf(htmlOrText: string, title = 'Document'): Promise
   });
 
   for (const line of lines) {
-    if (!line.trim()) continue;
+    const lineText = sanitizeForPdfText(line).slice(0, 95);
+    if (!lineText.trim()) continue;
     if (lineCount >= maxLines) {
       page = pdfDoc.addPage([pageWidth, pageHeight]);
       lineCount = 0;
     }
     const y = pageHeight - margin - 40 - lineCount * lineHeight;
-    page.drawText(line.slice(0, 95), {
+    page.drawText(lineText, {
       x: margin,
       y,
       size: 11,

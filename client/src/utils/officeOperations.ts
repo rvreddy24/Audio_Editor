@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import PptxGenJS from 'pptxgenjs';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { extractPdfTextPages, renderAllPagesToImages } from './pdfRenderer';
+import { sanitizeForPdfText } from './pdfOperations';
 
 /**
  * 1. EXCEL (.xlsx, .xls, .csv) TO PDF
@@ -29,7 +30,7 @@ export async function convertExcelToPdf(file: File): Promise<Uint8Array> {
   let rowCountOnPage = 0;
 
   // Header Title
-  currentPage.drawText(`${file.name} - ${sheetName}`, {
+  currentPage.drawText(sanitizeForPdfText(`${file.name} - ${sheetName}`), {
     x: margin,
     y: pageHeight - margin,
     size: 15,
@@ -38,8 +39,9 @@ export async function convertExcelToPdf(file: File): Promise<Uint8Array> {
   });
 
   const colWidth = Math.min(130, Math.floor((pageWidth - margin * 2) / Math.max(1, (rows[0] || []).length || 5)));
+  const totalRowsToRender = Math.min(500, rows.length);
 
-  for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+  for (let rIdx = 0; rIdx < totalRowsToRender; rIdx++) {
     const row = rows[rIdx] || [];
     if (rowCountOnPage >= maxRowsPerPage) {
       currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
@@ -61,7 +63,8 @@ export async function convertExcelToPdf(file: File): Promise<Uint8Array> {
     }
 
     for (let cIdx = 0; cIdx < row.length; cIdx++) {
-      const cellText = String(row[cIdx] !== undefined && row[cIdx] !== null ? row[cIdx] : '').slice(0, 22);
+      const rawVal = row[cIdx] !== undefined && row[cIdx] !== null ? String(row[cIdx]) : '';
+      const cellText = sanitizeForPdfText(rawVal).slice(0, 22);
       const cellX = margin + cIdx * colWidth;
 
       if (cellX + colWidth <= pageWidth - margin) {
@@ -154,7 +157,7 @@ export async function convertPptxToPdf(file: File): Promise<Uint8Array> {
   const page = pdfDoc.addPage([slideWidth, slideHeight]);
 
   // Clean presentation title slide
-  page.drawText(file.name.replace(/\.pptx?$/i, ''), {
+  page.drawText(sanitizeForPdfText(file.name.replace(/\.pptx?$/i, '')), {
     x: 100,
     y: 300,
     size: 28,
