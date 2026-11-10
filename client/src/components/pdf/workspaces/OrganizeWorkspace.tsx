@@ -14,6 +14,7 @@ import {
   parsePdfFile,
   organizePdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
   PageConfig,
 } from '../../../utils/pdfOperations';
@@ -100,11 +101,12 @@ export const OrganizeWorkspace: React.FC<OrganizeWorkspaceProps> = ({ onBack }) 
     if (!file || pages.length === 0) return;
     setIsProcessing(true);
     try {
+      const buf = await getBufferFromFile(file);
       const configs: PageConfig[] = pages.map((p) => ({
         originalIndex: p.originalIndex,
         rotation: p.rotation,
       }));
-      const resultBytes = await organizePdf(file.data, configs);
+      const resultBytes = await organizePdf(buf, configs);
       downloadBytes(resultBytes, `organized_${file.name}`);
       setIsDone(true);
     } catch (err: any) {

@@ -8,7 +8,7 @@ import {
   Check,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
-import { parsePdfFile, PdfFileInfo, extractPdfToCsv, downloadBlob } from '../../../utils/pdfOperations';
+import { parsePdfFile, PdfFileInfo, extractPdfToCsv, downloadBlob, getBufferFromFile } from '../../../utils/pdfOperations';
 
 interface PdfToExcelWorkspaceProps {
   onBack: () => void;
@@ -26,7 +26,8 @@ export const PdfToExcelWorkspace: React.FC<PdfToExcelWorkspaceProps> = ({ onBack
       setFile(parsed);
       setIsProcessing(true);
       try {
-        const csv = await extractPdfToCsv(parsed.data);
+        const buf = await getBufferFromFile(parsed);
+        const csv = await extractPdfToCsv(buf);
         setCsvContent(csv);
       } finally {
         setIsProcessing(false);

@@ -12,6 +12,7 @@ import {
   parsePdfFile,
   addPageNumbersToPdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -40,7 +41,8 @@ export const PageNumbersWorkspace: React.FC<PageNumbersWorkspaceProps> = ({ onBa
     if (!file) return;
     setIsProcessing(true);
     try {
-      const resultBytes = await addPageNumbersToPdf(file.data, {
+      const buf = await getBufferFromFile(file);
+      const resultBytes = await addPageNumbersToPdf(buf, {
         format,
         position,
       });

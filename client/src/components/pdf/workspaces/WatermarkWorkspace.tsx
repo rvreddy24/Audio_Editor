@@ -12,6 +12,7 @@ import {
   parsePdfFile,
   addWatermarkToPdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -43,7 +44,8 @@ export const WatermarkWorkspace: React.FC<WatermarkWorkspaceProps> = ({ onBack }
     if (!file || !text.trim()) return;
     setIsProcessing(true);
     try {
-      const resultBytes = await addWatermarkToPdf(file.data, {
+      const buf = await getBufferFromFile(file);
+      const resultBytes = await addWatermarkToPdf(buf, {
         text,
         opacity,
         fontSize,

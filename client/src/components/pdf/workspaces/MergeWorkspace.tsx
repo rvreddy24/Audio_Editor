@@ -11,7 +11,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
-import { parsePdfFile, mergePdfs, downloadBytes, PdfFileInfo } from '../../../utils/pdfOperations';
+import { parsePdfFile, mergePdfs, downloadBytes, getBufferFromFile, PdfFileInfo } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
 
 interface MergeWorkspaceProps {
@@ -46,13 +46,13 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
     if (files.length < 2) return;
     setIsProcessing(true);
     try {
-      const buffers = files.map((f) => f.data);
+      const buffers = await Promise.all(files.map((f) => getBufferFromFile(f)));
       const result = await mergePdfs(buffers);
       setMergedBytes(result);
       downloadBytes(result, 'merged_document.pdf');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Merge error:', err);
-      alert('Failed to merge PDFs. Please try again.');
+      alert(`Failed to merge PDFs: ${err?.message || 'Please try again.'}`);
     } finally {
       setIsProcessing(false);
     }

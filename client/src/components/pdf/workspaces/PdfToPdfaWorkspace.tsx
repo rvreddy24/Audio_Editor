@@ -8,7 +8,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
-import { parsePdfFile, convertToPdfA, downloadBytes, PdfFileInfo } from '../../../utils/pdfOperations';
+import { parsePdfFile, convertToPdfA, downloadBytes, getBufferFromFile, PdfFileInfo } from '../../../utils/pdfOperations';
 
 interface PdfToPdfaWorkspaceProps {
   onBack: () => void;
@@ -30,7 +30,8 @@ export const PdfToPdfaWorkspace: React.FC<PdfToPdfaWorkspaceProps> = ({ onBack }
     if (!file) return;
     setIsProcessing(true);
     try {
-      const pdfaBytes = await convertToPdfA(file.data);
+      const buf = await getBufferFromFile(file);
+      const pdfaBytes = await convertToPdfA(buf);
       downloadBytes(pdfaBytes, `pdfa_${file.name}`);
       setIsDone(true);
     } catch (err: any) {

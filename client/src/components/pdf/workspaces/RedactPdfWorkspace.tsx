@@ -14,6 +14,7 @@ import {
   parsePdfFile,
   redactPdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
   RedactionBox,
 } from '../../../utils/pdfOperations';
@@ -53,7 +54,8 @@ export const RedactPdfWorkspace: React.FC<RedactPdfWorkspaceProps> = ({ onBack }
     if (!file || redactions.length === 0) return;
     setIsProcessing(true);
     try {
-      const resultBytes = await redactPdf(file.data, redactions);
+      const buf = await getBufferFromFile(file);
+      const resultBytes = await redactPdf(buf, redactions);
       downloadBytes(resultBytes, `redacted_${file.name}`);
       setIsDone(true);
     } catch (err: any) {

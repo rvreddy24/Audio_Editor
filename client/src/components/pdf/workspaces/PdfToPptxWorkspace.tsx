@@ -8,7 +8,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
-import { parsePdfFile, PdfFileInfo, downloadBlob } from '../../../utils/pdfOperations';
+import { parsePdfFile, PdfFileInfo, downloadBlob, getBufferFromFile } from '../../../utils/pdfOperations';
 import { convertPdfToPptx } from '../../../utils/officeOperations';
 import { formatFileSize } from '../../../utils/formatters';
 
@@ -32,7 +32,8 @@ export const PdfToPptxWorkspace: React.FC<PdfToPptxWorkspaceProps> = ({ onBack }
     if (!file) return;
     setIsProcessing(true);
     try {
-      const pptxBlob = await convertPdfToPptx(file.data, file.name);
+      const buf = await getBufferFromFile(file);
+      const pptxBlob = await convertPdfToPptx(buf, file.name);
       downloadBlob(pptxBlob, `${file.name.replace(/\.pdf$/i, '')}.pptx`);
       setIsDone(true);
     } catch (err: any) {

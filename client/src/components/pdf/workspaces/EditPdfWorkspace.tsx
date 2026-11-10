@@ -14,6 +14,7 @@ import {
   parsePdfFile,
   editPdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
   AnnotationItem,
 } from '../../../utils/pdfOperations';
@@ -62,7 +63,8 @@ export const EditPdfWorkspace: React.FC<EditPdfWorkspaceProps> = ({ onBack }) =>
     if (!file || annotations.length === 0) return;
     setIsProcessing(true);
     try {
-      const resultBytes = await editPdf(file.data, annotations);
+      const buf = await getBufferFromFile(file);
+      const resultBytes = await editPdf(buf, annotations);
       downloadBytes(resultBytes, `edited_${file.name}`);
       setIsDone(true);
     } catch (err: any) {

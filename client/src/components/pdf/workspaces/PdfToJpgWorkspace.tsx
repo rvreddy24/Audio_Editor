@@ -12,6 +12,7 @@ import {
   convertPdfToImagesZip,
   downloadBlob,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { renderAllPagesToImages } from '../../../utils/pdfRenderer';
@@ -39,7 +40,8 @@ export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) 
     setIsExtracting(true);
 
     try {
-      const extracted = await renderAllPagesToImages(parsed.data, 2.0);
+      const buf = await getBufferFromFile(parsed);
+      const extracted = await renderAllPagesToImages(buf, 2.0);
       setImages(extracted);
     } catch (err: any) {
       alert('Failed to render PDF pages: ' + err.message);
@@ -52,7 +54,8 @@ export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) 
     if (!file) return;
     setIsZipping(true);
     try {
-      const zipBlob = await convertPdfToImagesZip(file.data, file.name);
+      const buf = await getBufferFromFile(file);
+      const zipBlob = await convertPdfToImagesZip(buf, file.name);
       downloadBlob(zipBlob, `${file.name.replace(/\.pdf$/i, '')}_images.zip`);
     } catch (err: any) {
       alert('Failed to generate ZIP: ' + err.message);

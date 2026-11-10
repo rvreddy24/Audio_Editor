@@ -8,7 +8,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
-import { parsePdfFile, repairPdf, downloadBytes, PdfFileInfo } from '../../../utils/pdfOperations';
+import { parsePdfFile, repairPdf, downloadBytes, getBufferFromFile, PdfFileInfo } from '../../../utils/pdfOperations';
 
 interface RepairPdfWorkspaceProps {
   onBack: () => void;
@@ -30,7 +30,8 @@ export const RepairPdfWorkspace: React.FC<RepairPdfWorkspaceProps> = ({ onBack }
     if (!file) return;
     setIsProcessing(true);
     try {
-      const repaired = await repairPdf(file.data);
+      const buf = await getBufferFromFile(file);
+      const repaired = await repairPdf(buf);
       downloadBytes(repaired, `repaired_${file.name}`);
       setIsDone(true);
     } catch (err: any) {

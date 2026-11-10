@@ -13,6 +13,7 @@ import {
   parsePdfFile,
   rotateAllPages,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -39,7 +40,8 @@ export const RotateWorkspace: React.FC<RotateWorkspaceProps> = ({ onBack }) => {
     if (!file) return;
     setIsProcessing(true);
     try {
-      const resultBytes = await rotateAllPages(file.data, rotationAngle);
+      const buf = await getBufferFromFile(file);
+      const resultBytes = await rotateAllPages(buf, rotationAngle);
       downloadBytes(resultBytes, `rotated_${file.name}`);
       setIsDone(true);
     } catch (err: any) {

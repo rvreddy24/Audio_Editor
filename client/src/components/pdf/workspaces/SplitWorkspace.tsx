@@ -14,6 +14,7 @@ import {
   splitPdfAllPagesToZip,
   downloadBytes,
   downloadBlob,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -41,11 +42,12 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
     if (!file) return;
     setIsProcessing(true);
     try {
+      const buf = await getBufferFromFile(file);
       if (mode === 'ranges') {
-        const resultBytes = await splitPdfByRanges(file.data, rangeInput);
+        const resultBytes = await splitPdfByRanges(buf, rangeInput);
         downloadBytes(resultBytes, `split_${file.name}`);
       } else {
-        const zipBlob = await splitPdfAllPagesToZip(file.data, file.name);
+        const zipBlob = await splitPdfAllPagesToZip(buf, file.name);
         downloadBlob(zipBlob, `split_all_${file.name.replace(/\.pdf$/i, '')}.zip`);
       }
       setIsDone(true);

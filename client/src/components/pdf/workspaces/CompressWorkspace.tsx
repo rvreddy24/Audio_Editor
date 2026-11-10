@@ -13,6 +13,7 @@ import {
   parsePdfFile,
   compressPdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -42,7 +43,8 @@ export const CompressWorkspace: React.FC<CompressWorkspaceProps> = ({ onBack }) 
     if (!file) return;
     setIsProcessing(true);
     try {
-      const res = await compressPdf(file.data, level);
+      const buf = await getBufferFromFile(file);
+      const res = await compressPdf(buf, level);
       setResult(res);
       downloadBytes(res.bytes, `compressed_${file.name}`);
     } catch (err: any) {

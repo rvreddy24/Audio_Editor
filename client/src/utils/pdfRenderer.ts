@@ -7,8 +7,10 @@ if (typeof window !== 'undefined') {
 }
 
 export async function getPdfDocument(data: ArrayBuffer) {
+  // CRITICAL: Always slice(0) so worker transferable object does not detach caller's ArrayBuffer
+  const bufferCopy = data.slice(0);
   const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(data),
+    data: new Uint8Array(bufferCopy),
     cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
     cMapPacked: true,
   });

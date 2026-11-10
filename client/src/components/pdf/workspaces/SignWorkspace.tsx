@@ -13,6 +13,7 @@ import {
   parsePdfFile,
   signPdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -85,7 +86,8 @@ export const SignWorkspace: React.FC<SignWorkspaceProps> = ({ onBack }) => {
     if (!file || !signatureDataUrl) return;
     setIsProcessing(true);
     try {
-      const resultBytes = await signPdf(file.data, signatureDataUrl, 0, {
+      const buf = await getBufferFromFile(file);
+      const resultBytes = await signPdf(buf, signatureDataUrl, 0, {
         x: 100,
         y: 100,
         width: 160,

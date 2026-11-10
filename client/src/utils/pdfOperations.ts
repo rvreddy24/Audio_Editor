@@ -14,16 +14,28 @@ export interface PdfFileInfo {
   data: ArrayBuffer;
 }
 
+export async function getBufferFromFile(fileInfo: PdfFileInfo): Promise<ArrayBuffer> {
+  if (fileInfo.data && fileInfo.data.byteLength > 0) {
+    return fileInfo.data.slice(0);
+  }
+  if (fileInfo.file) {
+    const fresh = await fileInfo.file.arrayBuffer();
+    fileInfo.data = fresh;
+    return fresh.slice(0);
+  }
+  throw new Error('PDF file buffer is empty or detached');
+}
+
 export async function parsePdfFile(file: File): Promise<PdfFileInfo> {
   const data = await file.arrayBuffer();
   let pageCount = 1;
   let previewUrl = '';
 
   try {
-    const pdfDoc = await PDFDocument.load(data, { ignoreEncryption: true });
+    const pdfDoc = await PDFDocument.load(data.slice(0), { ignoreEncryption: true });
     pageCount = pdfDoc.getPageCount();
     try {
-      previewUrl = await renderPdfPageToDataUrl(data, 1, 0.6);
+      previewUrl = await renderPdfPageToDataUrl(data.slice(0), 1, 0.6);
     } catch (e) {
       console.warn('Could not generate page thumbnail:', e);
     }
@@ -49,7 +61,10 @@ export async function mergePdfs(pdfBuffers: ArrayBuffer[]): Promise<Uint8Array> 
   const mergedPdf = await PDFDocument.create();
 
   for (const buffer of pdfBuffers) {
-    const srcDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+    if (!buffer || buffer.byteLength === 0) {
+      throw new Error('One of the PDF files could not be read or is empty.');
+    }
+    const srcDoc = await PDFDocument.load(buffer.slice(0), { ignoreEncryption: true });
     const copiedPages = await mergedPdf.copyPages(srcDoc, srcDoc.getPageIndices());
     copiedPages.forEach((page) => mergedPdf.addPage(page));
   }

@@ -12,6 +12,7 @@ import {
   parsePdfFile,
   cropPdf,
   downloadBytes,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -40,7 +41,8 @@ export const CropPdfWorkspace: React.FC<CropPdfWorkspaceProps> = ({ onBack }) =>
     if (!file) return;
     setIsProcessing(true);
     try {
-      const resultBytes = await cropPdf(file.data, { top, right, bottom, left });
+      const buf = await getBufferFromFile(file);
+      const resultBytes = await cropPdf(buf, { top, right, bottom, left });
       downloadBytes(resultBytes, `cropped_${file.name}`);
       setIsDone(true);
     } catch (err: any) {

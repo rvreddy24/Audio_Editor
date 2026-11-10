@@ -12,6 +12,7 @@ import {
   parsePdfFile,
   convertPdfToDocx,
   downloadBlob,
+  getBufferFromFile,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -36,7 +37,8 @@ export const PdfToWordWorkspace: React.FC<PdfToWordWorkspaceProps> = ({ onBack }
     if (!file) return;
     setIsProcessing(true);
     try {
-      const docxBlob = await convertPdfToDocx(file.data);
+      const buf = await getBufferFromFile(file);
+      const docxBlob = await convertPdfToDocx(buf);
       downloadBlob(docxBlob, `${file.name.replace(/\.pdf$/i, '')}.docx`);
       setIsDone(true);
     } catch (err: any) {

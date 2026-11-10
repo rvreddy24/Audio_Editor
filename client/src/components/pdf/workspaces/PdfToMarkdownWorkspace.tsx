@@ -9,7 +9,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
-import { parsePdfFile, PdfFileInfo, extractPdfToMarkdown, downloadBlob } from '../../../utils/pdfOperations';
+import { parsePdfFile, PdfFileInfo, extractPdfToMarkdown, downloadBlob, getBufferFromFile } from '../../../utils/pdfOperations';
 
 interface PdfToMarkdownWorkspaceProps {
   onBack: () => void;
@@ -27,7 +27,8 @@ export const PdfToMarkdownWorkspace: React.FC<PdfToMarkdownWorkspaceProps> = ({ 
       setFile(parsed);
       setIsProcessing(true);
       try {
-        const md = await extractPdfToMarkdown(parsed.data, parsed.name);
+        const buf = await getBufferFromFile(parsed);
+        const md = await extractPdfToMarkdown(buf, parsed.name);
         setMarkdown(md);
       } finally {
         setIsProcessing(false);

@@ -8,7 +8,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
-import { parsePdfFile, PdfFileInfo, downloadBlob } from '../../../utils/pdfOperations';
+import { parsePdfFile, PdfFileInfo, downloadBlob, getBufferFromFile } from '../../../utils/pdfOperations';
 import { convertPdfToExcelXlsx } from '../../../utils/officeOperations';
 import { formatFileSize } from '../../../utils/formatters';
 
@@ -32,7 +32,8 @@ export const PdfToExcelXlsxWorkspace: React.FC<PdfToExcelXlsxWorkspaceProps> = (
     if (!file) return;
     setIsProcessing(true);
     try {
-      const xlsxBlob = await convertPdfToExcelXlsx(file.data);
+      const buf = await getBufferFromFile(file);
+      const xlsxBlob = await convertPdfToExcelXlsx(buf);
       downloadBlob(xlsxBlob, `${file.name.replace(/\.pdf$/i, '')}.xlsx`);
       setIsDone(true);
     } catch (err: any) {
