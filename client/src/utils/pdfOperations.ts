@@ -1,6 +1,8 @@
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
 import JSZip from 'jszip';
-import { renderAllPagesToImages, renderPdfPageToDataUrl } from './pdfRenderer';
+import { Document as DocxDocument, Paragraph, TextRun, Packer } from 'docx';
+import mammoth from 'mammoth';
+import { renderAllPagesToImages, renderPdfPageToDataUrl, extractPdfTextPages } from './pdfRenderer';
 
 export interface PdfFileInfo {
   id: string;
@@ -435,3 +437,311 @@ export function downloadBytes(bytes: Uint8Array, filename: string, mimeType = 'a
   const blob = new Blob([bytes as unknown as BlobPart], { type: mimeType });
   downloadBlob(blob, filename);
 }
+
+/**
+ * 12. PDF TO WORD (.docx)
+ */
+export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
+  const pagesText = await extractPdfTextPages(buffer);
+
+  const docChildren: Paragraph[] = [];
+  pagesText.forEach((pText, pIdx) => {
+    docChildren.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `--- Page ${pIdx + 1} ---`,
+            bold: true,
+            size: 20,
+            color: '666666',
+          }),
+        ],
+      })
+    );
+
+    const lines = pText.split('\n');
+    lines.forEach((line) => {
+      docChildren.push(
+        new Paragraph({
+          children: [new TextRun({ text: line, size: 22 })],
+        })
+      );
+    });
+  });
+
+  const doc = new DocxDocument({
+    sections: [
+      {
+        properties: {},
+        children: docChildren,
+      },
+    ],
+  });
+
+  return await Packer.toBlob(doc);
+}
+
+/**
+ * 13. WORD (.docx) TO PDF
+ */
+export async function convertWordToPdf(file: File): Promise<Uint8Array> {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  const rawText = result.value || 'Document has no extractable text.';
+
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  const lines = rawText.split('\n');
+  const fontSize = 11;
+  const lineHeight = 16;
+  const margin = 50;
+  const pageWidth = 595.28;
+  const pageHeight = 841.89;
+  const maxLinesPerPage = Math.floor((pageHeight - margin * 2 - 40) / lineHeight);
+
+  let currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
+  let lineCount = 0;
+
+  // Title header
+  currentPage.drawText(file.name.replace(/\.docx?$/i, ''), {
+    x: margin,
+    y: pageHeight - margin,
+    size: 16,
+    font: boldFont,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lineCount >= maxLinesPerPage) {
+      currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
+      lineCount = 0;
+    }
+
+    const y = pageHeight - margin - 40 - lineCount * lineHeight;
+    const lineText = lines[i].slice(0, 95); // truncate line safely for page width
+    currentPage.drawText(lineText, {
+      x: margin,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+    lineCount++;
+  }
+
+  return await pdfDoc.save();
+}
+
+/**
+ * 14. CROP PDF (Trim Page Margins)
+ */
+export async function cropPdf(
+  buffer: ArrayBuffer,
+  margins: { top: number; right: number; bottom: number; left: number }
+): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const pages = pdfDoc.getPages();
+
+  pages.forEach((page) => {
+    const { width, height } = page.getSize();
+    const newX = margins.left;
+    const newY = margins.bottom;
+    const newWidth = Math.max(50, width - margins.left - margins.right);
+    const newHeight = Math.max(50, height - margins.top - margins.bottom);
+
+    page.setCropBox(newX, newY, newWidth, newHeight);
+  });
+
+  return await pdfDoc.save();
+}
+
+/**
+ * 15. REDACT PDF (Black Out Sensitive Content)
+ */
+export interface RedactionBox {
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export async function redactPdf(
+  buffer: ArrayBuffer,
+  redactions: RedactionBox[]
+): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+
+  for (const r of redactions) {
+    if (r.pageIndex >= 0 && r.pageIndex < pdfDoc.getPageCount()) {
+      const page = pdfDoc.getPage(r.pageIndex);
+      page.drawRectangle({
+        x: r.x,
+        y: r.y,
+        width: r.width,
+        height: r.height,
+        color: rgb(0, 0, 0),
+      });
+    }
+  }
+
+  return await pdfDoc.save();
+}
+
+/**
+ * 16. EDIT PDF (Add Text Annotations & Shapes)
+ */
+export interface AnnotationItem {
+  pageIndex: number;
+  text: string;
+  x: number;
+  y: number;
+  size?: number;
+  color?: string; // hex
+}
+
+export async function editPdf(
+  buffer: ArrayBuffer,
+  annotations: AnnotationItem[]
+): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  for (const a of annotations) {
+    if (a.pageIndex >= 0 && a.pageIndex < pdfDoc.getPageCount()) {
+      const page = pdfDoc.getPage(a.pageIndex);
+      page.drawText(a.text, {
+        x: a.x,
+        y: a.y,
+        size: a.size || 14,
+        font,
+        color: rgb(0.1, 0.1, 0.8),
+      });
+    }
+  }
+
+  return await pdfDoc.save();
+}
+
+/**
+ * 17. HTML TO PDF
+ */
+export async function htmlToPdf(htmlOrText: string, title = 'Document'): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  // Clean html tags to plain formatted text
+  const cleanText = htmlOrText.replace(/<[^>]*>/g, '\n').replace(/\n\s*\n/g, '\n');
+  const lines = cleanText.split('\n');
+
+  const pageWidth = 595.28;
+  const pageHeight = 841.89;
+  const margin = 50;
+  const lineHeight = 16;
+  const maxLines = Math.floor((pageHeight - margin * 2 - 40) / lineHeight);
+
+  let page = pdfDoc.addPage([pageWidth, pageHeight]);
+  let lineCount = 0;
+
+  page.drawText(title, {
+    x: margin,
+    y: pageHeight - margin,
+    size: 16,
+    font: boldFont,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    if (lineCount >= maxLines) {
+      page = pdfDoc.addPage([pageWidth, pageHeight]);
+      lineCount = 0;
+    }
+    const y = pageHeight - margin - 40 - lineCount * lineHeight;
+    page.drawText(line.slice(0, 95), {
+      x: margin,
+      y,
+      size: 11,
+      font,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+    lineCount++;
+  }
+
+  return await pdfDoc.save();
+}
+
+/**
+ * 18. REPAIR PDF (Recover syntax & rebuild cross-reference table)
+ */
+export async function repairPdf(buffer: ArrayBuffer): Promise<Uint8Array> {
+  // Loading with ignoreEncryption and saving rebuilds the PDF object tree,
+  // fixing malformed xref tables and corrupted stream lengths
+  const pdfDoc = await PDFDocument.load(buffer, {
+    ignoreEncryption: true,
+    updateMetadata: true,
+  });
+  return await pdfDoc.save({ useObjectStreams: false });
+}
+
+/**
+ * 19. PDF TO PDF/A (Archival standard metadata)
+ */
+export async function convertToPdfA(buffer: ArrayBuffer): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  pdfDoc.setTitle('Archival PDF/A Document');
+  pdfDoc.setAuthor('rajvarshith.com Studio');
+  pdfDoc.setSubject('PDF/A Conformance Archival Copy');
+  pdfDoc.setProducer('rajvarshith.com PDF Engine');
+  pdfDoc.setCreator('PDF/A Archival Converter');
+  pdfDoc.setCreationDate(new Date());
+  pdfDoc.setModificationDate(new Date());
+
+  return await pdfDoc.save();
+}
+
+/**
+ * 20. PDF TO CSV / EXCEL
+ */
+export async function extractPdfToCsv(buffer: ArrayBuffer): Promise<string> {
+  const pagesText = await extractPdfTextPages(buffer);
+  const rows: string[] = [];
+
+  pagesText.forEach((pText) => {
+    const lines = pText.split('\n');
+    lines.forEach((line) => {
+      // Split on tabs or multiple spaces (table columns)
+      const cols = line.split(/\t|\s{2,}/).map((c) => `"${c.replace(/"/g, '""')}"`);
+      rows.push(cols.join(','));
+    });
+  });
+
+  return rows.join('\n');
+}
+
+/**
+ * 21. PDF TO MARKDOWN
+ */
+export async function extractPdfToMarkdown(buffer: ArrayBuffer, title: string): Promise<string> {
+  const pagesText = await extractPdfTextPages(buffer);
+  const mdSections: string[] = [`# ${title.replace(/\.pdf$/i, '')}\n`];
+
+  pagesText.forEach((pText, idx) => {
+    mdSections.push(`## Page ${idx + 1}\n`);
+    const lines = pText.split('\n');
+    lines.forEach((line) => {
+      if (line.length < 50 && line === line.toUpperCase() && line.trim().length > 3) {
+        mdSections.push(`### ${line}\n`);
+      } else {
+        mdSections.push(`${line}\n`);
+      }
+    });
+    mdSections.push('\n---\n');
+  });
+
+  return mdSections.join('\n');
+}
+

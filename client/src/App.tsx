@@ -48,6 +48,19 @@ import { PageNumbersWorkspace } from './components/pdf/workspaces/PageNumbersWor
 import { ProtectWorkspace } from './components/pdf/workspaces/ProtectWorkspace';
 import { UnlockWorkspace } from './components/pdf/workspaces/UnlockWorkspace';
 import { SignWorkspace } from './components/pdf/workspaces/SignWorkspace';
+import { PdfToWordWorkspace } from './components/pdf/workspaces/PdfToWordWorkspace';
+import { WordToPdfWorkspace } from './components/pdf/workspaces/WordToPdfWorkspace';
+import { CropPdfWorkspace } from './components/pdf/workspaces/CropPdfWorkspace';
+import { RedactPdfWorkspace } from './components/pdf/workspaces/RedactPdfWorkspace';
+import { ComparePdfWorkspace } from './components/pdf/workspaces/ComparePdfWorkspace';
+import { HtmlToPdfWorkspace } from './components/pdf/workspaces/HtmlToPdfWorkspace';
+import { ScanPdfWorkspace } from './components/pdf/workspaces/ScanPdfWorkspace';
+import { OcrPdfWorkspace } from './components/pdf/workspaces/OcrPdfWorkspace';
+import { PdfToMarkdownWorkspace } from './components/pdf/workspaces/PdfToMarkdownWorkspace';
+import { PdfToExcelWorkspace } from './components/pdf/workspaces/PdfToExcelWorkspace';
+import { RepairPdfWorkspace } from './components/pdf/workspaces/RepairPdfWorkspace';
+import { PdfToPdfaWorkspace } from './components/pdf/workspaces/PdfToPdfaWorkspace';
+import { EditPdfWorkspace } from './components/pdf/workspaces/EditPdfWorkspace';
 
 import { uploadFile, checkHealth } from './api';
 import { LoadedFile, ProcessingResult } from './types';
@@ -267,6 +280,58 @@ export function App() {
 
           {activePdfTool === 'sign' && (
             <SignWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pdf-to-word' && (
+            <PdfToWordWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'word-to-pdf' && (
+            <WordToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'crop' && (
+            <CropPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'redact' && (
+            <RedactPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'compare' && (
+            <ComparePdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'html-to-pdf' && (
+            <HtmlToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'scan-pdf' && (
+            <ScanPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'ocr-pdf' && (
+            <OcrPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pdf-to-markdown' && (
+            <PdfToMarkdownWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pdf-to-excel' && (
+            <PdfToExcelWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'repair-pdf' && (
+            <RepairPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pdf-to-pdfa' && (
+            <PdfToPdfaWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'edit-pdf' && (
+            <EditPdfWorkspace onBack={() => setActivePdfTool('home')} />
           )}
         </main>
       )}

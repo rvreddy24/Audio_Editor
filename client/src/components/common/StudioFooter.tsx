@@ -80,6 +80,54 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             <ul className="space-y-2">
               <li>
                 <button
+                  onClick={() => onSelectPdfTool('pdf-to-word')}
+                  className="hover:text-white transition-colors"
+                >
+                  PDF to Word
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectPdfTool('word-to-pdf')}
+                  className="hover:text-white transition-colors"
+                >
+                  Word to PDF
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectPdfTool('edit-pdf')}
+                  className="hover:text-white transition-colors"
+                >
+                  Edit PDF
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectPdfTool('redact')}
+                  className="hover:text-white transition-colors"
+                >
+                  Redact PDF
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectPdfTool('ocr-pdf')}
+                  className="hover:text-white transition-colors"
+                >
+                  OCR Text Recognition
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectPdfTool('compare')}
+                  className="hover:text-white transition-colors"
+                >
+                  Compare PDF
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => onSelectPdfTool('rotate')}
                   className="hover:text-white transition-colors"
                 >

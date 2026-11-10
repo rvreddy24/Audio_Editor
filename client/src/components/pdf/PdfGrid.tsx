@@ -16,6 +16,19 @@ import {
   Search,
   Sparkles,
   ArrowRight,
+  FileText,
+  FileType,
+  Globe,
+  Camera,
+  Sheet,
+  FileCode,
+  Archive,
+  Pencil,
+  ShieldAlert,
+  SplitSquareVertical,
+  ScanText,
+  Wrench,
+  Crop,
 } from 'lucide-react';
 import { PDF_TOOLS, PdfToolKey, ToolMeta } from './types';
 
@@ -37,6 +50,19 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   Unlock,
   PenTool,
   Music,
+  FileText,
+  FileType,
+  Globe,
+  Camera,
+  Sheet,
+  FileCode,
+  Archive,
+  Pencil,
+  ShieldAlert,
+  SplitSquareVertical,
+  ScanText,
+  Wrench,
+  Crop,
 };
 
 export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
@@ -45,10 +71,11 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
 
   const categories = [
     { key: 'all', label: 'All Tools' },
-    { key: 'organize', label: 'Organize PDF' },
+    { key: 'organize', label: 'Organize' },
     { key: 'optimize', label: 'Optimize' },
     { key: 'convert', label: 'Convert' },
-    { key: 'security', label: 'Security & Sign' },
+    { key: 'edit', label: 'Edit & Review' },
+    { key: 'security', label: 'Security' },
     { key: 'audio', label: 'Audio Tools' },
   ];
 
@@ -69,7 +96,7 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search any tool..."
+            placeholder="Search any PDF tool..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all shadow-2xs"
@@ -122,7 +149,7 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#e5322d] transition-colors flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-600 transition-colors flex items-center justify-between">
                   {tool.title}
                 </h3>
 
@@ -133,7 +160,7 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
               </div>
 
               {/* Bottom Action Hint */}
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center text-xs font-semibold text-slate-400 group-hover:text-[#e5322d] transition-colors">
+              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center text-xs font-semibold text-slate-400 group-hover:text-red-600 transition-colors">
                 <span>Open tool</span>
                 <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
               </div>

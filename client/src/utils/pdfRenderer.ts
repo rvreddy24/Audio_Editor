@@ -68,3 +68,35 @@ export async function renderAllPagesToImages(
 
   return results;
 }
+
+export async function extractPdfTextPages(data: ArrayBuffer): Promise<string[]> {
+  const pdf = await getPdfDocument(data);
+  const pagesText: string[] = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageLines: string[] = [];
+    let currentLine = '';
+    let lastY = -1;
+
+    for (const item of content.items as any[]) {
+      if ('str' in item) {
+        const itemY = item.transform ? Math.round(item.transform[5]) : 0;
+        if (lastY !== -1 && Math.abs(itemY - lastY) > 4) {
+          if (currentLine.trim()) pageLines.push(currentLine.trim());
+          currentLine = item.str;
+        } else {
+          currentLine += (currentLine ? ' ' : '') + item.str;
+        }
+        lastY = itemY;
+      }
+    }
+    if (currentLine.trim()) pageLines.push(currentLine.trim());
+
+    pagesText.push(pageLines.join('\n'));
+  }
+
+  return pagesText;
+}
+

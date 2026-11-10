@@ -3,27 +3,41 @@ export type PdfToolKey =
   | 'merge'
   | 'split'
   | 'compress'
-  | 'organize'
-  | 'rotate'
+  | 'pdf-to-word'
+  | 'word-to-pdf'
+  | 'edit-pdf'
   | 'pdf-to-jpg'
   | 'jpg-to-pdf'
+  | 'sign'
   | 'watermark'
-  | 'page-numbers'
-  | 'protect'
+  | 'rotate'
+  | 'html-to-pdf'
   | 'unlock'
-  | 'sign';
+  | 'protect'
+  | 'organize'
+  | 'pdf-to-pdfa'
+  | 'repair-pdf'
+  | 'page-numbers'
+  | 'scan-pdf'
+  | 'ocr-pdf'
+  | 'compare'
+  | 'redact'
+  | 'crop'
+  | 'pdf-to-excel'
+  | 'pdf-to-markdown';
 
 export interface ToolMeta {
   key: PdfToolKey | 'audio';
   title: string;
   shortDesc: string;
-  category: 'organize' | 'optimize' | 'convert' | 'security' | 'audio';
+  category: 'organize' | 'optimize' | 'convert' | 'security' | 'edit' | 'audio';
   badgeColor: string;
   iconName: string;
   popular?: boolean;
 }
 
 export const PDF_TOOLS: ToolMeta[] = [
+  // 1. Organize
   {
     key: 'merge',
     title: 'Merge PDF',
@@ -43,6 +57,25 @@ export const PDF_TOOLS: ToolMeta[] = [
     popular: true,
   },
   {
+    key: 'organize',
+    title: 'Organize PDF',
+    shortDesc: 'Sort, add, delete, and reorder PDF pages. Drag and drop the page thumbnails.',
+    category: 'organize',
+    badgeColor: 'bg-purple-600',
+    iconName: 'LayoutGrid',
+    popular: true,
+  },
+  {
+    key: 'rotate',
+    title: 'Rotate PDF',
+    shortDesc: 'Rotate your PDFs the way you need them. Rotate multiple PDFs or pages at once!',
+    category: 'organize',
+    badgeColor: 'bg-indigo-600',
+    iconName: 'RotateCw',
+  },
+
+  // 2. Optimize
+  {
     key: 'compress',
     title: 'Compress PDF',
     shortDesc: 'Reduce file size while optimizing for maximal PDF quality.',
@@ -52,14 +85,59 @@ export const PDF_TOOLS: ToolMeta[] = [
     popular: true,
   },
   {
-    key: 'organize',
-    title: 'Organize PDF',
-    shortDesc: 'Sort, add, delete, and reorder PDF pages. Drag and drop the page thumbnails.',
-    category: 'organize',
-    badgeColor: 'bg-purple-600',
-    iconName: 'LayoutGrid',
+    key: 'repair-pdf',
+    title: 'Repair PDF',
+    shortDesc: 'Repair damaged or corrupted PDF files and recover data from malformed syntax.',
+    category: 'optimize',
+    badgeColor: 'bg-orange-500',
+    iconName: 'Wrench',
+  },
+  {
+    key: 'crop',
+    title: 'Crop PDF',
+    shortDesc: 'Trim page margins and crop document borders to customize page dimensions.',
+    category: 'optimize',
+    badgeColor: 'bg-lime-600',
+    iconName: 'Crop',
+  },
+
+  // 3. Convert to PDF
+  {
+    key: 'jpg-to-pdf',
+    title: 'JPG to PDF',
+    shortDesc: 'Convert JPG, PNG, and images to PDF. Adjust orientation and margins in seconds.',
+    category: 'convert',
+    badgeColor: 'bg-sky-500',
+    iconName: 'FileImage',
     popular: true,
   },
+  {
+    key: 'word-to-pdf',
+    title: 'Word to PDF',
+    shortDesc: 'Make DOC and DOCX files easy to read by converting them to clean PDF documents.',
+    category: 'convert',
+    badgeColor: 'bg-blue-600',
+    iconName: 'FileType',
+    popular: true,
+  },
+  {
+    key: 'html-to-pdf',
+    title: 'HTML to PDF',
+    shortDesc: 'Convert web HTML snippets and online pages into printable PDF documents.',
+    category: 'convert',
+    badgeColor: 'bg-teal-600',
+    iconName: 'Globe',
+  },
+  {
+    key: 'scan-pdf',
+    title: 'Scan to PDF',
+    shortDesc: 'Capture physical paper documents using your webcam/camera and compile into PDF.',
+    category: 'convert',
+    badgeColor: 'bg-cyan-600',
+    iconName: 'Camera',
+  },
+
+  // 4. Convert from PDF
   {
     key: 'pdf-to-jpg',
     title: 'PDF to JPG',
@@ -70,21 +148,57 @@ export const PDF_TOOLS: ToolMeta[] = [
     popular: true,
   },
   {
-    key: 'jpg-to-pdf',
-    title: 'JPG to PDF',
-    shortDesc: 'Convert your JPG/PNG images to PDF. Adjust orientation and margins in seconds.',
+    key: 'pdf-to-word',
+    title: 'PDF to Word',
+    shortDesc: 'Easily convert your PDF files into editable DOCX Word documents.',
     category: 'convert',
-    badgeColor: 'bg-sky-500',
-    iconName: 'FileImage',
+    badgeColor: 'bg-blue-500',
+    iconName: 'FileText',
     popular: true,
   },
   {
-    key: 'rotate',
-    title: 'Rotate PDF',
-    shortDesc: 'Rotate your PDFs the way you need them. Rotate multiple PDFs or pages at once!',
-    category: 'organize',
-    badgeColor: 'bg-indigo-600',
-    iconName: 'RotateCw',
+    key: 'pdf-to-excel',
+    title: 'PDF to Excel / CSV',
+    shortDesc: 'Extract tabular data and spreadsheets from PDF straight into CSV/Excel format.',
+    category: 'convert',
+    badgeColor: 'bg-emerald-600',
+    iconName: 'Sheet',
+  },
+  {
+    key: 'pdf-to-markdown',
+    title: 'PDF to Markdown',
+    shortDesc: 'Extract clean structured text and Markdown formatting from your PDF files.',
+    category: 'convert',
+    badgeColor: 'bg-slate-800',
+    iconName: 'FileCode',
+  },
+  {
+    key: 'pdf-to-pdfa',
+    title: 'PDF to PDF/A',
+    shortDesc: 'Transform your PDF into an ISO-standardized archival PDF/A document for long-term storage.',
+    category: 'convert',
+    badgeColor: 'bg-stone-600',
+    iconName: 'Archive',
+  },
+
+  // 5. Edit & Security
+  {
+    key: 'edit-pdf',
+    title: 'Edit PDF',
+    shortDesc: 'Add text, shapes, comments, highlights, and annotations directly onto your PDF.',
+    category: 'edit',
+    badgeColor: 'bg-violet-600',
+    iconName: 'Pencil',
+    popular: true,
+  },
+  {
+    key: 'sign',
+    title: 'Sign PDF',
+    shortDesc: 'Sign yourself or draw, type, and stamp electronic signatures onto your PDF documents.',
+    category: 'security',
+    badgeColor: 'bg-teal-600',
+    iconName: 'PenTool',
+    popular: true,
   },
   {
     key: 'watermark',
@@ -103,6 +217,30 @@ export const PDF_TOOLS: ToolMeta[] = [
     iconName: 'Hash',
   },
   {
+    key: 'redact',
+    title: 'Redact PDF',
+    shortDesc: 'Permanently black out and sanitize confidential text, personal data, or numbers.',
+    category: 'security',
+    badgeColor: 'bg-zinc-800',
+    iconName: 'ShieldAlert',
+  },
+  {
+    key: 'compare',
+    title: 'Compare PDF',
+    shortDesc: 'Side-by-side synchronized comparison between two PDF documents to detect differences.',
+    category: 'edit',
+    badgeColor: 'bg-indigo-500',
+    iconName: 'SplitSquareVertical',
+  },
+  {
+    key: 'ocr-pdf',
+    title: 'OCR PDF',
+    shortDesc: 'Optical Character Recognition to extract text from scanned images and PDFs.',
+    category: 'convert',
+    badgeColor: 'bg-amber-600',
+    iconName: 'ScanText',
+  },
+  {
     key: 'protect',
     title: 'Protect PDF',
     shortDesc: 'Protect PDF files with a password. Encrypt PDF documents to prevent unauthorized access.',
@@ -118,14 +256,8 @@ export const PDF_TOOLS: ToolMeta[] = [
     badgeColor: 'bg-pink-600',
     iconName: 'Unlock',
   },
-  {
-    key: 'sign',
-    title: 'Sign PDF',
-    shortDesc: 'Sign yourself or draw, type, and upload electronic signatures onto your PDF documents.',
-    category: 'security',
-    badgeColor: 'bg-teal-600',
-    iconName: 'PenTool',
-  },
+
+  // 6. Audio Suite
   {
     key: 'audio',
     title: 'Audio Studio',
