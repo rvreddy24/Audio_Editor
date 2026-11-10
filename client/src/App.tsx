@@ -39,6 +39,10 @@ import { PdfToolKey, PDF_TOOLS } from './components/pdf/types';
 import { CalculatorHub } from './components/calculator/CalculatorHub';
 import { CalculatorKey, ALL_CALCULATORS } from './components/calculator/types';
 
+// Image Studio (Pi7 Toolkit Clone)
+import { ImageStudioHub } from './components/image/ImageStudioHub';
+import { ImageToolKey, IMAGE_TOOLS } from './components/image/types';
+
 // PDF Workspaces
 import { MergeWorkspace } from './components/pdf/workspaces/MergeWorkspace';
 import { SplitWorkspace } from './components/pdf/workspaces/SplitWorkspace';
@@ -81,10 +85,11 @@ import { formatTime, formatFileSize } from './utils/formatters';
 type TabKey = 'trim' | 'convert' | 'video' | 'effects' | 'merge' | 'tags';
 
 export function App() {
-  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc'
-  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc'>('home');
+  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc' | 'image'
+  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc' | 'image'>('home');
   const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>('home');
   const [activeCalc, setActiveCalc] = useState<CalculatorKey>('home');
+  const [activeImageTool, setActiveImageTool] = useState<ImageToolKey | undefined>(undefined);
 
   // Audio state
   const [currentFile, setCurrentFile] = useState<LoadedFile | null>(null);
@@ -127,6 +132,12 @@ export function App() {
   const handleOpenCalc = (tool: CalculatorKey = 'home') => {
     setViewMode('calc');
     setActiveCalc(tool);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenImage = (tool?: ImageToolKey) => {
+    setViewMode('image');
+    setActiveImageTool(tool);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -191,6 +202,7 @@ export function App() {
   // Lookup active tool title for breadcrumb
   const currentPdfToolMeta = PDF_TOOLS.find((t) => t.key === activePdfTool);
   const currentCalcMeta = ALL_CALCULATORS.find((c) => c.key === activeCalc);
+  const currentImageToolMeta = IMAGE_TOOLS.find((t) => t.key === activeImageTool);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
@@ -199,14 +211,17 @@ export function App() {
         currentView={viewMode}
         activePdfToolTitle={activePdfTool !== 'home' ? currentPdfToolMeta?.title : undefined}
         activeCalcTitle={activeCalc !== 'home' ? currentCalcMeta?.name : undefined}
+        activeImageToolTitle={currentImageToolMeta?.title}
         onNavigateHome={() => {
           setViewMode('home');
           setActivePdfTool('home');
           setActiveCalc('home');
+          setActiveImageTool(undefined);
         }}
         onNavigatePdf={() => handleOpenPdf('home')}
         onNavigateAudio={() => handleOpenAudio()}
         onNavigateCalc={() => handleOpenCalc('home')}
+        onNavigateImage={() => handleOpenImage()}
       />
 
       {/* VIEW 1: HOME HUB (Master Cards for PDF & Audio) */}
@@ -216,6 +231,7 @@ export function App() {
             onOpenPdf={(tool) => handleOpenPdf(tool || 'home')}
             onOpenAudio={(tab) => handleOpenAudio(tab)}
             onOpenCalc={(tool) => handleOpenCalc(tool || 'home')}
+            onOpenImage={(tool) => handleOpenImage(tool)}
           />
         </main>
       )}
@@ -652,11 +668,41 @@ export function App() {
         </main>
       )}
 
+      {/* VIEW 5: IMAGE STUDIO WORKSTATION (Pi7 Toolkit) */}
+      {viewMode === 'image' && (
+        <main className="flex-1">
+          {/* Image Subheader Bar */}
+          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+            <button
+              onClick={() => {
+                if (activeImageTool) setActiveImageTool(undefined);
+                else setViewMode('home');
+              }}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-emerald-600 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{activeImageTool ? 'Back to All Image Tools' : 'Back to Home Dashboard'}</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                Image Studio (Pi7 Toolkit)
+              </span>
+            </div>
+          </div>
+
+          <ImageStudioHub
+            initialTool={activeImageTool}
+            onBackToHome={() => setViewMode('home')}
+          />
+        </main>
+      )}
+
       {/* Universal Studio Footer */}
       <StudioFooter
         onSelectPdfTool={(tool) => handleOpenPdf(tool)}
         onOpenAudio={() => handleOpenAudio()}
         onOpenCalc={(tool) => handleOpenCalc(tool)}
+        onOpenImage={(tool) => handleOpenImage(tool)}
       />
     </div>
   );

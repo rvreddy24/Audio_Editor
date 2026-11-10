@@ -1,22 +1,25 @@
 import React from 'react';
 import { PdfToolKey } from '../pdf/types';
 import { CalculatorKey } from '../calculator/types';
+import { ImageToolKey } from '../image/types';
 
 interface StudioFooterProps {
   onSelectPdfTool: (tool: PdfToolKey) => void;
   onOpenAudio: () => void;
   onOpenCalc?: (tool?: CalculatorKey) => void;
+  onOpenImage?: (tool?: ImageToolKey) => void;
 }
 
 export const StudioFooter: React.FC<StudioFooterProps> = ({
   onSelectPdfTool,
   onOpenAudio,
   onOpenCalc,
+  onOpenImage,
 }) => {
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10">
           {/* Column 1: PDF Tools */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
@@ -74,7 +77,46 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             </ul>
           </div>
 
-          {/* Column 2: Audio Studio */}
+          {/* Column 2: Image Studio (Pi7 Toolkit) */}
+          <div>
+            <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
+              Image Studio (Pi7)
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <button onClick={() => onOpenImage?.('compress-kb')} className="hover:text-white transition-colors">
+                  Compress to KB (20, 50, 100KB)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('passport-photo')} className="hover:text-white transition-colors">
+                  Passport Photo Maker
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('signature-resizer')} className="hover:text-white transition-colors">
+                  Signature Resizer (≤ 20KB)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('resize-dimensions')} className="hover:text-white transition-colors">
+                  Resize by Pixels & CM
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('name-date-stamp')} className="hover:text-white transition-colors">
+                  Name & Date on Photo (DoP)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('dpi-converter')} className="hover:text-white transition-colors">
+                  Convert DPI (200, 300 DPI)
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Audio Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
               Audio Studio
@@ -113,7 +155,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             </ul>
           </div>
 
-          {/* Column 3: Calculator Studio */}
+          {/* Column 4: Calculator Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
               Calculator Studio
@@ -145,16 +187,6 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenCalc?.('calorie')} className="hover:text-white transition-colors">
-                  Daily Calorie (TDEE)
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onOpenCalc?.('percentage')} className="hover:text-white transition-colors">
-                  Percentage Calculator
-                </button>
-              </li>
-              <li>
                 <button onClick={() => onOpenCalc?.('unit-converter')} className="hover:text-white transition-colors">
                   Universal Unit Converter
                 </button>
@@ -162,7 +194,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             </ul>
           </div>
 
-          {/* Column 4: Platform */}
+          {/* Column 5: Platform */}
           <div>
             <div className="mb-3">
               <div className="bg-white rounded-xl p-2 inline-block shadow-xs">
@@ -174,7 +206,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </div>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed mb-4">
-              A private, fast, and 100% free web workstation suite for PDF manipulation, professional audio editing, and comprehensive calculators.
+              A private, fast, and 100% free web workstation suite for PDF manipulation, Pi7 image processing, professional audio editing, and comprehensive calculators.
             </p>
             <div className="text-[11px] text-slate-500 font-mono">
               Running live on cloud container

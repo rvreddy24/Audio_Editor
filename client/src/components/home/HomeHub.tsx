@@ -7,7 +7,7 @@ import {
   Layers,
   Scissors,
   Minimize2,
-  Image,
+  Image as ImageIcon,
   Sliders,
   RefreshCw,
   Film,
@@ -16,19 +16,28 @@ import {
   Calculator,
   DollarSign,
   Scale,
+  Camera,
+  UserCheck,
 } from 'lucide-react';
 import { PdfToolKey } from '../pdf/types';
 import { CalculatorKey } from '../calculator/types';
+import { ImageToolKey } from '../image/types';
 
 interface HomeHubProps {
   onOpenPdf: (specificTool?: PdfToolKey) => void;
   onOpenAudio: (tab?: string) => void;
   onOpenCalc: (specificTool?: CalculatorKey) => void;
+  onOpenImage?: (specificTool?: ImageToolKey) => void;
 }
 
-export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio, onOpenCalc }) => {
+export const HomeHub: React.FC<HomeHubProps> = ({
+  onOpenPdf,
+  onOpenAudio,
+  onOpenCalc,
+  onOpenImage,
+}) => {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* Official Brand Banner (Transparent PNG - No dark box needed) */}
       <div className="flex justify-center mb-6 sm:mb-8">
         <div className="max-w-md sm:max-w-lg w-full flex items-center justify-center">
@@ -41,213 +50,205 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio, onOpen
       </div>
 
       {/* Hero Header */}
-      <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+      <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200/80 text-orange-800 text-xs font-semibold mb-3 shadow-2xs">
           <img src="/rv-logo.png" alt="logo" className="w-3.5 h-3.5 object-contain" />
           <span>Professional Web Workstation Suite</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-          Everything You Need to Edit & Compute <br className="hidden sm:inline" />
+          Everything You Need to Edit, Convert & Compute <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-indigo-600">
-            PDFs, Office, Audio & Calculators
+            PDFs, Images, Audio & Calculators
           </span>
         </h1>
         <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
-          Choose a workstation below. Fast, secure, and 100% free right in your browser.
+          Choose a workstation below. Fast, secure, and 100% free right inside your browser.
         </p>
       </div>
 
-      {/* Primary Category Master Cards (Compact 3-Workstation Layout) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+      {/* Primary Category Master Cards (4-Workstation Layout) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8 sm:mb-10">
         {/* CARD 1: PDF & OFFICE TOOLS */}
         <div
           onClick={() => onOpenPdf()}
-          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-red-500 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
+          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-red-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
         >
-          {/* Subtle background glow */}
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-red-100/50 blur-2xl group-hover:bg-red-200/50 transition-colors pointer-events-none" />
 
           <div>
             <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-tight">
-                    PDF & Office Studio
+                  <h2 className="text-base font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-tight">
+                    PDF & Office
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500">
-                    PDF, Word, Excel & Images
+                    iLovePDF Suite
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200/80 px-2.5 py-0.5 rounded-full shrink-0">
-                32+ Tools
+              <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full shrink-0">
+                25+ Tools
               </span>
             </div>
 
-            <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed mb-3">
-              Merge, split, compress, convert Word/Excel/PPT, OCR scan, watermark, resize images, and e-sign.
+            <p className="text-xs text-slate-600 leading-relaxed mb-3">
+              Merge, split, compress, protect, watermark, and convert Word/Excel/HTML to PDF with OCR.
             </p>
 
-            {/* Compact feature chips */}
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                'Merge & Split',
-                'Compress PDF',
-                'Word ⇄ PDF',
-                'Excel ⇄ PDF',
-                'OCR Scanner',
-                'Sign PDF',
-              ].map((toolName) => (
-                <span
-                  key={toolName}
-                  className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium group-hover:bg-red-50 group-hover:text-red-700 transition-colors"
-                >
-                  {toolName}
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Merge', 'Compress', 'Word⇄PDF', 'OCR', 'Sign'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
+                  {t}
                 </span>
               ))}
-              <span className="px-2 py-0.5 rounded-md bg-red-50 text-red-600 text-[11px] font-bold border border-red-100">
-                +26 More
-              </span>
             </div>
           </div>
 
-          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-red-600 flex items-center gap-1.5">
-              <span>Open PDF Studio</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium">100% Free • In-Browser</span>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-red-600 group-hover:text-red-700">
+            <span>Open PDF Studio</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
-        {/* CARD 2: AUDIO STUDIO */}
+        {/* CARD 2: IMAGE STUDIO (Pi7 Toolkit) */}
+        <div
+          onClick={() => onOpenImage && onOpenImage()}
+          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-emerald-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-emerald-100/50 blur-2xl group-hover:bg-emerald-200/50 transition-colors pointer-events-none" />
+
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors leading-tight">
+                    Image Studio
+                  </h2>
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Pi7 Toolkit Suite
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
+                Pi7 Engine
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-3">
+              Exact KB compressor (20KB, 50KB, 100KB), passport photo maker, signature resizer & DPI converter.
+            </p>
+
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Exact KB', 'Passport', 'Signature', 'DPI 300', 'DoP'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600 group-hover:text-emerald-700">
+            <span>Open Image Studio</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
+
+        {/* CARD 3: AUDIO STUDIO */}
         <div
           onClick={() => onOpenAudio()}
-          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-600 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
+          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-600 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
         >
-          {/* Subtle background glow */}
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-indigo-100/50 blur-2xl group-hover:bg-indigo-200/50 transition-colors pointer-events-none" />
 
           <div>
             <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
                   <Music className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
+                  <h2 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
                     Audio Studio
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500">
-                    Visual Waveform & DSP
+                    FFmpeg 8.1 Engine
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full shrink-0">
-                FFmpeg 8.1
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full shrink-0">
+                Pro DSP
               </span>
             </div>
 
-            <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed mb-3">
-              Visual waveform trimmer, universal format converter, video audio extractor, 8D audio & pitch DSP, and ID3 tag editor.
+            <p className="text-xs text-slate-600 leading-relaxed mb-3">
+              Visual waveform editor, audio trimmer, format converter, video soundtrack extractor & ID3 tag editor.
             </p>
 
-            {/* Compact feature chips */}
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                'Waveform Trimmer',
-                'Universal Converter',
-                'Video to Audio',
-                'Pitch & Speed DSP',
-                '8D Audio Effect',
-                'ID3 Tag Editor',
-              ].map((toolName) => (
-                <span
-                  key={toolName}
-                  className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium group-hover:bg-indigo-50 group-hover:text-indigo-700 transition-colors"
-                >
-                  {toolName}
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Waveform', 'Trimmer', 'MP3/WAV', 'DSP', 'Tags'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
+                  {t}
                 </span>
               ))}
-              <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[11px] font-bold border border-indigo-100">
-                +More
-              </span>
             </div>
           </div>
 
-          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-indigo-600 flex items-center gap-1.5">
-              <span>Launch Audio Studio</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium">Native Speed • 1 GB Limit</span>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-600 group-hover:text-indigo-700">
+            <span>Open Audio Studio</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
-        {/* CARD 3: CALCULATOR STUDIO */}
+        {/* CARD 4: CALCULATOR STUDIO */}
         <div
           onClick={() => onOpenCalc()}
-          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-orange-500 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden md:col-span-2 lg:col-span-1"
+          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-orange-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
         >
-          {/* Subtle background glow */}
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-orange-100/50 blur-2xl group-hover:bg-orange-200/50 transition-colors pointer-events-none" />
 
           <div>
             <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
                   <Calculator className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-orange-600 transition-colors leading-tight">
-                    Calculator Studio
+                  <h2 className="text-base font-bold text-slate-900 group-hover:text-orange-600 transition-colors leading-tight">
+                    Calculators
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500">
-                    Inspired by Calculator.net
+                    Calculator.net Clone
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-700 bg-orange-50 border border-orange-200/80 px-2.5 py-0.5 rounded-full shrink-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-700 bg-orange-50 border border-orange-200/80 px-2 py-0.5 rounded-full shrink-0">
                 22+ Tools
               </span>
             </div>
 
-            <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed mb-3">
-              Scientific keypad, mortgage, auto loan, compound interest, BMI, calorie deficit, fractions, and unit conversion.
+            <p className="text-xs text-slate-600 leading-relaxed mb-3">
+              Scientific LCD calculator, mortgage & loan EMI, compound interest, BMI, and universal unit converter.
             </p>
 
-            {/* Compact feature chips */}
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                'Scientific Calc',
-                'Mortgage & Loan',
-                'Compound Interest',
-                'BMI & Calorie',
-                'Percentages',
-                'Unit Converter',
-              ].map((toolName) => (
-                <span
-                  key={toolName}
-                  className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium group-hover:bg-orange-50 group-hover:text-orange-700 transition-colors"
-                >
-                  {toolName}
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Scientific', 'Mortgage', 'BMI', 'Interest', 'Units'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
+                  {t}
                 </span>
               ))}
-              <span className="px-2 py-0.5 rounded-md bg-orange-50 text-orange-600 text-[11px] font-bold border border-orange-100">
-                +16 More
-              </span>
             </div>
           </div>
 
-          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-orange-600 flex items-center gap-1.5">
-              <span>Open Calculator Studio</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium">Instant • Private</span>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-orange-600 group-hover:text-orange-700">
+            <span>Open Calculators</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
       </div>
@@ -258,65 +259,85 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio, onOpen
           Quick Launch Tools
         </h3>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
           <button
             onClick={() => onOpenPdf('merge')}
-            className="bg-white hover:bg-red-50/50 p-4 rounded-2xl border border-slate-200 hover:border-red-300 flex flex-col items-center gap-2 text-center transition-all group"
+            className="bg-white hover:bg-red-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-red-300 flex flex-col items-center gap-1.5 text-center transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Layers className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-red-50 text-red-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Layers className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-red-600">Merge PDF</span>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-red-600">Merge PDF</span>
+          </button>
+
+          <button
+            onClick={() => onOpenImage ? onOpenImage('compress-kb') : undefined}
+            className="bg-white hover:bg-emerald-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-300 flex flex-col items-center gap-1.5 text-center transition-all group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Minimize2 className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-emerald-600">Compress KB</span>
+          </button>
+
+          <button
+            onClick={() => onOpenImage ? onOpenImage('passport-photo') : undefined}
+            className="bg-white hover:bg-sky-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-sky-300 flex flex-col items-center gap-1.5 text-center transition-all group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-sky-600">Passport Photo</span>
+          </button>
+
+          <button
+            onClick={() => onOpenImage ? onOpenImage('signature-resizer') : undefined}
+            className="bg-white hover:bg-purple-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-purple-300 flex flex-col items-center gap-1.5 text-center transition-all group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <PenTool className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-purple-600">Sign Resizer</span>
           </button>
 
           <button
             onClick={() => onOpenAudio('convert')}
-            className="bg-white hover:bg-indigo-50/50 p-4 rounded-2xl border border-slate-200 hover:border-indigo-300 flex flex-col items-center gap-2 text-center transition-all group"
+            className="bg-white hover:bg-indigo-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-indigo-300 flex flex-col items-center gap-1.5 text-center transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <RefreshCw className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <RefreshCw className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-600">Audio Converter</span>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-indigo-600">Audio Conv</span>
           </button>
 
           <button
             onClick={() => onOpenCalc('scientific')}
-            className="bg-white hover:bg-orange-50/50 p-4 rounded-2xl border border-slate-200 hover:border-orange-300 flex flex-col items-center gap-2 text-center transition-all group"
+            className="bg-white hover:bg-orange-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-orange-300 flex flex-col items-center gap-1.5 text-center transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Calculator className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Calculator className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-orange-600">Scientific Calc</span>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-orange-600">Scientific</span>
           </button>
 
           <button
             onClick={() => onOpenCalc('mortgage')}
-            className="bg-white hover:bg-emerald-50/50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 flex flex-col items-center gap-2 text-center transition-all group"
+            className="bg-white hover:bg-emerald-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-300 flex flex-col items-center gap-1.5 text-center transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <DollarSign className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <DollarSign className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-emerald-600">Mortgage Calc</span>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-emerald-600">Mortgage</span>
           </button>
 
           <button
             onClick={() => onOpenCalc('bmi')}
-            className="bg-white hover:bg-rose-50/50 p-4 rounded-2xl border border-slate-200 hover:border-rose-300 flex flex-col items-center gap-2 text-center transition-all group"
+            className="bg-white hover:bg-rose-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-rose-300 flex flex-col items-center gap-1.5 text-center transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Scale className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Scale className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-rose-600">BMI & Health</span>
-          </button>
-
-          <button
-            onClick={() => onOpenCalc('unit-converter')}
-            className="bg-white hover:bg-purple-50/50 p-4 rounded-2xl border border-slate-200 hover:border-purple-300 flex flex-col items-center gap-2 text-center transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Scale className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold text-slate-800 group-hover:text-purple-600">Unit Converter</span>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-rose-600">BMI Calc</span>
           </button>
         </div>
       </div>
