@@ -24,13 +24,21 @@ export type PdfToolKey =
   | 'redact'
   | 'crop'
   | 'pdf-to-excel'
-  | 'pdf-to-markdown';
+  | 'pdf-to-markdown'
+  | 'excel-to-pdf'
+  | 'pdf-to-excel-xlsx'
+  | 'pptx-to-pdf'
+  | 'pdf-to-pptx'
+  | 'compress-image'
+  | 'resize-image'
+  | 'convert-image'
+  | 'watermark-image';
 
 export interface ToolMeta {
   key: PdfToolKey | 'audio';
   title: string;
   shortDesc: string;
-  category: 'organize' | 'optimize' | 'convert' | 'security' | 'edit' | 'audio';
+  category: 'organize' | 'optimize' | 'convert' | 'security' | 'edit' | 'audio' | 'office' | 'image';
   badgeColor: string;
   iconName: string;
   popular?: boolean;
@@ -138,6 +146,75 @@ export const PDF_TOOLS: ToolMeta[] = [
   },
 
   // 4. Convert from PDF
+  {
+    key: 'excel-to-pdf',
+    title: 'Excel to PDF',
+    shortDesc: 'Convert Excel spreadsheets (.xlsx, .xls, .csv) into clean, printable PDF tables.',
+    category: 'office',
+    badgeColor: 'bg-emerald-600',
+    iconName: 'Sheet',
+    popular: true,
+  },
+  {
+    key: 'pdf-to-excel-xlsx',
+    title: 'PDF to Excel (.xlsx)',
+    shortDesc: 'Extract tables and data from your PDF straight into an editable Microsoft Excel (.xlsx) file.',
+    category: 'office',
+    badgeColor: 'bg-emerald-600',
+    iconName: 'Sheet',
+    popular: true,
+  },
+  {
+    key: 'pptx-to-pdf',
+    title: 'PowerPoint to PDF',
+    shortDesc: 'Make PPT and PPTX slideshows easy to view by converting them to clean PDF slide decks.',
+    category: 'office',
+    badgeColor: 'bg-orange-600',
+    iconName: 'Presentation',
+    popular: true,
+  },
+  {
+    key: 'pdf-to-pptx',
+    title: 'PDF to PowerPoint (.pptx)',
+    shortDesc: 'Convert your PDF pages into presentation slides in Microsoft PowerPoint (.pptx) format.',
+    category: 'office',
+    badgeColor: 'bg-orange-500',
+    iconName: 'Presentation',
+    popular: true,
+  },
+  {
+    key: 'compress-image',
+    title: 'Compress Image',
+    shortDesc: 'Compress JPG, PNG, and WebP images with the best quality-to-size ratio.',
+    category: 'image',
+    badgeColor: 'bg-amber-500',
+    iconName: 'ImageIcon',
+    popular: true,
+  },
+  {
+    key: 'resize-image',
+    title: 'Resize Image',
+    shortDesc: 'Resize JPG, PNG, and WebP images by defining exact pixel dimensions or percentage scaling.',
+    category: 'image',
+    badgeColor: 'bg-blue-500',
+    iconName: 'Scaling',
+  },
+  {
+    key: 'convert-image',
+    title: 'Convert Image Format',
+    shortDesc: 'Convert images between JPG, PNG, and WebP with zero quality degradation.',
+    category: 'image',
+    badgeColor: 'bg-sky-600',
+    iconName: 'RefreshCw',
+  },
+  {
+    key: 'watermark-image',
+    title: 'Watermark Image',
+    shortDesc: 'Stamp text watermarks, copyright notices, or branding over your photos in seconds.',
+    category: 'image',
+    badgeColor: 'bg-rose-500',
+    iconName: 'Stamp',
+  },
   {
     key: 'pdf-to-jpg',
     title: 'PDF to JPG',

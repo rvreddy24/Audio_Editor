@@ -16,10 +16,12 @@
     "mammoth": "^1.13.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.5.438",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tesseract.js": "^7.0.0",
-    "wavesurfer.js": "^8.0.5"
+    "wavesurfer.js": "^8.0.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/jszip": "^3.4.0",

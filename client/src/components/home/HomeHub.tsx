@@ -57,16 +57,16 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
                 <FileText className="w-8 h-8" />
               </div>
               <span className="text-xs font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200/80 px-3 py-1 rounded-full">
-                12 Tools Available
+                32+ Tools Available
               </span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-red-600 transition-colors">
-              PDF Toolkit
+              PDF & Office Studio
             </h2>
 
             <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-              Complete PDF manipulation workstation. Merge, split, compress, convert, organize, watermark, rotate, protect, and electronically sign PDF documents with zero software installation.
+              Complete document & image workstation. Merge, split, compress, Word, Excel, PowerPoint conversions, OCR text extraction, watermark, image editor, protect, and electronically sign files with zero software installation.
             </p>
 
             {/* Included tools badge list */}
@@ -74,16 +74,20 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
               {[
                 'Merge PDF',
                 'Split PDF',
-                'Compress',
-                'PDF to JPG',
-                'JPG to PDF',
-                'Organize Pages',
-                'Rotate',
-                'Watermark',
-                'Page Numbers',
+                'Compress PDF',
+                'Word to PDF',
+                'PDF to Word',
+                'Excel to PDF',
+                'PDF to Excel (.xlsx)',
+                'PPT to PDF',
+                'PDF to PPTX',
+                'Compress Image',
+                'Resize Image',
+                'Convert Image',
+                'Watermark Image',
                 'Sign PDF',
-                'Protect',
-                'Unlock',
+                'OCR Scan',
+                'Protect & Unlock',
               ].map((toolName) => (
                 <span
                   key={toolName}

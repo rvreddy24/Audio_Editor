@@ -61,6 +61,14 @@ import { PdfToExcelWorkspace } from './components/pdf/workspaces/PdfToExcelWorks
 import { RepairPdfWorkspace } from './components/pdf/workspaces/RepairPdfWorkspace';
 import { PdfToPdfaWorkspace } from './components/pdf/workspaces/PdfToPdfaWorkspace';
 import { EditPdfWorkspace } from './components/pdf/workspaces/EditPdfWorkspace';
+import { ExcelToPdfWorkspace } from './components/pdf/workspaces/ExcelToPdfWorkspace';
+import { PdfToExcelXlsxWorkspace } from './components/pdf/workspaces/PdfToExcelXlsxWorkspace';
+import { PptxToPdfWorkspace } from './components/pdf/workspaces/PptxToPdfWorkspace';
+import { PdfToPptxWorkspace } from './components/pdf/workspaces/PdfToPptxWorkspace';
+import { CompressImageWorkspace } from './components/pdf/workspaces/CompressImageWorkspace';
+import { ResizeImageWorkspace } from './components/pdf/workspaces/ResizeImageWorkspace';
+import { ConvertImageWorkspace } from './components/pdf/workspaces/ConvertImageWorkspace';
+import { WatermarkImageWorkspace } from './components/pdf/workspaces/WatermarkImageWorkspace';
 
 import { uploadFile, checkHealth } from './api';
 import { LoadedFile, ProcessingResult } from './types';
@@ -332,6 +340,38 @@ export function App() {
 
           {activePdfTool === 'edit-pdf' && (
             <EditPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'excel-to-pdf' && (
+            <ExcelToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pdf-to-excel-xlsx' && (
+            <PdfToExcelXlsxWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pptx-to-pdf' && (
+            <PptxToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'pdf-to-pptx' && (
+            <PdfToPptxWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'compress-image' && (
+            <CompressImageWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'resize-image' && (
+            <ResizeImageWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'convert-image' && (
+            <ConvertImageWorkspace onBack={() => setActivePdfTool('home')} />
+          )}
+
+          {activePdfTool === 'watermark-image' && (
+            <WatermarkImageWorkspace onBack={() => setActivePdfTool('home')} />
           )}
         </main>
       )}

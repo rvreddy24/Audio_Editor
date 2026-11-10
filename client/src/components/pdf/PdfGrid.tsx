@@ -29,6 +29,9 @@ import {
   ScanText,
   Wrench,
   Crop,
+  Presentation,
+  Scaling,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { PDF_TOOLS, PdfToolKey, ToolMeta } from './types';
 
@@ -63,6 +66,9 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   ScanText,
   Wrench,
   Crop,
+  Presentation,
+  Scaling,
+  ImageIcon,
 };
 
 export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
@@ -71,6 +77,8 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
 
   const categories = [
     { key: 'all', label: 'All Tools' },
+    { key: 'office', label: 'Word / Excel / PPT' },
+    { key: 'image', label: 'Image Tools' },
     { key: 'organize', label: 'Organize' },
     { key: 'optimize', label: 'Optimize' },
     { key: 'convert', label: 'Convert' },
