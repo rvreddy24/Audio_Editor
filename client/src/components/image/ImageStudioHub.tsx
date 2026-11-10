@@ -111,13 +111,10 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Studio Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-slate-800 text-xs font-semibold mb-3 shadow-2xs border border-slate-200">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-slate-800 text-xs font-semibold mb-3 shadow-2xs border border-slate-200">
           <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain" />
           <span>
             rajvarshith<span className="text-orange-500 font-bold">.com</span> Image Studio
-          </span>
-          <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-            Pro Client Engine
           </span>
         </div>
 

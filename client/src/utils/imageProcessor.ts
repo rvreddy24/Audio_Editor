@@ -1,6 +1,6 @@
 /**
  * Pure In-Browser Client-Side Image Processing Engine
- * Replicates the complete Pi7 Image Toolkit (image.pi7.org) suite:
+ * Comprehensive Image Studio suite:
  * - Target KB/MB Exact Compression
  * - Increase Image Size to Minimum Target
  * - Dimension Resizing (Pixels, CM, MM, Inches)

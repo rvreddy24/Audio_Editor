@@ -152,7 +152,7 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ activeCalc, onSele
           Free Online Calculators for Every Need
         </h1>
         <p className="mt-2.5 text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
-          Inspired by calculator.net. Instant, private, 100% free financial, fitness, math, scientific, and everyday conversion tools.
+          Instant, private, 100% free financial, fitness, math, scientific, and everyday conversion tools.
         </p>
 
         {/* Global Search Bar */}

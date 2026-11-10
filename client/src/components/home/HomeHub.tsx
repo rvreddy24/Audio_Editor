@@ -85,9 +85,6 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                   <h2 className="text-base font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-tight">
                     PDF & Office
                   </h2>
-                  <span className="text-[11px] font-semibold text-slate-500">
-                    PDF Workstation
-                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-full shrink-0">
@@ -131,13 +128,10 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                   <h2 className="text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors leading-tight">
                     Image Studio
                   </h2>
-                  <span className="text-[11px] font-semibold text-slate-500">
-                    Form & Photo Suite
-                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
-                Pro Engine
+                10+ Tools
               </span>
             </div>
 
@@ -177,9 +171,6 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                   <h2 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
                     Audio Studio
                   </h2>
-                  <span className="text-[11px] font-semibold text-slate-500">
-                    FFmpeg 8.1 Engine
-                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-full shrink-0">
@@ -223,9 +214,6 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                   <h2 className="text-base font-bold text-slate-900 group-hover:text-orange-600 transition-colors leading-tight">
                     Calculators
                   </h2>
-                  <span className="text-[11px] font-semibold text-slate-500">
-                    Calculator.net Clone
-                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-orange-700 bg-orange-50 border border-orange-200/80 px-2 py-0.5 rounded-full shrink-0">

@@ -39,7 +39,7 @@ import { PdfToolKey, PDF_TOOLS } from './components/pdf/types';
 import { CalculatorHub } from './components/calculator/CalculatorHub';
 import { CalculatorKey, ALL_CALCULATORS } from './components/calculator/types';
 
-// Image Studio (Pi7 Toolkit Clone)
+// Image Studio
 import { ImageStudioHub } from './components/image/ImageStudioHub';
 import { ImageToolKey, IMAGE_TOOLS } from './components/image/types';
 
@@ -668,7 +668,7 @@ export function App() {
         </main>
       )}
 
-      {/* VIEW 5: IMAGE STUDIO WORKSTATION (Pi7 Toolkit) */}
+      {/* VIEW 5: IMAGE STUDIO WORKSTATION */}
       {viewMode === 'image' && (
         <main className="flex-1">
           {/* Image Subheader Bar */}
