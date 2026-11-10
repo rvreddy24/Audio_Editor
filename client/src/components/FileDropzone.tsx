@@ -56,50 +56,47 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative rounded-3xl border-2 border-dashed p-10 lg:p-14 text-center transition-all flex flex-col items-center justify-center gap-6 overflow-hidden ${
+      className={`relative rounded-3xl border-2 border-dashed p-10 lg:p-14 text-center transition-all flex flex-col items-center justify-center gap-6 bg-white ${
         isDragging
-          ? 'border-emerald-400 bg-emerald-950/20 shadow-neon-volt scale-[1.01]'
-          : 'border-white/[0.1] bg-studio-900/60 hover:border-emerald-500/40 hover:bg-studio-900/90 shadow-2xl'
+          ? 'border-indigo-600 bg-indigo-50/50 shadow-md scale-[1.01]'
+          : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50/40 shadow-sm'
       }`}
     >
-      {/* Background radial glow */}
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.04] via-transparent to-transparent pointer-events-none" />
-
       {/* Uploading progress overlay */}
       {isLoading && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl rounded-3xl p-6 gap-3.5">
-          <div className="w-12 h-12 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin shadow-neon-volt" />
-          <div className="text-sm font-mono font-bold text-white uppercase tracking-wider">
-            ANALYZING MEDIA WITH FFMPEG...
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/90 backdrop-blur-xs rounded-3xl p-6 gap-3.5">
+          <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="text-sm font-semibold text-slate-900">
+            Analyzing media with FFmpeg...
           </div>
-          <div className="w-64 h-2 bg-studio-800 rounded-full overflow-hidden p-[1px]">
+          <div className="w-64 h-2 bg-slate-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-200 rounded-full"
+              className="h-full bg-indigo-600 transition-all duration-200 rounded-full"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
-          <div className="text-xs font-mono text-emerald-400 font-bold">{uploadProgress}% UPLOADED</div>
+          <div className="text-xs font-mono text-slate-500 font-semibold">{uploadProgress}% uploaded</div>
         </div>
       )}
 
-      {/* Glowing Hardware Icon */}
-      <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-neon-volt">
-        <UploadCloud className="w-8 h-8 animate-pulse" />
+      {/* Cloud Icon */}
+      <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-2xs">
+        <UploadCloud className="w-8 h-8" />
       </div>
 
-      <div className="max-w-lg flex flex-col gap-2">
-        <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase font-sans">
-          IMPORT AUDIO OR VIDEO SESSION
+      <div className="max-w-md flex flex-col gap-1.5">
+        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+          Drop Audio or Video to Start Editing
         </h3>
-        <p className="text-xs text-studio-400 font-mono leading-relaxed">
-          Universal multi-track support for MP3, WAV, FLAC, AAC, OPUS, OGG, M4A, MP4, MKV, MOV, and WebM files.
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Support for MP3, WAV, AAC, M4A, FLAC, OGG, OPUS, MP4, MKV, MOV, WebM, and AVI files up to 1 GB.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3.5 z-10">
-        <label className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold px-7 py-3 rounded-xl shadow-neon-volt cursor-pointer flex items-center gap-2 text-xs font-mono tracking-wider uppercase transition-all hover:scale-105 active:scale-95">
+      <div className="flex flex-wrap items-center justify-center gap-3 z-10">
+        <label className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-xs cursor-pointer flex items-center gap-2 text-xs transition-all hover:scale-102 active:scale-98">
           <Music className="w-4 h-4" />
-          BROWSE MEDIA FILE
+          Browse Files
           <input
             type="file"
             accept="audio/*,video/*"
@@ -111,28 +108,27 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         <button
           onClick={handleLoadDemo}
           disabled={isGeneratingDemo}
-          className="bg-studio-950 hover:bg-studio-850 text-emerald-400 hover:text-white font-mono font-bold px-5 py-3 rounded-xl border border-emerald-500/30 flex items-center gap-2 text-xs transition-all shadow-sm"
+          className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2.5 rounded-xl border border-slate-200 flex items-center gap-2 text-xs transition-colors shadow-2xs"
         >
           {isGeneratingDemo ? (
             <>
-              <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-              SYNTHESIZING...
+              <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+              Generating...
             </>
           ) : (
             <>
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              TRY DEMO SYNTHWAVE TRACK
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              Try Demo Audio Track
             </>
           )}
         </button>
       </div>
 
-      {/* Codec Badge Strip */}
-      <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[10px] text-studio-400 font-mono tracking-wider uppercase z-10">
-        <span className="px-2.5 py-1 rounded-lg bg-studio-950 border border-white/[0.06]">MP3 / WAV / FLAC</span>
-        <span className="px-2.5 py-1 rounded-lg bg-studio-950 border border-white/[0.06]">AAC / M4A / OPUS</span>
-        <span className="px-2.5 py-1 rounded-lg bg-studio-950 border border-white/[0.06]">MP4 / MKV / WEBM VIDEO</span>
-        <span className="px-2.5 py-1 rounded-lg bg-studio-950 border border-emerald-500/20 text-emerald-400 font-bold">UP TO 1 GB</span>
+      {/* Format badges */}
+      <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500 font-medium">
+        <span className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/60">MP3 / WAV / FLAC</span>
+        <span className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/60">AAC / M4A / OPUS</span>
+        <span className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/60">MP4 / MKV / WebM Video</span>
       </div>
     </div>
   );

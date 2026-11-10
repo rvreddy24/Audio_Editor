@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scissors, Sparkles, Sliders, Check, ArrowRight } from 'lucide-react';
+import { Scissors, Sliders, Check } from 'lucide-react';
 import { trimAudio } from '../api';
 import { LoadedFile, ProcessingResult } from '../types';
 import { formatTime } from '../utils/formatters';
@@ -67,140 +67,126 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
   };
 
   return (
-    <div className="studio-glass rounded-2xl p-6 shadow-2xl flex flex-col gap-6 border border-white/[0.08]">
-      {/* Module Title Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Scissors className="w-4 h-4" />
-            </span>
-            <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-sans">
-              Precision Waveform Trimmer & Splice Unit
-            </h3>
-          </div>
-          <p className="text-[11px] text-studio-400 font-mono mt-1">
-            Frame-accurate cutting, splice removal, and analog fade curve envelopes.
+          <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+            <Scissors className="w-5 h-5 text-indigo-600" />
+            Trim & Precision Cut
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Crop segments, remove unwanted audio, and apply smooth fade in/out curves.
           </p>
         </div>
 
-        {/* Mode Toggle Switcher */}
-        <div className="flex items-center bg-studio-950 p-1 rounded-xl border border-white/[0.08]">
+        {/* Mode Selector */}
+        <div className="flex items-center bg-slate-100 p-1 rounded-xl">
           <button
             onClick={() => onCutModeChange('keep')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono tracking-wider transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
               cutMode === 'keep'
-                ? 'bg-emerald-500 text-black shadow-neon-volt'
-                : 'text-studio-400 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-xs font-semibold'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            KEEP SELECTION
+            Keep Selection
           </button>
           <button
             onClick={() => onCutModeChange('remove')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold font-mono tracking-wider transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
               cutMode === 'remove'
-                ? 'bg-rose-500 text-white shadow-neon-rose'
-                : 'text-studio-400 hover:text-white'
+                ? 'bg-white text-rose-600 shadow-xs font-semibold'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            CUT & SPLICE OUT
+            Cut & Remove Selection
           </button>
         </div>
       </div>
 
-      {/* Dual In/Out Precision Marker Panels */}
+      {/* Start / End Markers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* IN Marker */}
-        <div className="bg-studio-950/70 p-4 rounded-xl border border-emerald-500/20 flex flex-col gap-3">
+        {/* Start Point Card */}
+        <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="text-[11px] font-mono font-bold tracking-widest text-emerald-400 uppercase">
-                IN-POINT (START)
-              </span>
-            </div>
+            <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+              Start Marker
+            </span>
             <button
               onClick={() => handleStartChange(currentTime)}
-              className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-md border border-emerald-500/30 transition-colors"
+              className="text-xs text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200/60 transition-colors font-medium"
             >
-              SNAP TO PLAYHEAD ({formatTime(currentTime)})
+              Set to Current ({formatTime(currentTime)})
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-studio-900 border border-studio-800 rounded-xl px-3 py-2 flex items-center justify-between">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max={endTime - 0.05}
-                value={startTime.toFixed(2)}
-                onChange={(e) => handleStartChange(parseFloat(e.target.value) || 0)}
-                className="bg-transparent font-mono text-xl font-black text-emerald-400 focus:outline-none w-full"
-              />
-              <span className="text-xs text-studio-500 font-mono font-semibold">SEC</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              max={endTime - 0.05}
+              value={startTime.toFixed(2)}
+              onChange={(e) => handleStartChange(parseFloat(e.target.value) || 0)}
+              className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-mono text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+            <span className="text-xs text-slate-500 font-medium">sec</span>
           </div>
 
-          {/* Micro Nudge Buttons */}
-          <div className="grid grid-cols-4 gap-1 text-[11px] font-mono">
-            <button onClick={() => handleStartChange(startTime - 1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">-1.0s</button>
-            <button onClick={() => handleStartChange(startTime - 0.1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">-0.1s</button>
-            <button onClick={() => handleStartChange(startTime + 0.1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">+0.1s</button>
-            <button onClick={() => handleStartChange(startTime + 1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">+1.0s</button>
+          {/* Nudge buttons */}
+          <div className="flex items-center gap-1.5 text-xs font-medium">
+            <button onClick={() => handleStartChange(startTime - 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-1s</button>
+            <button onClick={() => handleStartChange(startTime - 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-0.1s</button>
+            <button onClick={() => handleStartChange(startTime + 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+0.1s</button>
+            <button onClick={() => handleStartChange(startTime + 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+1s</button>
           </div>
         </div>
 
-        {/* OUT Marker */}
-        <div className="bg-studio-950/70 p-4 rounded-xl border border-rose-500/20 flex flex-col gap-3">
+        {/* End Point Card */}
+        <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-rose-400" />
-              <span className="text-[11px] font-mono font-bold tracking-widest text-rose-400 uppercase">
-                OUT-POINT (END)
-              </span>
-            </div>
+            <span className="text-xs font-semibold text-rose-700 uppercase tracking-wide">
+              End Marker
+            </span>
             <button
               onClick={() => handleEndChange(currentTime)}
-              className="text-[10px] font-mono font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-md border border-rose-500/30 transition-colors"
+              className="text-xs text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200/60 transition-colors font-medium"
             >
-              SNAP TO PLAYHEAD ({formatTime(currentTime)})
+              Set to Current ({formatTime(currentTime)})
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-studio-900 border border-studio-800 rounded-xl px-3 py-2 flex items-center justify-between">
-              <input
-                type="number"
-                step="0.01"
-                min={startTime + 0.05}
-                max={duration}
-                value={endTime.toFixed(2)}
-                onChange={(e) => handleEndChange(parseFloat(e.target.value) || duration)}
-                className="bg-transparent font-mono text-xl font-black text-rose-400 focus:outline-none w-full"
-              />
-              <span className="text-xs text-studio-500 font-mono font-semibold">SEC</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              step="0.01"
+              min={startTime + 0.05}
+              max={duration}
+              value={endTime.toFixed(2)}
+              onChange={(e) => handleEndChange(parseFloat(e.target.value) || duration)}
+              className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-mono text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+            <span className="text-xs text-slate-500 font-medium">sec</span>
           </div>
 
-          {/* Micro Nudge Buttons */}
-          <div className="grid grid-cols-4 gap-1 text-[11px] font-mono">
-            <button onClick={() => handleEndChange(endTime - 1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">-1.0s</button>
-            <button onClick={() => handleEndChange(endTime - 0.1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">-0.1s</button>
-            <button onClick={() => handleEndChange(endTime + 0.1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">+0.1s</button>
-            <button onClick={() => handleEndChange(endTime + 1)} className="py-1 bg-studio-900 hover:bg-studio-800 border border-white/[0.04] rounded text-studio-300">+1.0s</button>
+          {/* Nudge buttons */}
+          <div className="flex items-center gap-1.5 text-xs font-medium">
+            <button onClick={() => handleEndChange(endTime - 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-1s</button>
+            <button onClick={() => handleEndChange(endTime - 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-0.1s</button>
+            <button onClick={() => handleEndChange(endTime + 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+0.1s</button>
+            <button onClick={() => handleEndChange(endTime + 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+1s</button>
           </div>
         </div>
       </div>
 
-      {/* Faders and Audio Container Settings */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-studio-950/60 rounded-xl border border-white/[0.06]">
+      {/* Fades & Export Settings */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 border border-slate-200/80 rounded-xl">
         {/* Fade In */}
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center text-[10px] font-mono uppercase text-studio-400">
-            <span>FADE IN</span>
-            <span className="font-bold text-emerald-400 text-xs">{fadeIn}s</span>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between text-xs font-medium text-slate-700">
+            <span>Fade In</span>
+            <span className="font-mono text-indigo-600 font-semibold">{fadeIn}s</span>
           </div>
           <input
             type="range"
@@ -209,15 +195,15 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
             step="0.5"
             value={fadeIn}
             onChange={(e) => setFadeIn(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
+            className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer"
           />
         </div>
 
         {/* Fade Out */}
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center text-[10px] font-mono uppercase text-studio-400">
-            <span>FADE OUT</span>
-            <span className="font-bold text-rose-400 text-xs">{fadeOut}s</span>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between text-xs font-medium text-slate-700">
+            <span>Fade Out</span>
+            <span className="font-mono text-indigo-600 font-semibold">{fadeOut}s</span>
           </div>
           <input
             type="range"
@@ -226,56 +212,56 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
             step="0.5"
             value={fadeOut}
             onChange={(e) => setFadeOut(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
+            className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer"
           />
         </div>
 
-        {/* Format */}
+        {/* Target Format */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">OUTPUT FORMAT</label>
+          <label className="text-xs font-medium text-slate-700">Output Format</label>
           <select
             value={targetFormat}
             onChange={(e) => setTargetFormat(e.target.value)}
-            className="bg-studio-900 border border-studio-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
+            className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium focus:outline-none focus:border-indigo-500"
           >
-            <option value="mp3">MP3 Universal</option>
-            <option value="wav">WAV Lossless PCM</option>
-            <option value="flac">FLAC Hi-Fi Master</option>
-            <option value="aac">AAC Low-Latency</option>
-            <option value="m4a">M4A Apple Core</option>
-            <option value="opus">OPUS Next-Gen</option>
+            <option value="mp3">MP3 (Universal)</option>
+            <option value="wav">WAV (Lossless PCM)</option>
+            <option value="flac">FLAC (Lossless Hi-Fi)</option>
+            <option value="aac">AAC (Modern Web/iOS)</option>
+            <option value="m4a">M4A (Apple Audio)</option>
+            <option value="opus">OPUS (Modern Voice/Streaming)</option>
           </select>
         </div>
 
         {/* Bitrate */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">TARGET BITRATE</label>
+          <label className="text-xs font-medium text-slate-700">Bitrate</label>
           <select
             value={bitrate}
             onChange={(e) => setBitrate(e.target.value)}
             disabled={targetFormat === 'wav' || targetFormat === 'flac'}
-            className="bg-studio-900 border border-studio-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono disabled:opacity-40 focus:outline-none focus:border-emerald-500"
+            className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium disabled:opacity-40 focus:outline-none focus:border-indigo-500"
           >
-            <option value="320k">320 kbps (Maximum)</option>
-            <option value="256k">256 kbps (High Fidelity)</option>
-            <option value="192k">192 kbps (Standard Pro)</option>
+            <option value="320k">320 kbps (High Quality)</option>
+            <option value="256k">256 kbps</option>
+            <option value="192k">192 kbps (Standard)</option>
             <option value="128k">128 kbps (Balanced)</option>
-            <option value="64k">64 kbps (Voice Voice)</option>
+            <option value="64k">64 kbps (Voice)</option>
           </select>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-xl text-xs font-mono">
-          ERROR: {error}
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-medium">
+          {error}
         </div>
       )}
 
       {/* Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/[0.06]">
-        <div className="flex items-center gap-2 text-xs font-mono text-studio-400">
-          <span>OUTPUT LENGTH:</span>
-          <span className="text-white font-extrabold text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100">
+        <div className="text-xs text-slate-500 font-medium">
+          Estimated Output Duration:{' '}
+          <span className="font-mono text-slate-900 font-bold">
             {cutMode === 'keep'
               ? formatTime(Math.max(0, endTime - startTime))
               : formatTime(Math.max(0, duration - (endTime - startTime)))}
@@ -285,17 +271,17 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
         <button
           onClick={handleExport}
           disabled={isProcessing}
-          className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold px-6 py-2.5 rounded-xl shadow-neon-volt flex items-center gap-2 text-xs font-mono tracking-wider uppercase transition-all disabled:opacity-50"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-xs flex items-center gap-2 text-xs transition-colors disabled:opacity-50"
         >
           {isProcessing ? (
             <>
-              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-              RENDERING AUDIO WITH FFMPEG...
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Processing Audio...
             </>
           ) : (
             <>
               <Scissors className="w-4 h-4" />
-              {cutMode === 'keep' ? 'RENDER & EXPORT SELECTION' : 'SPLICE & REMOVE SELECTION'}
+              {cutMode === 'keep' ? 'Trim & Export Selection' : 'Cut Out & Splice Remainder'}
             </>
           )}
         </button>

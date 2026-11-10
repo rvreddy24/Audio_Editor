@@ -70,7 +70,7 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
       analyser.getByteFrequencyData(dataArray);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#080a0f';
+      ctx.fillStyle = '#f8fafc';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const barWidth = (canvas.width / bufferLength) * 2;
@@ -78,8 +78,7 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
 
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * canvas.height;
-        // Cyber neon gradient
-        ctx.fillStyle = `hsl(${140 + (i / bufferLength) * 60}, 90%, 55%)`;
+        ctx.fillStyle = '#4f46e5';
         ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
         x += barWidth;
       }
@@ -149,7 +148,7 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
 
   const handleUseRecording = () => {
     if (!recordedBlob) return;
-    const file = new File([recordedBlob], `mic_recording_${Date.now()}.webm`, {
+    const file = new File([recordedBlob], `recording_${Date.now()}.webm`, {
       type: 'audio/webm'
     });
     onRecordingComplete(file);
@@ -159,41 +158,41 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4">
-      <div className="bg-studio-950 border border-rose-500/30 rounded-3xl w-full max-w-lg p-6 sm:p-7 shadow-neon-rose flex flex-col gap-5">
-        <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
-          <div className="flex items-center gap-2.5 text-rose-400 font-mono font-bold text-sm uppercase tracking-wide">
-            <Mic className="w-5 h-5 text-rose-500 animate-pulse" />
-            LIVE MICROPHONE RECORDER
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-xl flex flex-col gap-5">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm">
+            <Mic className="w-4 h-4 text-rose-600" />
+            Voice & Microphone Recorder
           </div>
           <button
             onClick={() => {
               cleanupStream();
               onClose();
             }}
-            className="text-studio-400 hover:text-white p-1 rounded-lg"
+            className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Visualizer Canvas */}
-        <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] bg-[#080a0f] h-36 flex items-center justify-center shadow-inner">
-          <canvas ref={canvasRef} width={460} height={144} className="w-full h-full block" />
+        <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 h-32 flex items-center justify-center">
+          <canvas ref={canvasRef} width={460} height={128} className="w-full h-full block" />
           {!isRecording && !recordedBlob && (
-            <div className="absolute text-xs font-mono text-studio-500 uppercase tracking-wider">
-              CLICK START RECORDING TO INITIALIZE STREAM
+            <div className="absolute text-xs text-slate-400 font-medium">
+              Click Start Recording to begin
             </div>
           )}
         </div>
 
-        {/* Big LED Timer Display */}
+        {/* Timer Display */}
         <div className="text-center">
-          <div className="font-mono text-4xl font-black text-rose-400 tracking-widest drop-shadow-[0_0_10px_rgba(244,63,94,0.4)]">
+          <div className="font-mono text-3xl font-bold text-slate-900 tracking-wider">
             {formatTime(recordSeconds, false)}
           </div>
-          <div className="text-[10px] font-mono uppercase tracking-widest text-studio-400 mt-1">
-            {isRecording ? (isPaused ? 'STREAM PAUSED' : 'RECORDING ACTIVE (44.1 KHZ)') : recordedBlob ? 'CAPTURE COMPLETE' : 'STANDBY'}
+          <div className="text-xs text-slate-500 mt-0.5 font-medium">
+            {isRecording ? (isPaused ? 'Recording Paused' : 'Recording...') : recordedBlob ? 'Recording Ready' : 'Ready to record'}
           </div>
         </div>
 
@@ -202,9 +201,9 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
           {!isRecording && !recordedBlob && (
             <button
               onClick={startRecording}
-              className="bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white font-mono font-extrabold px-7 py-3 rounded-xl flex items-center gap-2 shadow-neon-rose text-xs tracking-wider uppercase transition-all"
+              className="bg-rose-600 hover:bg-rose-700 text-white font-medium px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-xs text-xs transition-colors"
             >
-              <Mic className="w-4 h-4" /> START RECORDING
+              <Mic className="w-4 h-4" /> Start Recording
             </button>
           )}
 
@@ -212,17 +211,17 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
             <>
               <button
                 onClick={pauseRecording}
-                className="bg-studio-900 hover:bg-studio-800 text-studio-200 border border-white/[0.08] px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-mono font-bold transition-colors"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-medium transition-colors"
               >
                 {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-                {isPaused ? 'RESUME' : 'PAUSE'}
+                {isPaused ? 'Resume' : 'Pause'}
               </button>
 
               <button
                 onClick={stopRecording}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-mono font-extrabold px-6 py-2.5 rounded-xl flex items-center gap-2 text-xs shadow-neon-rose tracking-wider uppercase transition-all"
+                className="bg-rose-600 hover:bg-rose-700 text-white font-medium px-5 py-2 rounded-xl flex items-center gap-2 text-xs shadow-xs transition-colors"
               >
-                <Square className="w-4 h-4 fill-current" /> STOP & FINISH
+                <Square className="w-4 h-4 fill-current" /> Finish Recording
               </button>
             </>
           )}
@@ -234,17 +233,17 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
               )}
               <button
                 onClick={startRecording}
-                className="p-2.5 bg-studio-900 hover:bg-studio-850 text-studio-300 rounded-xl border border-white/[0.06]"
-                title="Retake"
+                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs"
+                title="Record Again"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
               <button
                 onClick={handleUseRecording}
-                className="bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black px-4 py-2.5 rounded-xl flex items-center gap-1.5 text-xs shadow-neon-volt tracking-wider uppercase transition-all"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl flex items-center gap-1.5 text-xs shadow-xs transition-colors"
               >
-                <Check className="w-4 h-4 stroke-[3]" />
-                LOAD TO STUDIO
+                <Check className="w-4 h-4 stroke-[2.5]" />
+                Load into Studio
               </button>
             </div>
           )}

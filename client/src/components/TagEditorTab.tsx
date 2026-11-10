@@ -43,128 +43,128 @@ export const TagEditorTab: React.FC<TagEditorTabProps> = ({ currentFile, onProce
   };
 
   return (
-    <div className="studio-glass rounded-2xl p-6 shadow-2xl flex flex-col gap-6 border border-white/[0.08]">
-      <div className="flex items-center gap-2 border-b border-white/[0.06] pb-4">
-        <span className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
+      <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
+        <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
           <Tag className="w-4 h-4" />
         </span>
         <div>
-          <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-sans">
-            ID3 Container Metadata & Track Info
+          <h3 className="text-base font-semibold text-slate-900 font-sans">
+            ID3 Metadata & Track Information
           </h3>
-          <p className="text-[11px] text-studio-400 font-mono mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Embed title, artist attribution, album naming, and metadata tags into the audio stream.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Title */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase font-bold text-studio-400 flex items-center gap-1.5">
-            <Music className="w-3.5 h-3.5 text-teal-400" /> TRACK TITLE
+          <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <Music className="w-3.5 h-3.5 text-indigo-600" /> Track Title
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Midnight Horizon"
-            className="bg-studio-950 border border-studio-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-studio-600 focus:outline-none focus:border-teal-500"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
           />
         </div>
 
         {/* Artist */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase font-bold text-studio-400 flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-teal-400" /> ARTIST / PRODUCER
+          <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-indigo-600" /> Artist / Band
           </label>
           <input
             type="text"
             value={artist}
             onChange={(e) => setArtist(e.target.value)}
             placeholder="e.g. Solar Wave"
-            className="bg-studio-950 border border-studio-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-studio-600 focus:outline-none focus:border-teal-500"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
           />
         </div>
 
         {/* Album */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase font-bold text-studio-400 flex items-center gap-1.5">
-            <Disc className="w-3.5 h-3.5 text-teal-400" /> ALBUM RELEASE
+          <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <Disc className="w-3.5 h-3.5 text-indigo-600" /> Album Release
           </label>
           <input
             type="text"
             value={album}
             onChange={(e) => setAlbum(e.target.value)}
-            placeholder="e.g. Neon Odyssey LP"
-            className="bg-studio-950 border border-studio-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-studio-600 focus:outline-none focus:border-teal-500"
+            placeholder="e.g. Odyssey EP"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
           />
         </div>
 
         {/* Year */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase font-bold text-studio-400 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-teal-400" /> RELEASE YEAR
+          <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-indigo-600" /> Release Year
           </label>
           <input
             type="text"
             value={year}
             onChange={(e) => setYear(e.target.value)}
             placeholder="e.g. 2026"
-            className="bg-studio-950 border border-studio-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-studio-600 focus:outline-none focus:border-teal-500"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
           />
         </div>
 
         {/* Genre */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase font-bold text-studio-400 flex items-center gap-1.5">
-            <Hash className="w-3.5 h-3.5 text-teal-400" /> MUSICAL GENRE
+          <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <Hash className="w-3.5 h-3.5 text-indigo-600" /> Musical Genre
           </label>
           <input
             type="text"
             value={genre}
             onChange={(e) => setGenre(e.target.value)}
-            placeholder="e.g. Synthwave / Cyberpunk"
-            className="bg-studio-950 border border-studio-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-studio-600 focus:outline-none focus:border-teal-500"
+            placeholder="e.g. Synth-pop / Electronic"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
           />
         </div>
 
         {/* Comment */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] uppercase font-bold text-studio-400 flex items-center gap-1.5">
-            <MessageSquare className="w-3.5 h-3.5 text-teal-400" /> MASTERING METADATA
+          <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5 text-indigo-600" /> Comments & Notes
           </label>
           <input
             type="text"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="e.g. Mastered in SoundCraft Pro Studio"
-            className="bg-studio-950 border border-studio-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-studio-600 focus:outline-none focus:border-teal-500"
+            placeholder="e.g. Mastered in SoundCraft Studio"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
           />
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-xl text-xs font-mono">
-          ERROR: {error}
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-medium">
+          {error}
         </div>
       )}
 
-      <div className="flex justify-end pt-2 border-t border-white/[0.06]">
+      <div className="flex justify-end pt-2 border-t border-slate-100">
         <button
           onClick={handleSave}
           disabled={isProcessing}
-          className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-black font-extrabold px-6 py-2.5 rounded-xl shadow-neon-volt flex items-center gap-2 text-xs font-mono tracking-wider uppercase transition-all disabled:opacity-50"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-xs flex items-center gap-2 text-xs transition-colors disabled:opacity-50"
         >
           {isProcessing ? (
             <>
-              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-              WRITING ID3 METADATA...
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Saving Tags...
             </>
           ) : (
             <>
               <Save className="w-4 h-4" />
-              WRITE METADATA TO FILE
+              Write Metadata to File
             </>
           )}
         </button>

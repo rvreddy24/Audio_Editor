@@ -69,46 +69,40 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
   };
 
   return (
-    <div className="studio-glass rounded-2xl p-6 shadow-2xl flex flex-col gap-6 border border-white/[0.08]">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       {/* Title */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Sliders className="w-4 h-4" />
-            </span>
-            <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-sans">
-              DSP Audio FX & Analog Mastering Rack
-            </h3>
-          </div>
-          <p className="text-[11px] text-studio-400 font-mono mt-1">
-            Rubberband time-stretching, pitch transposition, LUFS loudness mastering, and spatial 8D processing.
+          <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+            <Sliders className="w-5 h-5 text-indigo-600" />
+            Audio Effects & Quality Studio
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Tempo and pitch stretching, volume gain boost, LUFS loudness mastering, and spatial effects.
           </p>
         </div>
 
         <button
           onClick={resetAll}
-          className="text-xs font-mono font-bold text-studio-400 hover:text-white bg-studio-950 hover:bg-studio-850 border border-white/[0.06] px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
+          className="text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          RESET RACK
+          Reset All
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Module 1: Tempo & Pitch Transpose */}
-        <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold tracking-widest text-emerald-400 uppercase flex items-center gap-1.5">
-              <Gauge className="w-3.5 h-3.5" /> SPEED & PITCH
-            </span>
-          </div>
+        {/* Module 1: Tempo & Pitch */}
+        <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl flex flex-col gap-3.5">
+          <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
+            <Gauge className="w-3.5 h-3.5 text-indigo-600" /> Speed & Pitch
+          </span>
 
           {/* Tempo Slider */}
           <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-studio-400 uppercase text-[10px]">TEMPO MULTIPLIER</span>
-              <span className="text-emerald-400 font-black">{speed.toFixed(2)}x</span>
+            <div className="flex justify-between text-xs font-medium text-slate-700">
+              <span>Playback Speed</span>
+              <span className="text-indigo-600 font-bold font-mono">{speed.toFixed(2)}x</span>
             </div>
             <input
               type="range"
@@ -117,21 +111,21 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="0.05"
               value={speed}
               onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[9px] text-studio-500 font-mono">
+            <div className="flex justify-between text-[10px] text-slate-400 font-medium">
               <span>0.25x</span>
-              <span>1.0x (NORMAL)</span>
+              <span>1.0x (Normal)</span>
               <span>2.50x</span>
             </div>
           </div>
 
           {/* Pitch Shifter */}
           <div className="flex flex-col gap-1.5 mt-1">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-studio-400 uppercase text-[10px]">PITCH TRANSPOSITION</span>
-              <span className="text-cyan-400 font-black">
-                {pitch > 0 ? `+${pitch}` : pitch} SEMITONES
+            <div className="flex justify-between text-xs font-medium text-slate-700">
+              <span>Pitch Shift</span>
+              <span className="text-indigo-600 font-bold font-mono">
+                {pitch > 0 ? `+${pitch}` : pitch} semitones
               </span>
             </div>
             <input
@@ -141,40 +135,36 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="1"
               value={pitch}
               onChange={(e) => setPitch(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[9px] text-studio-500 font-mono">
-              <span>-12 (OCTAVE DOWN)</span>
-              <span>0</span>
-              <span>+12 (OCTAVE UP)</span>
+            <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>-1 Octave</span>
+              <span>0 (Original)</span>
+              <span>+1 Octave</span>
             </div>
           </div>
 
-          {/* Pitch Lock Toggle */}
-          <label className="flex items-center gap-2 mt-1 cursor-pointer select-none text-[11px] text-studio-300 font-mono">
+          <label className="flex items-center gap-2 mt-1 cursor-pointer select-none text-xs text-slate-700 font-medium">
             <input
               type="checkbox"
               checked={preservePitch}
               onChange={(e) => setPreservePitch(e.target.checked)}
-              className="rounded bg-studio-900 border-studio-700 text-emerald-500 focus:ring-0"
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             <span>Preserve Pitch when changing speed</span>
           </label>
         </div>
 
         {/* Module 2: Gain Booster & Normalization */}
-        <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold tracking-widest text-amber-400 uppercase flex items-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5" /> VOLUME & MASTERING
-            </span>
-          </div>
+        <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl flex flex-col gap-3.5">
+          <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
+            <Volume2 className="w-3.5 h-3.5 text-indigo-600" /> Volume & Loudness
+          </span>
 
-          {/* Volume Multiplier */}
           <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-studio-400 uppercase text-[10px]">GAIN MULTIPLIER / BOOST</span>
-              <span className="text-amber-400 font-black">{Math.round(volume * 100)}%</span>
+            <div className="flex justify-between text-xs font-medium text-slate-700">
+              <span>Gain Multiplier / Boost</span>
+              <span className="text-indigo-600 font-bold font-mono">{Math.round(volume * 100)}%</span>
             </div>
             <input
               type="range"
@@ -183,59 +173,53 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="0.05"
               value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[9px] text-studio-500 font-mono">
+            <div className="flex justify-between text-[10px] text-slate-400 font-medium">
               <span>10%</span>
-              <span>100% (UNITY)</span>
+              <span>100% (Original)</span>
               <span>300% (+10dB)</span>
             </div>
           </div>
 
-          {/* Normalization Target */}
           <div className="flex flex-col gap-1.5 mt-1">
-            <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">
-              LOUDNESS NORMALIZATION (LUFS)
-            </label>
+            <label className="text-xs font-medium text-slate-700">Loudness Normalization</label>
             <select
               value={normalize}
               onChange={(e) => setNormalize(e.target.value as any)}
-              className="bg-studio-900 border border-studio-800 rounded-xl px-2.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500"
+              className="bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:border-indigo-500"
             >
-              <option value="none">None (Raw Dynamic Range)</option>
-              <option value="ebu_r128">Spotify & YouTube Master (-14 LUFS)</option>
+              <option value="none">None (Preserve Original Dynamics)</option>
+              <option value="ebu_r128">Spotify & YouTube Standard (-14 LUFS)</option>
               <option value="peak">Peak Limiting (Maximize Loudness)</option>
             </select>
           </div>
         </div>
 
         {/* Module 3: EQ & Acoustic Filters */}
-        <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold tracking-widest text-cyan-400 uppercase flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5" /> EQUALIZER & PRESETS
-            </span>
-          </div>
+        <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl flex flex-col gap-3.5">
+          <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
+            <Sliders className="w-3.5 h-3.5 text-indigo-600" /> Equalizer & Tone
+          </span>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">ACOUSTIC PROFILE</label>
+            <label className="text-xs font-medium text-slate-700">Acoustic Preset</label>
             <select
               value={preset}
               onChange={(e) => setPreset(e.target.value)}
-              className="bg-studio-900 border border-studio-800 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"
+              className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium focus:outline-none focus:border-indigo-500"
             >
               <option value="flat">Flat Direct Curve</option>
               <option value="vocal_clarity">Vocal Clarity & Speech Boost</option>
               <option value="lo_fi">Lo-Fi Retro Muffle (Warm)</option>
-              <option value="radio">Vintage Radio / Walkie-Talkie</option>
+              <option value="radio">Vintage Radio / Telephone</option>
             </select>
           </div>
 
-          {/* Bass slider */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-studio-400 uppercase text-[10px]">BASS SHELF</span>
-              <span className="text-cyan-400 font-bold">{bass > 0 ? `+${bass}` : bass} dB</span>
+            <div className="flex justify-between text-xs font-medium text-slate-700">
+              <span>Bass Shelf</span>
+              <span className="text-indigo-600 font-bold font-mono">{bass > 0 ? `+${bass}` : bass} dB</span>
             </div>
             <input
               type="range"
@@ -244,15 +228,14 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="1"
               value={bass}
               onChange={(e) => setBass(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
           </div>
 
-          {/* Treble slider */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-studio-400 uppercase text-[10px]">TREBLE AIR</span>
-              <span className="text-cyan-400 font-bold">{treble > 0 ? `+${treble}` : treble} dB</span>
+            <div className="flex justify-between text-xs font-medium text-slate-700">
+              <span>Treble Air</span>
+              <span className="text-indigo-600 font-bold font-mono">{treble > 0 ? `+${treble}` : treble} dB</span>
             </div>
             <input
               type="range"
@@ -261,70 +244,70 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="1"
               value={treble}
               onChange={(e) => setTreble(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-slate-200 rounded-lg cursor-pointer"
             />
           </div>
         </div>
       </div>
 
-      {/* Special Hardware Toggle Pads */}
-      <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3">
-        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-purple-400 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5" /> SPECIAL DSP PROCESSORS
+      {/* Special Effects Toggles */}
+      <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl flex flex-col gap-3">
+        <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Special Effects
         </span>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 8D Audio */}
           <label className={`p-3.5 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
-            panning8D ? 'bg-purple-600/20 border-purple-500 text-white shadow-neon-rose' : 'bg-studio-900 border-white/[0.06] text-studio-300 hover:border-white/[0.15]'
+            panning8D ? 'bg-indigo-50 border-indigo-600 text-indigo-900 ring-1 ring-indigo-600' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
           }`}>
             <input type="checkbox" checked={panning8D} onChange={(e) => setPanning8D(e.target.checked)} className="hidden" />
-            <Headphones className={`w-5 h-5 ${panning8D ? 'text-purple-400 animate-pulse' : 'text-studio-500'}`} />
+            <Headphones className={`w-5 h-5 ${panning8D ? 'text-indigo-600' : 'text-slate-400'}`} />
             <div>
-              <div className="text-xs font-mono font-bold">8D BINAURAL SPATIALIZER</div>
-              <div className="text-[10px] text-studio-400">360° rotating audio orbit</div>
+              <div className="text-xs font-semibold">8D Spatial Audio</div>
+              <div className="text-[11px] text-slate-500">Binaural 360° rotating sound</div>
             </div>
           </label>
 
           {/* Vocal Remover */}
           <label className={`p-3.5 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
-            vocalRemover ? 'bg-emerald-600/20 border-emerald-500 text-white shadow-neon-volt' : 'bg-studio-900 border-white/[0.06] text-studio-300 hover:border-white/[0.15]'
+            vocalRemover ? 'bg-indigo-50 border-indigo-600 text-indigo-900 ring-1 ring-indigo-600' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
           }`}>
             <input type="checkbox" checked={vocalRemover} onChange={(e) => setVocalRemover(e.target.checked)} className="hidden" />
-            <Mic className={`w-5 h-5 ${vocalRemover ? 'text-emerald-400' : 'text-studio-500'}`} />
+            <Mic className={`w-5 h-5 ${vocalRemover ? 'text-indigo-600' : 'text-slate-400'}`} />
             <div>
-              <div className="text-xs font-mono font-bold">VOCAL REMOVER / KARAOKE</div>
-              <div className="text-[10px] text-studio-400">Center-channel phase cancellation</div>
+              <div className="text-xs font-semibold">Vocal Remover / Karaoke</div>
+              <div className="text-[11px] text-slate-500">Center-channel vocal cancel</div>
             </div>
           </label>
 
           {/* Reverse Audio */}
           <label className={`p-3.5 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
-            reverse ? 'bg-cyan-600/20 border-cyan-500 text-white shadow-neon-cyan' : 'bg-studio-900 border-white/[0.06] text-studio-300 hover:border-white/[0.15]'
+            reverse ? 'bg-indigo-50 border-indigo-600 text-indigo-900 ring-1 ring-indigo-600' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
           }`}>
             <input type="checkbox" checked={reverse} onChange={(e) => setReverse(e.target.checked)} className="hidden" />
-            <RotateCcw className={`w-5 h-5 ${reverse ? 'text-cyan-400' : 'text-studio-500'}`} />
+            <RotateCcw className={`w-5 h-5 ${reverse ? 'text-indigo-600' : 'text-slate-400'}`} />
             <div>
-              <div className="text-xs font-mono font-bold">REVERSE PLAYBACK</div>
-              <div className="text-[10px] text-studio-400">Backwards audio flip</div>
+              <div className="text-xs font-semibold">Reverse Audio</div>
+              <div className="text-[11px] text-slate-500">Backwards playback effect</div>
             </div>
           </label>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-xl text-xs font-mono">
-          ERROR: {error}
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-medium">
+          {error}
         </div>
       )}
 
       {/* Render Action Button */}
-      <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-        <div className="flex items-center gap-3 font-mono text-xs">
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+        <div className="flex items-center gap-3 text-xs">
           <select
             value={targetFormat}
             onChange={(e) => setTargetFormat(e.target.value)}
-            className="bg-studio-950 border border-studio-800 rounded-xl px-2.5 py-1.5 text-xs text-white"
+            className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium"
           >
             <option value="mp3">MP3</option>
             <option value="wav">WAV</option>
@@ -335,7 +318,7 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
             value={bitrate}
             onChange={(e) => setBitrate(e.target.value)}
             disabled={targetFormat === 'wav' || targetFormat === 'flac'}
-            className="bg-studio-950 border border-studio-800 rounded-xl px-2.5 py-1.5 text-xs text-white disabled:opacity-40"
+            className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium disabled:opacity-40"
           >
             <option value="320k">320 kbps</option>
             <option value="256k">256 kbps</option>
@@ -346,17 +329,17 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
         <button
           onClick={handleApply}
           disabled={isProcessing}
-          className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black font-extrabold px-6 py-2.5 rounded-xl shadow-neon-volt flex items-center gap-2 text-xs font-mono tracking-wider uppercase transition-all disabled:opacity-50"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-xs flex items-center gap-2 text-xs transition-colors disabled:opacity-50"
         >
           {isProcessing ? (
             <>
-              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-              PROCESSING DSP RACK...
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Processing Effects...
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              RENDER MASTER EFFECTS
+              Apply Effects & Export
             </>
           )}
         </button>

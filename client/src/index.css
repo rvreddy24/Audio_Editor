@@ -3,56 +3,44 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background-color: #06070a;
-  color: #f1f4f9;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
-  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Studio custom scrollbars */
+/* Crisp light scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0d13;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1d2332;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #262e42;
+  background: #94a3b8;
 }
 
-/* Custom Range Input */
+/* Clean range inputs */
 input[type='range'] {
-  accent-color: #22c55e;
+  accent-color: #4f46e5;
 }
 
-/* Cyber LED pulse */
-@keyframes led-blink {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px #22c55e); }
-  50% { opacity: 0.4; filter: none; }
-}
-.animate-led {
-  animation: led-blink 2s infinite ease-in-out;
-}
-
-/* Glow border effect */
-.studio-glass {
-  background: linear-gradient(135deg, rgba(22, 26, 37, 0.7) 0%, rgba(11, 13, 19, 0.9) 100%);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.studio-card-glow:hover {
-  border-color: rgba(34, 197, 94, 0.3);
-  box-shadow: 0 0 25px -5px rgba(34, 197, 94, 0.15);
+/* Clean card */
+.clean-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
 }
