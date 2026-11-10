@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, ArrowRightLeft, HardDrive, Music, Check, Zap } from 'lucide-react';
+import { RefreshCw, ArrowRightLeft, HardDrive, Check, Zap, Cpu } from 'lucide-react';
 import { convertAudio } from '../api';
 import { LoadedFile, ProcessingResult } from '../types';
 import { formatFileSize, formatTime } from '../utils/formatters';
@@ -12,7 +12,6 @@ interface ConverterTabProps {
 export const ConverterTab: React.FC<ConverterTabProps> = ({ currentFile, onProcessed }) => {
   const [targetFormat, setTargetFormat] = useState<string>('mp3');
   const [bitrate, setBitrate] = useState<number>(320);
-  const [customBitrate, setCustomBitrate] = useState<boolean>(false);
   const [sampleRate, setSampleRate] = useState<string>('original');
   const [channels, setChannels] = useState<string>('original');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -22,33 +21,31 @@ export const ConverterTab: React.FC<ConverterTabProps> = ({ currentFile, onProce
   const currentKbps = currentFile.probe.audio?.bitRate || currentFile.probe.bitRate || 0;
   const currentFormat = currentFile.probe.audio?.codec || currentFile.probe.formatName || '';
 
-  // Formats definition
   const formats = [
-    { id: 'mp3', label: 'MP3', desc: 'Universal audio, compatible with all devices', lossy: true },
-    { id: 'wav', label: 'WAV', desc: 'Uncompressed raw audio, 100% studio quality', lossy: false },
-    { id: 'flac', label: 'FLAC', desc: 'Lossless audio compression, audiophile favorite', lossy: false },
-    { id: 'aac', label: 'AAC', desc: 'High efficiency, Apple & streaming standard', lossy: true },
-    { id: 'm4a', label: 'M4A', desc: 'MPEG-4 Audio container for iOS & macOS', lossy: true },
-    { id: 'ogg', label: 'OGG', desc: 'Open-source Vorbis audio format', lossy: true },
-    { id: 'opus', label: 'OPUS', desc: 'Next-gen low latency & high clarity codec', lossy: true },
-    { id: 'aiff', label: 'AIFF', desc: 'Apple studio uncompressed PCM', lossy: false },
-    { id: 'wma', label: 'WMA', desc: 'Windows Media Audio format', lossy: true },
+    { id: 'mp3', label: 'MP3', desc: 'Universal audio standard', tag: 'CBR/VBR' },
+    { id: 'wav', label: 'WAV', desc: 'Studio uncompressed PCM', tag: '100% Lossless' },
+    { id: 'flac', label: 'FLAC', desc: 'Hi-Fi audiophile compression', tag: 'Lossless' },
+    { id: 'aac', label: 'AAC', desc: 'High-efficiency stream codec', tag: 'Apple Core' },
+    { id: 'm4a', label: 'M4A', desc: 'MPEG-4 Audio container', tag: 'iOS Standard' },
+    { id: 'ogg', label: 'OGG', desc: 'Open-source Vorbis stream', tag: 'Open Codec' },
+    { id: 'opus', label: 'OPUS', desc: 'Ultra-low latency speech', tag: 'Next-Gen' },
+    { id: 'aiff', label: 'AIFF', desc: 'Apple uncompressed PCM', tag: 'Lossless' },
+    { id: 'wma', label: 'WMA', desc: 'Windows Media Audio', tag: 'Legacy' },
   ];
 
   const bitratePresets = [32, 64, 96, 128, 160, 192, 256, 320];
 
-  // Calculate estimated output size
   const isLossless = targetFormat === 'wav' || targetFormat === 'aiff';
   const isFlac = targetFormat === 'flac';
   let estimatedBytes = 0;
   if (isLossless) {
     const sr = sampleRate === 'original' ? (currentFile.probe.audio?.sampleRate || 44100) : parseInt(sampleRate, 10);
     const ch = channels === 'original' ? (currentFile.probe.audio?.channels || 2) : parseInt(channels, 10);
-    estimatedBytes = duration * sr * ch * 2; // 16-bit PCM
+    estimatedBytes = duration * sr * ch * 2;
   } else if (isFlac) {
     const sr = sampleRate === 'original' ? (currentFile.probe.audio?.sampleRate || 44100) : parseInt(sampleRate, 10);
     const ch = channels === 'original' ? (currentFile.probe.audio?.channels || 2) : parseInt(channels, 10);
-    estimatedBytes = duration * sr * ch * 2 * 0.6; // approx 60% compression
+    estimatedBytes = duration * sr * ch * 2 * 0.6;
   } else {
     estimatedBytes = (duration * (bitrate * 1000)) / 8;
   }
@@ -73,96 +70,105 @@ export const ConverterTab: React.FC<ConverterTabProps> = ({ currentFile, onProce
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
-      {/* Title & Info */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="studio-glass rounded-2xl p-6 shadow-2xl flex flex-col gap-6 border border-white/[0.08]">
+      {/* Title & Current Audio Hardware Specs */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
         <div>
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <ArrowRightLeft className="w-5 h-5 text-indigo-400" />
-            Universal Audio Converter & Bitrate Scaler
-          </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Convert to any target audio format, increase or decrease bitrate (kbps), and customize sample rates.
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <RefreshCw className="w-4 h-4" />
+            </span>
+            <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-sans">
+              Universal Audio Transcoder & Bitrate Scaler
+            </h3>
+          </div>
+          <p className="text-[11px] text-studio-400 font-mono mt-1">
+            Re-encode, compress or uncompress, scale kbps bitrate, and customize sampling clock rates.
           </p>
         </div>
 
-        {/* Current File Specs Badge */}
-        <div className="flex items-center gap-3 bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 text-xs">
+        {/* Source Specs Pill */}
+        <div className="flex items-center gap-3 bg-studio-950 px-3.5 py-1.5 rounded-xl border border-white/[0.06] text-xs font-mono">
           <div>
-            <span className="text-slate-500">Current: </span>
-            <span className="font-semibold text-indigo-400 uppercase">{currentFormat}</span>
+            <span className="text-studio-500 text-[10px] uppercase">SOURCE: </span>
+            <span className="font-extrabold text-cyan-400 uppercase">{currentFormat}</span>
           </div>
-          <div className="h-3 w-px bg-slate-800" />
+          <span className="text-studio-700">|</span>
           <div>
-            <span className="text-slate-500">Bitrate: </span>
-            <span className="font-mono text-emerald-400 font-semibold">{currentKbps > 0 ? `${currentKbps} kbps` : 'Variable'}</span>
+            <span className="text-studio-500 text-[10px] uppercase">BITRATE: </span>
+            <span className="font-extrabold text-emerald-400">{currentKbps > 0 ? `${currentKbps} kbps` : 'Variable'}</span>
           </div>
-          <div className="h-3 w-px bg-slate-800" />
+          <span className="text-studio-700">|</span>
           <div>
-            <span className="text-slate-500">Size: </span>
-            <span className="font-mono text-slate-300">{formatFileSize(currentFile.size)}</span>
+            <span className="text-studio-500 text-[10px] uppercase">SIZE: </span>
+            <span className="font-semibold text-studio-200">{formatFileSize(currentFile.size)}</span>
           </div>
         </div>
       </div>
 
-      {/* Target Format Grid */}
-      <div className="flex flex-col gap-2">
-        <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-          Select Target Format
+      {/* Target Format Matrix */}
+      <div className="flex flex-col gap-2.5">
+        <label className="text-[10px] font-mono font-bold tracking-widest uppercase text-studio-400">
+          CHOOSE TARGET FORMAT
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-          {formats.map((fmt) => (
-            <button
-              key={fmt.id}
-              onClick={() => setTargetFormat(fmt.id)}
-              className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                targetFormat === fmt.id
-                  ? 'bg-indigo-600/15 border-indigo-500 ring-1 ring-indigo-500 text-white'
-                  : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white'
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-bold text-sm tracking-wide">{fmt.label}</span>
-                {targetFormat === fmt.id && (
-                  <span className="w-4 h-4 bg-indigo-500 text-white rounded-full flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-slate-400 mt-1 line-clamp-1">{fmt.desc}</span>
-            </button>
-          ))}
+          {formats.map((fmt) => {
+            const isSelected = targetFormat === fmt.id;
+            return (
+              <button
+                key={fmt.id}
+                onClick={() => setTargetFormat(fmt.id)}
+                className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                  isSelected
+                    ? 'bg-cyan-500/15 border-cyan-500 text-white shadow-neon-cyan'
+                    : 'bg-studio-950/70 border-white/[0.06] hover:border-white/[0.15] text-studio-300'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-mono font-extrabold text-sm tracking-wide">{fmt.label}</span>
+                  {isSelected ? (
+                    <span className="w-4 h-4 bg-cyan-400 text-black rounded-full flex items-center justify-center font-bold">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-mono text-studio-500 uppercase">{fmt.tag}</span>
+                  )}
+                </div>
+                <span className="text-[10px] text-studio-400 mt-1 line-clamp-1">{fmt.desc}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Bitrate (kbps) Control Section */}
-      <div className="bg-slate-950/60 p-5 rounded-xl border border-slate-800 flex flex-col gap-4">
+      {/* Bitrate (kbps) Control Rack */}
+      <div className="bg-studio-950/70 p-5 rounded-xl border border-white/[0.06] flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400" />
-              Bitrate (kbps) Scaler
-            </h4>
-            <p className="text-xs text-slate-400">
-              Higher kbps = richer studio sound; lower kbps = significantly smaller file size.
+            <span className="text-xs font-mono font-bold text-white flex items-center gap-2 uppercase tracking-wide">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              Bitrate (kbps) Scaling Unit
+            </span>
+            <p className="text-[11px] text-studio-400 font-mono mt-0.5">
+              Control audio density. Higher kbps gives richer studio fidelity; lower kbps creates ultra-compact files.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">Target Bitrate:</span>
-            <span className="font-mono text-lg font-bold text-indigo-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-700">
-              {targetFormat === 'wav' || targetFormat === 'flac' || targetFormat === 'aiff' ? 'Lossless' : `${bitrate} kbps`}
+            <span className="text-[10px] font-mono uppercase text-studio-400">TARGET:</span>
+            <span className="font-mono text-lg font-black text-amber-400 bg-studio-900 px-3 py-1 rounded-xl border border-amber-500/30">
+              {targetFormat === 'wav' || targetFormat === 'flac' || targetFormat === 'aiff' ? 'LOSSLESS' : `${bitrate} kbps`}
             </span>
           </div>
         </div>
 
         {targetFormat === 'wav' || targetFormat === 'flac' || targetFormat === 'aiff' ? (
-          <div className="p-3 bg-indigo-950/30 border border-indigo-800/40 rounded-xl text-xs text-indigo-300 flex items-center gap-2">
-            <span>ℹ️ {targetFormat.toUpperCase()} is a lossless format; bitrate is preserved at full audio fidelity without lossy compression.</span>
+          <div className="p-3 bg-cyan-950/20 border border-cyan-500/30 rounded-xl text-xs font-mono text-cyan-300 flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>Format {targetFormat.toUpperCase()} preserves full master sample fidelity at 16/24-bit without lossy compression.</span>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {/* Range Slider */}
             <input
               type="range"
               min="32"
@@ -170,20 +176,19 @@ export const ConverterTab: React.FC<ConverterTabProps> = ({ currentFile, onProce
               step="16"
               value={bitrate}
               onChange={(e) => setBitrate(parseInt(e.target.value, 10))}
-              className="w-full h-2 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full h-2 bg-studio-900 rounded-lg cursor-pointer"
             />
 
-            {/* Quick Preset Buttons */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-slate-500 mr-1">Presets:</span>
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[10px] font-mono uppercase text-studio-500 mr-2">PRESETS:</span>
               {bitratePresets.map((b) => (
                 <button
                   key={b}
                   onClick={() => setBitrate(b)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
                     bitrate === b
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                      ? 'bg-amber-500 text-black shadow-neon-amber'
+                      : 'bg-studio-900 hover:bg-studio-800 text-studio-300 border border-white/[0.04]'
                   }`}
                 >
                   {b}k
@@ -194,68 +199,70 @@ export const ConverterTab: React.FC<ConverterTabProps> = ({ currentFile, onProce
         )}
       </div>
 
-      {/* Advanced Audio Options: Sample Rate & Channels */}
+      {/* Advanced Sampling and Channels */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Sample Rate */}
-        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 flex flex-col gap-2">
-          <label className="text-xs font-medium text-slate-300">Sample Rate (Hz)</label>
+        <div className="bg-studio-950/50 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-2">
+          <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-studio-400">
+            SAMPLING FREQUENCY
+          </label>
           <select
             value={sampleRate}
             onChange={(e) => setSampleRate(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            className="bg-studio-900 border border-studio-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"
           >
-            <option value="original">Original (Keep Source)</option>
-            <option value="44100">44,100 Hz (Standard CD Quality)</option>
-            <option value="48000">48,000 Hz (Pro Studio / Video)</option>
-            <option value="96000">96,000 Hz (High-Resolution 96k)</option>
-            <option value="22050">22,050 Hz (Low Bandwidth)</option>
+            <option value="original">Source Default (No Resampling)</option>
+            <option value="44100">44,100 Hz (Red Book CD Quality)</option>
+            <option value="48000">48,000 Hz (Studio / Film Master)</option>
+            <option value="96000">96,000 Hz (Hi-Res Audio 96k)</option>
+            <option value="22050">22,050 Hz (Low Bandwidth Speech)</option>
           </select>
         </div>
 
-        {/* Audio Channels */}
-        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 flex flex-col gap-2">
-          <label className="text-xs font-medium text-slate-300">Channels</label>
+        <div className="bg-studio-950/50 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-2">
+          <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-studio-400">
+            CHANNEL CONFIGURATION
+          </label>
           <select
             value={channels}
             onChange={(e) => setChannels(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            className="bg-studio-900 border border-studio-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"
           >
-            <option value="original">Original (Keep Source)</option>
-            <option value="2">Stereo (2 Channels)</option>
-            <option value="1">Mono (1 Channel - Voice/Speech)</option>
+            <option value="original">Source Default (Preserve Channels)</option>
+            <option value="2">Stereo (2 Channels L/R)</option>
+            <option value="1">Mono (1 Channel Downmix)</option>
           </select>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-950/50 border border-rose-800/80 text-rose-300 p-3 rounded-xl text-xs">
-          {error}
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-xl text-xs font-mono">
+          ERROR: {error}
         </div>
       )}
 
-      {/* Bottom Summary & Convert Trigger */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <HardDrive className="w-4 h-4 text-indigo-400" />
-          <span>Estimated Output Size:</span>
-          <span className="font-mono text-emerald-400 font-semibold">{formatFileSize(estimatedBytes)}</span>
-          <span className="text-slate-600">({formatTime(duration)} audio)</span>
+      {/* Bottom Summary Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/[0.06]">
+        <div className="flex items-center gap-2 text-xs font-mono text-studio-400">
+          <HardDrive className="w-4 h-4 text-cyan-400" />
+          <span>ESTIMATED OUTPUT SIZE:</span>
+          <span className="font-black text-cyan-400 text-sm">{formatFileSize(estimatedBytes)}</span>
+          <span className="text-studio-500">({formatTime(duration)})</span>
         </div>
 
         <button
           onClick={handleConvert}
           disabled={isProcessing}
-          className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 text-sm transition-all disabled:opacity-50"
+          className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black font-extrabold px-6 py-2.5 rounded-xl shadow-neon-cyan flex items-center gap-2 text-xs font-mono tracking-wider uppercase transition-all disabled:opacity-50"
         >
           {isProcessing ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Converting Audio...
+              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              TRANSCODING VIA FFMPEG...
             </>
           ) : (
             <>
               <RefreshCw className="w-4 h-4" />
-              Convert to {targetFormat.toUpperCase()} ({bitrate} kbps)
+              RENDER TO {targetFormat.toUpperCase()} ({bitrate} kbps)
             </>
           )}
         </button>

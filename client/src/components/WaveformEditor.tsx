@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, Pause, RotateCcw, ZoomIn, ZoomOut, Maximize2, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, RotateCcw, ZoomIn, ZoomOut, Volume2, VolumeX, Scissors, Bookmark } from 'lucide-react';
 import { formatTime } from '../utils/formatters';
 
 interface WaveformEditorProps {
@@ -10,6 +10,8 @@ interface WaveformEditorProps {
   onRangeChange: (start: number, end: number) => void;
   onCurrentTimeChange?: (time: number) => void;
   cutMode?: 'keep' | 'remove';
+  isPlaying?: boolean;
+  onPlayStateChange?: (playing: boolean) => void;
 }
 
 export const WaveformEditor: React.FC<WaveformEditorProps> = ({
@@ -19,22 +21,25 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
   endTime,
   onRangeChange,
   onCurrentTimeChange,
-  cutMode = 'keep'
+  cutMode = 'keep',
+  isPlaying: externalIsPlaying,
+  onPlayStateChange
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [internalPlaying, setInternalPlaying] = useState(false);
+  const isPlaying = externalIsPlaying !== undefined ? externalIsPlaying : internalPlaying;
+
   const [currentTime, setCurrentTime] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [peaks, setPeaks] = useState<number[]>([]);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Dragging states for markers
+  // Dragging states
   const [dragTarget, setDragTarget] = useState<'start' | 'end' | 'playhead' | null>(null);
 
   // Load and decode audio buffer
@@ -50,8 +55,6 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
         try {
           const decoded = await audioCtx.decodeAudioData(buffer);
           if (!isCancelled) {
-            setAudioBuffer(decoded);
-            // Extract peaks for drawing
             const rawData = decoded.getChannelData(0);
             const samples = 1200;
             const blockSize = Math.floor(rawData.length / samples);
@@ -64,7 +67,6 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
               }
               calculatedPeaks.push(sum / blockSize);
             }
-            // Normalize peaks
             const max = Math.max(...calculatedPeaks, 0.001);
             setPeaks(calculatedPeaks.map(p => p / max));
           }
@@ -96,7 +98,8 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     };
 
     const handleEnded = () => {
-      setIsPlaying(false);
+      setInternalPlaying(false);
+      if (onPlayStateChange) onPlayStateChange(false);
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -106,9 +109,23 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [onCurrentTimeChange]);
+  }, [onCurrentTimeChange, onPlayStateChange]);
 
-  // Draw waveform canvas
+  // Handle external isPlaying prop changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (externalIsPlaying && audio.paused) {
+      if (currentTime < startTime || currentTime >= endTime) {
+        audio.currentTime = startTime;
+      }
+      audio.play().catch(console.error);
+    } else if (!externalIsPlaying && !audio.paused) {
+      audio.pause();
+    }
+  }, [externalIsPlaying]);
+
+  // Draw waveform canvas with Neon Cyber DAW aesthetics
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !containerRef.current) return;
@@ -117,7 +134,7 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     if (!ctx) return;
 
     const width = containerRef.current.clientWidth * zoomLevel;
-    const height = 180;
+    const height = 190;
     const dpr = window.devicePixelRatio || 1;
 
     canvas.width = width * dpr;
@@ -128,32 +145,48 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // Background grid
-    ctx.fillStyle = '#0f172a';
+    // Deep Obsidian Studio Canvas Background
+    ctx.fillStyle = '#080a0f';
     ctx.fillRect(0, 0, width, height);
+
+    // Subtle horizontal center line
+    ctx.strokeStyle = '#161b26';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, height / 2);
+    ctx.lineTo(width, height / 2);
+    ctx.stroke();
 
     const totalDur = duration || 1;
     const startX = (startTime / totalDur) * width;
     const endX = (endTime / totalDur) * width;
     const playheadX = (currentTime / totalDur) * width;
 
-    // Draw region overlay
+    // Draw selection zone overlay
     if (cutMode === 'keep') {
-      // Highlight kept selection
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.15)'; // Emerald
+      // Emerald glowing highlight
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, 'rgba(34, 197, 94, 0.18)');
+      grad.addColorStop(0.5, 'rgba(34, 197, 94, 0.08)');
+      grad.addColorStop(1, 'rgba(34, 197, 94, 0.18)');
+      ctx.fillStyle = grad;
       ctx.fillRect(startX, 0, Math.max(0, endX - startX), height);
 
-      // Dim non-selected areas
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+      // Darkened inactive outer edges
+      ctx.fillStyle = 'rgba(5, 7, 10, 0.72)';
       ctx.fillRect(0, 0, startX, height);
       ctx.fillRect(endX, 0, width - endX, height);
     } else {
-      // Highlight removed selection in Red
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.2)'; // Red
+      // Coral Rose cut-out highlight
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, 'rgba(244, 63, 94, 0.22)');
+      grad.addColorStop(0.5, 'rgba(244, 63, 94, 0.10)');
+      grad.addColorStop(1, 'rgba(244, 63, 94, 0.22)');
+      ctx.fillStyle = grad;
       ctx.fillRect(startX, 0, Math.max(0, endX - startX), height);
     }
 
-    // Draw waveform bars
+    // Draw Waveform Bars with neon gradient
     const barWidth = 3;
     const gap = 1.5;
     const step = barWidth + gap;
@@ -162,58 +195,65 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     for (let i = 0; i < totalBars; i++) {
       const x = i * step;
       const peakIndex = Math.floor((i / totalBars) * peaks.length);
-      const amp = peaks[peakIndex] || 0.1;
-      const barHeight = Math.max(4, amp * (height * 0.75));
+      const amp = peaks[peakIndex] || 0.08;
+      const barHeight = Math.max(3, amp * (height * 0.76));
       const y = (height - barHeight) / 2;
 
-      // Color coding based on selection
       const isInside = x >= startX && x <= endX;
       if (cutMode === 'keep') {
-        ctx.fillStyle = isInside ? '#34d399' : '#475569';
+        if (isInside) {
+          ctx.fillStyle = '#22c55e'; // Neon Volt
+        } else {
+          ctx.fillStyle = '#262f40'; // Gunmetal
+        }
       } else {
-        ctx.fillStyle = isInside ? '#f87171' : '#38bdf8';
+        if (isInside) {
+          ctx.fillStyle = '#fb7185'; // Coral
+        } else {
+          ctx.fillStyle = '#38bdf8'; // Cyan
+        }
       }
 
       ctx.beginPath();
-      ctx.roundRect(x, y, barWidth, barHeight, 2);
+      ctx.roundRect(x, y, barWidth, barHeight, 1.5);
       ctx.fill();
     }
 
-    // Draw Timeline markers (seconds)
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '10px monospace';
-    const intervalSec = totalDur > 60 ? 10 : totalDur > 20 ? 5 : 1;
+    // Timeline Scale Ruler at bottom
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 9px "JetBrains Mono", monospace';
+    const intervalSec = totalDur > 120 ? 15 : totalDur > 60 ? 10 : totalDur > 20 ? 5 : 1;
     for (let s = 0; s <= totalDur; s += intervalSec) {
       const markX = (s / totalDur) * width;
-      ctx.strokeStyle = '#334155';
+      ctx.strokeStyle = '#1e2638';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(markX, height - 14);
+      ctx.moveTo(markX, height - 16);
       ctx.lineTo(markX, height);
       ctx.stroke();
       ctx.fillText(formatTime(s, false), markX + 3, height - 4);
     }
 
-    // Draw Start Handle (Green)
-    ctx.strokeStyle = '#10b981';
-    ctx.lineWidth = 2.5;
+    // Start Marker (Neon Volt #22c55e)
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(startX, 0);
     ctx.lineTo(startX, height);
     ctx.stroke();
 
     // Start handle flag
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = '#22c55e';
     ctx.beginPath();
-    ctx.roundRect(startX - 6, 0, 12, 20, [0, 0, 4, 4]);
+    ctx.roundRect(startX - 8, 0, 16, 22, [0, 0, 4, 4]);
     ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 9px sans-serif';
-    ctx.fillText('S', startX - 3, 14);
+    ctx.fillStyle = '#05070a';
+    ctx.font = '900 10px "JetBrains Mono", monospace';
+    ctx.fillText('IN', startX - 6, 15);
 
-    // Draw End Handle (Rose)
+    // End Marker (Neon Crimson #f43f5e)
     ctx.strokeStyle = '#f43f5e';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(endX, 0);
     ctx.lineTo(endX, height);
@@ -222,23 +262,30 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     // End handle flag
     ctx.fillStyle = '#f43f5e';
     ctx.beginPath();
-    ctx.roundRect(endX - 6, 0, 12, 20, [0, 0, 4, 4]);
+    ctx.roundRect(endX - 10, 0, 20, 22, [0, 0, 4, 4]);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 9px sans-serif';
-    ctx.fillText('E', endX - 3, 14);
+    ctx.font = '900 10px "JetBrains Mono", monospace';
+    ctx.fillText('OUT', endX - 9, 15);
 
-    // Draw Playhead cursor (Cyan)
-    ctx.strokeStyle = '#38bdf8';
+    // Playhead Laser Cursor (Electric Cyan #06b6d4)
+    ctx.strokeStyle = '#06b6d4';
     ctx.lineWidth = 2;
+    ctx.shadowColor = '#06b6d4';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
     ctx.moveTo(playheadX, 0);
     ctx.lineTo(playheadX, height);
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    ctx.fillStyle = '#38bdf8';
+    // Playhead indicator top cap
+    ctx.fillStyle = '#06b6d4';
     ctx.beginPath();
-    ctx.arc(playheadX, 6, 5, 0, Math.PI * 2);
+    ctx.moveTo(playheadX - 5, 0);
+    ctx.lineTo(playheadX + 5, 0);
+    ctx.lineTo(playheadX, 7);
+    ctx.closePath();
     ctx.fill();
   }, [duration, startTime, endTime, currentTime, zoomLevel, peaks, cutMode]);
 
@@ -246,7 +293,7 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     drawWaveform();
   }, [drawWaveform]);
 
-  // Mouse interaction: dragging markers or scrubbing playhead
+  // Mouse interaction
   const getTimeFromMouseEvent = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return 0;
@@ -259,7 +306,7 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const time = getTimeFromMouseEvent(e);
     const totalDur = duration || 1;
-    const threshold = totalDur * 0.02; // 2% hit test
+    const threshold = totalDur * 0.025;
 
     if (Math.abs(time - startTime) < threshold) {
       setDragTarget('start');
@@ -286,9 +333,7 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     }
   };
 
-  const handleMouseUp = () => {
-    setDragTarget(null);
-  };
+  const handleMouseUp = () => setDragTarget(null);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -296,13 +341,16 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
 
     if (isPlaying) {
       audio.pause();
-      setIsPlaying(false);
+      setInternalPlaying(false);
+      if (onPlayStateChange) onPlayStateChange(false);
     } else {
-      // If outside selected range, jump to start
       if (currentTime < startTime || currentTime >= endTime) {
         audio.currentTime = startTime;
       }
-      audio.play().then(() => setIsPlaying(true)).catch(console.error);
+      audio.play().then(() => {
+        setInternalPlaying(true);
+        if (onPlayStateChange) onPlayStateChange(true);
+      }).catch(console.error);
     }
   };
 
@@ -315,78 +363,67 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     if (onCurrentTimeChange) onCurrentTimeChange(clamped);
   };
 
-  const resetToSelectionStart = () => {
-    seek(startTime);
-  };
-
-  const handleVolumeChange = (newVol: number) => {
-    setVolume(newVol);
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : newVol;
-    }
-  };
-
-  const toggleMute = () => {
-    const nextMute = !isMuted;
-    setIsMuted(nextMute);
-    if (audioRef.current) {
-      audioRef.current.volume = nextMute ? 0 : volume;
-    }
-  };
-
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
+    <div className="studio-glass rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 border border-white/[0.08]">
       <audio ref={audioRef} src={audioUrl} preload="auto" />
 
-      {/* Header controls & timecode */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-        <div className="flex items-center gap-2">
+      {/* Top Waveform HUD Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
+        {/* Playback & Position */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={togglePlay}
             disabled={isLoadingAudio}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center font-medium transition-all ${
+            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold transition-all ${
               isPlaying
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20'
-                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-neon-amber'
+                : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-neon-volt'
             }`}
             title="Play / Pause (Space)"
           >
-            {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
+            {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
           </button>
 
           <button
-            onClick={resetToSelectionStart}
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-            title="Jump to Start of Selection"
+            onClick={() => seek(startTime)}
+            className="p-2 rounded-xl bg-studio-850 hover:bg-studio-800 text-studio-300 border border-white/[0.06] transition-colors"
+            title="Jump to Selection In-Point"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
 
-          <div className="flex items-center gap-2 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800/80 font-mono text-sm">
-            <span className="text-cyan-400 font-semibold">{formatTime(currentTime)}</span>
-            <span className="text-slate-600">/</span>
-            <span className="text-slate-400">{formatTime(duration)}</span>
+          {/* Precision Readout */}
+          <div className="flex items-center gap-2 bg-studio-950 px-3 py-1.5 rounded-xl border border-white/[0.06] font-mono text-xs">
+            <span className="text-cyan-400 font-bold">{formatTime(currentTime)}</span>
+            <span className="text-studio-600">|</span>
+            <span className="text-studio-400">{formatTime(duration)}</span>
           </div>
         </div>
 
-        {/* Selection summary pill */}
-        <div className="flex items-center gap-2 text-xs bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700/50">
-          <span className="text-slate-400">Selected:</span>
-          <span className="font-mono text-emerald-400 font-semibold">{formatTime(startTime)}</span>
-          <span className="text-slate-500">→</span>
-          <span className="font-mono text-rose-400 font-semibold">{formatTime(endTime)}</span>
-          <span className="text-slate-500 font-mono">({(endTime - startTime).toFixed(2)}s)</span>
+        {/* Selected Region Status Pill */}
+        <div className="flex items-center gap-2.5 bg-studio-950/80 px-3.5 py-1.5 rounded-xl border border-white/[0.06] text-xs">
+          <span className="text-[10px] tracking-widest uppercase font-mono text-studio-400">Region:</span>
+          <span className="font-mono text-emerald-400 font-bold">{formatTime(startTime)}</span>
+          <span className="text-studio-600">→</span>
+          <span className="font-mono text-rose-400 font-bold">{formatTime(endTime)}</span>
+          <span className="font-mono text-[11px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded font-bold">
+            Δ {(endTime - startTime).toFixed(2)}s
+          </span>
         </div>
 
-        {/* Zoom and Volume Controls */}
+        {/* Zoom & Audio Monitor Controls */}
         <div className="flex items-center gap-3">
-          {/* Volume */}
-          <div className="flex items-center gap-1.5">
+          {/* Volume Monitor */}
+          <div className="flex items-center gap-2 bg-studio-950 px-2.5 py-1.5 rounded-xl border border-white/[0.06]">
             <button
-              onClick={toggleMute}
-              className="text-slate-400 hover:text-slate-200 transition-colors"
+              onClick={() => {
+                const next = !isMuted;
+                setIsMuted(next);
+                if (audioRef.current) audioRef.current.volume = next ? 0 : volume;
+              }}
+              className="text-studio-400 hover:text-white"
             >
-              {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
+              {isMuted || volume === 0 ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
             </button>
             <input
               type="range"
@@ -394,50 +431,47 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
               max="1"
               step="0.05"
               value={isMuted ? 0 : volume}
-              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-              className="w-16 h-1.5 bg-slate-700 rounded-lg cursor-pointer"
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setVolume(v);
+                setIsMuted(false);
+                if (audioRef.current) audioRef.current.volume = v;
+              }}
+              className="w-14 h-1 bg-studio-800 rounded-lg cursor-pointer"
             />
           </div>
 
-          <div className="h-4 w-px bg-slate-800" />
-
-          {/* Zoom */}
-          <div className="flex items-center gap-1">
+          {/* Zoom Level Switcher */}
+          <div className="flex items-center gap-1 bg-studio-950 p-1 rounded-xl border border-white/[0.06]">
             <button
               onClick={() => setZoomLevel(prev => Math.max(1, prev - 0.5))}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+              className="p-1 rounded-lg bg-studio-850 hover:bg-studio-800 text-studio-300"
               title="Zoom Out"
             >
-              <ZoomOut className="w-3.5 h-3.5" />
+              <ZoomOut className="w-3 h-3" />
             </button>
-            <button
-              onClick={() => setZoomLevel(1)}
-              className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono"
-              title="Fit to Screen"
-            >
-              1x
-            </button>
+            <span className="font-mono text-[11px] text-studio-300 px-2 font-bold">{zoomLevel}x</span>
             <button
               onClick={() => setZoomLevel(prev => Math.min(5, prev + 0.5))}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+              className="p-1 rounded-lg bg-studio-850 hover:bg-studio-800 text-studio-300"
               title="Zoom In"
             >
-              <ZoomIn className="w-3.5 h-3.5" />
+              <ZoomIn className="w-3 h-3" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Waveform Canvas Container */}
+      {/* Panoramic Waveform Canvas */}
       <div
         ref={containerRef}
-        className="w-full overflow-x-auto relative rounded-xl border border-slate-800 bg-slate-950/80 cursor-crosshair select-none"
+        className="w-full overflow-x-auto relative rounded-xl border border-white/[0.08] bg-[#080a0f] cursor-crosshair select-none shadow-inner"
       >
         {isLoadingAudio && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
-            <div className="flex items-center gap-3 text-indigo-400 text-sm font-medium">
-              <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-              Decoding high-fidelity waveform...
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-md">
+            <div className="flex items-center gap-3 text-emerald-400 text-xs font-mono font-bold">
+              <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+              ANALYZING AUDIO PEAKS & FREQUENCIES...
             </div>
           </div>
         )}
@@ -451,9 +485,13 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
         />
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
-        <span>Click to scrub • Drag Green/Red flags to adjust trim window</span>
-        <span>Space: Play/Pause</span>
+      {/* Micro Status Footer */}
+      <div className="flex items-center justify-between text-[10px] text-studio-400 font-mono tracking-wider uppercase">
+        <span className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>Drag IN / OUT needles to trim • Click anywhere to scrub</span>
+        </span>
+        <span className="text-studio-500 font-semibold">SPACE: PLAY/STOP</span>
       </div>
     </div>
   );

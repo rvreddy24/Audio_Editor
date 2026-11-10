@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, Gauge, Volume2, Sparkles, Mic, Headphones, RotateCcw, Zap } from 'lucide-react';
+import { Sliders, Gauge, Volume2, Sparkles, Mic, Headphones, RotateCcw } from 'lucide-react';
 import { applyEffects } from '../api';
 import { LoadedFile, ProcessingResult } from '../types';
 
@@ -10,9 +10,9 @@ interface EffectsTabProps {
 
 export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed }) => {
   const [speed, setSpeed] = useState<number>(1.0);
-  const [pitch, setPitch] = useState<number>(0); // semitones -12 to +12
+  const [pitch, setPitch] = useState<number>(0);
   const [preservePitch, setPreservePitch] = useState<boolean>(true);
-  const [volume, setVolume] = useState<number>(1.0); // 0.1 to 3.0
+  const [volume, setVolume] = useState<number>(1.0);
   const [normalize, setNormalize] = useState<'none' | 'ebu_r128' | 'peak'>('none');
   const [preset, setPreset] = useState<string>('flat');
   const [bass, setBass] = useState<number>(0);
@@ -69,42 +69,46 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+    <div className="studio-glass rounded-2xl p-6 shadow-2xl flex flex-col gap-6 border border-white/[0.08]">
       {/* Title */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
         <div>
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-indigo-400" />
-            Effects & Mastering Studio
-          </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Tempo and pitch stretching, volume gain boost, 8D audio spatializer, vocal remover, and EQ filtering.
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Sliders className="w-4 h-4" />
+            </span>
+            <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-sans">
+              DSP Audio FX & Analog Mastering Rack
+            </h3>
+          </div>
+          <p className="text-[11px] text-studio-400 font-mono mt-1">
+            Rubberband time-stretching, pitch transposition, LUFS loudness mastering, and spatial 8D processing.
           </p>
         </div>
 
         <button
           onClick={resetAll}
-          className="text-xs text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
+          className="text-xs font-mono font-bold text-studio-400 hover:text-white bg-studio-950 hover:bg-studio-850 border border-white/[0.06] px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          Reset All Effects
+          RESET RACK
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Card 1: Speed & Pitch */}
-        <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex flex-col gap-3">
+        {/* Module 1: Tempo & Pitch Transpose */}
+        <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Gauge className="w-3.5 h-3.5" /> Speed & Pitch
+            <span className="text-[11px] font-mono font-bold tracking-widest text-emerald-400 uppercase flex items-center gap-1.5">
+              <Gauge className="w-3.5 h-3.5" /> SPEED & PITCH
             </span>
           </div>
 
-          {/* Speed */}
+          {/* Tempo Slider */}
           <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-300">Tempo / Playback Speed</span>
-              <span className="font-mono text-indigo-400 font-semibold">{speed.toFixed(2)}x</span>
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-studio-400 uppercase text-[10px]">TEMPO MULTIPLIER</span>
+              <span className="text-emerald-400 font-black">{speed.toFixed(2)}x</span>
             </div>
             <input
               type="range"
@@ -113,21 +117,21 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="0.05"
               value={speed}
               onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+            <div className="flex justify-between text-[9px] text-studio-500 font-mono">
               <span>0.25x</span>
-              <span>1.0x (Normal)</span>
-              <span>2.5x</span>
+              <span>1.0x (NORMAL)</span>
+              <span>2.50x</span>
             </div>
           </div>
 
           {/* Pitch Shifter */}
           <div className="flex flex-col gap-1.5 mt-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-300">Pitch Shift (Semitones)</span>
-              <span className="font-mono text-indigo-400 font-semibold">
-                {pitch > 0 ? `+${pitch}` : pitch} semitones
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-studio-400 uppercase text-[10px]">PITCH TRANSPOSITION</span>
+              <span className="text-cyan-400 font-black">
+                {pitch > 0 ? `+${pitch}` : pitch} SEMITONES
               </span>
             </div>
             <input
@@ -137,42 +141,40 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="1"
               value={pitch}
               onChange={(e) => setPitch(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-              <span>-1 Octave</span>
-              <span>0 (Original)</span>
-              <span>+1 Octave</span>
+            <div className="flex justify-between text-[9px] text-studio-500 font-mono">
+              <span>-12 (OCTAVE DOWN)</span>
+              <span>0</span>
+              <span>+12 (OCTAVE UP)</span>
             </div>
           </div>
 
-          {/* Preserve Pitch Toggle */}
-          <label className="flex items-center gap-2 mt-1 cursor-pointer select-none text-xs text-slate-300">
+          {/* Pitch Lock Toggle */}
+          <label className="flex items-center gap-2 mt-1 cursor-pointer select-none text-[11px] text-studio-300 font-mono">
             <input
               type="checkbox"
               checked={preservePitch}
               onChange={(e) => setPreservePitch(e.target.checked)}
-              className="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0"
+              className="rounded bg-studio-900 border-studio-700 text-emerald-500 focus:ring-0"
             />
-            <span>Preserve Pitch when changing speed (Rubberband)</span>
+            <span>Preserve Pitch when changing speed</span>
           </label>
         </div>
 
-        {/* Card 2: Volume & Loudness Normalization */}
-        <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex flex-col gap-3">
+        {/* Module 2: Gain Booster & Normalization */}
+        <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5" /> Volume & Loudness
+            <span className="text-[11px] font-mono font-bold tracking-widest text-amber-400 uppercase flex items-center gap-1.5">
+              <Volume2 className="w-3.5 h-3.5" /> VOLUME & MASTERING
             </span>
           </div>
 
           {/* Volume Multiplier */}
           <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-300">Gain Multiplier / Boost</span>
-              <span className="font-mono text-emerald-400 font-semibold">
-                {Math.round(volume * 100)}%
-              </span>
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-studio-400 uppercase text-[10px]">GAIN MULTIPLIER / BOOST</span>
+              <span className="text-amber-400 font-black">{Math.round(volume * 100)}%</span>
             </div>
             <input
               type="range"
@@ -181,58 +183,59 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="0.05"
               value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+            <div className="flex justify-between text-[9px] text-studio-500 font-mono">
               <span>10%</span>
-              <span>100% (Normal)</span>
+              <span>100% (UNITY)</span>
               <span>300% (+10dB)</span>
             </div>
           </div>
 
-          {/* Normalization Standard */}
+          {/* Normalization Target */}
           <div className="flex flex-col gap-1.5 mt-1">
-            <label className="text-xs text-slate-300">Loudness Normalization</label>
+            <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">
+              LOUDNESS NORMALIZATION (LUFS)
+            </label>
             <select
               value={normalize}
               onChange={(e) => setNormalize(e.target.value as any)}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="bg-studio-900 border border-studio-800 rounded-xl px-2.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500"
             >
-              <option value="none">None (Preserve Dynamics)</option>
-              <option value="ebu_r128">Spotify & YouTube Standard (-14 LUFS)</option>
-              <option value="peak">Peak Limiting (Maximize Loudness without Clip)</option>
+              <option value="none">None (Raw Dynamic Range)</option>
+              <option value="ebu_r128">Spotify & YouTube Master (-14 LUFS)</option>
+              <option value="peak">Peak Limiting (Maximize Loudness)</option>
             </select>
           </div>
         </div>
 
-        {/* Card 3: Equalizer & Presets */}
-        <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex flex-col gap-3">
+        {/* Module 3: EQ & Acoustic Filters */}
+        <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5" /> Tone & Filter Presets
+            <span className="text-[11px] font-mono font-bold tracking-widest text-cyan-400 uppercase flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5" /> EQUALIZER & PRESETS
             </span>
           </div>
 
-          {/* Presets */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-slate-300">Acoustic Preset</label>
+            <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">ACOUSTIC PROFILE</label>
             <select
               value={preset}
               onChange={(e) => setPreset(e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="bg-studio-900 border border-studio-800 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"
             >
-              <option value="flat">Flat / Direct Pass</option>
-              <option value="vocal_clarity">Vocal Clarity & Speech Enhancer</option>
-              <option value="lo_fi">Lo-Fi Retro Muffle</option>
+              <option value="flat">Flat Direct Curve</option>
+              <option value="vocal_clarity">Vocal Clarity & Speech Boost</option>
+              <option value="lo_fi">Lo-Fi Retro Muffle (Warm)</option>
               <option value="radio">Vintage Radio / Walkie-Talkie</option>
             </select>
           </div>
 
           {/* Bass slider */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-400">Bass Boost / Cut</span>
-              <span className="font-mono text-amber-400 font-semibold">{bass > 0 ? `+${bass}` : bass} dB</span>
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-studio-400 uppercase text-[10px]">BASS SHELF</span>
+              <span className="text-cyan-400 font-bold">{bass > 0 ? `+${bass}` : bass} dB</span>
             </div>
             <input
               type="range"
@@ -241,15 +244,15 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="1"
               value={bass}
               onChange={(e) => setBass(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
             />
           </div>
 
           {/* Treble slider */}
           <div className="flex flex-col gap-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-400">Treble Brightness</span>
-              <span className="font-mono text-amber-400 font-semibold">{treble > 0 ? `+${treble}` : treble} dB</span>
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-studio-400 uppercase text-[10px]">TREBLE AIR</span>
+              <span className="text-cyan-400 font-bold">{treble > 0 ? `+${treble}` : treble} dB</span>
             </div>
             <input
               type="range"
@@ -258,120 +261,102 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               step="1"
               value={treble}
               onChange={(e) => setTreble(parseInt(e.target.value, 10))}
-              className="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+              className="w-full h-1.5 bg-studio-850 rounded-lg cursor-pointer"
             />
           </div>
         </div>
       </div>
 
-      {/* Special Effects Row */}
-      <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 flex flex-col gap-3">
-        <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5" /> Special FX Toggles
+      {/* Special Hardware Toggle Pads */}
+      <div className="bg-studio-950/70 p-4 rounded-xl border border-white/[0.06] flex flex-col gap-3">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-purple-400 flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5" /> SPECIAL DSP PROCESSORS
         </span>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 8D Audio */}
-          <label className={`p-3 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
-            panning8D ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+          <label className={`p-3.5 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
+            panning8D ? 'bg-purple-600/20 border-purple-500 text-white shadow-neon-rose' : 'bg-studio-900 border-white/[0.06] text-studio-300 hover:border-white/[0.15]'
           }`}>
-            <input
-              type="checkbox"
-              checked={panning8D}
-              onChange={(e) => setPanning8D(e.target.checked)}
-              className="hidden"
-            />
-            <Headphones className={`w-5 h-5 ${panning8D ? 'text-indigo-400 animate-pulse' : 'text-slate-500'}`} />
+            <input type="checkbox" checked={panning8D} onChange={(e) => setPanning8D(e.target.checked)} className="hidden" />
+            <Headphones className={`w-5 h-5 ${panning8D ? 'text-purple-400 animate-pulse' : 'text-studio-500'}`} />
             <div>
-              <div className="text-xs font-semibold">8D Spatial Audio</div>
-              <div className="text-[10px] text-slate-400">Binaural 360° rotating sound</div>
+              <div className="text-xs font-mono font-bold">8D BINAURAL SPATIALIZER</div>
+              <div className="text-[10px] text-studio-400">360° rotating audio orbit</div>
             </div>
           </label>
 
           {/* Vocal Remover */}
-          <label className={`p-3 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
-            vocalRemover ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+          <label className={`p-3.5 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
+            vocalRemover ? 'bg-emerald-600/20 border-emerald-500 text-white shadow-neon-volt' : 'bg-studio-900 border-white/[0.06] text-studio-300 hover:border-white/[0.15]'
           }`}>
-            <input
-              type="checkbox"
-              checked={vocalRemover}
-              onChange={(e) => setVocalRemover(e.target.checked)}
-              className="hidden"
-            />
-            <Mic className={`w-5 h-5 ${vocalRemover ? 'text-indigo-400' : 'text-slate-500'}`} />
+            <input type="checkbox" checked={vocalRemover} onChange={(e) => setVocalRemover(e.target.checked)} className="hidden" />
+            <Mic className={`w-5 h-5 ${vocalRemover ? 'text-emerald-400' : 'text-studio-500'}`} />
             <div>
-              <div className="text-xs font-semibold">Vocal Remover / Karaoke</div>
-              <div className="text-[10px] text-slate-400">Center-channel cancellation</div>
+              <div className="text-xs font-mono font-bold">VOCAL REMOVER / KARAOKE</div>
+              <div className="text-[10px] text-studio-400">Center-channel phase cancellation</div>
             </div>
           </label>
 
           {/* Reverse Audio */}
-          <label className={`p-3 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
-            reverse ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+          <label className={`p-3.5 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
+            reverse ? 'bg-cyan-600/20 border-cyan-500 text-white shadow-neon-cyan' : 'bg-studio-900 border-white/[0.06] text-studio-300 hover:border-white/[0.15]'
           }`}>
-            <input
-              type="checkbox"
-              checked={reverse}
-              onChange={(e) => setReverse(e.target.checked)}
-              className="hidden"
-            />
-            <RotateCcw className={`w-5 h-5 ${reverse ? 'text-indigo-400' : 'text-slate-500'}`} />
+            <input type="checkbox" checked={reverse} onChange={(e) => setReverse(e.target.checked)} className="hidden" />
+            <RotateCcw className={`w-5 h-5 ${reverse ? 'text-cyan-400' : 'text-studio-500'}`} />
             <div>
-              <div className="text-xs font-semibold">Reverse Audio</div>
-              <div className="text-[10px] text-slate-400">Backwards playback effect</div>
+              <div className="text-xs font-mono font-bold">REVERSE PLAYBACK</div>
+              <div className="text-[10px] text-studio-400">Backwards audio flip</div>
             </div>
           </label>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-950/50 border border-rose-800/80 text-rose-300 p-3 rounded-xl text-xs">
-          {error}
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-xl text-xs font-mono">
+          ERROR: {error}
         </div>
       )}
 
-      {/* Render Button */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-        <div className="flex items-center gap-3">
+      {/* Render Action Button */}
+      <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+        <div className="flex items-center gap-3 font-mono text-xs">
           <select
             value={targetFormat}
             onChange={(e) => setTargetFormat(e.target.value)}
-            className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+            className="bg-studio-950 border border-studio-800 rounded-xl px-2.5 py-1.5 text-xs text-white"
           >
             <option value="mp3">MP3</option>
             <option value="wav">WAV</option>
             <option value="flac">FLAC</option>
             <option value="aac">AAC</option>
-            <option value="ogg">OGG</option>
-            <option value="opus">OPUS</option>
           </select>
           <select
             value={bitrate}
             onChange={(e) => setBitrate(e.target.value)}
             disabled={targetFormat === 'wav' || targetFormat === 'flac'}
-            className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 disabled:opacity-40"
+            className="bg-studio-950 border border-studio-800 rounded-xl px-2.5 py-1.5 text-xs text-white disabled:opacity-40"
           >
             <option value="320k">320 kbps</option>
             <option value="256k">256 kbps</option>
             <option value="192k">192 kbps</option>
-            <option value="128k">128 kbps</option>
           </select>
         </div>
 
         <button
           onClick={handleApply}
           disabled={isProcessing}
-          className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 text-sm transition-all disabled:opacity-50"
+          className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black font-extrabold px-6 py-2.5 rounded-xl shadow-neon-volt flex items-center gap-2 text-xs font-mono tracking-wider uppercase transition-all disabled:opacity-50"
         >
           {isProcessing ? (
             <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Rendering Effects...
+              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              PROCESSING DSP RACK...
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              Apply Effects & Export
+              RENDER MASTER EFFECTS
             </>
           )}
         </button>

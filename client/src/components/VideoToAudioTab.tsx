@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Film, Music, Scissors, Download, Play, Pause, RefreshCw, UploadCloud } from 'lucide-react';
+import { Film, Music, Play, Pause, UploadCloud, Radio } from 'lucide-react';
 import { videoToAudio } from '../api';
 import { LoadedFile, ProcessingResult } from '../types';
-import { formatTime, formatFileSize } from '../utils/formatters';
+import { formatTime } from '../utils/formatters';
 
 interface VideoToAudioTabProps {
   currentFile: LoadedFile;
@@ -69,51 +69,53 @@ export const VideoToAudioTab: React.FC<VideoToAudioTabProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+    <div className="studio-glass rounded-2xl p-6 shadow-2xl flex flex-col gap-6 border border-white/[0.08]">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
         <div>
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Film className="w-5 h-5 text-indigo-400" />
-            Video to Audio Extractor & Editor
-          </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Strip high-fidelity audio from any MP4, MKV, WebM, MOV, or AVI video with precision range extraction.
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <Film className="w-4 h-4" />
+            </span>
+            <h3 className="text-base font-extrabold text-white tracking-tight uppercase font-sans">
+              Video Soundtrack Extractor & Cinema Cutter
+            </h3>
+          </div>
+          <p className="text-[11px] text-studio-400 font-mono mt-1">
+            Demux and transcode high-fidelity soundtracks from MP4, MKV, MOV, WebM, or AVI videos.
           </p>
         </div>
 
-        {/* Video specs badge */}
-        {isVideo && (
-          <div className="flex items-center gap-3 bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 text-xs">
-            {videoInfo && (
-              <div>
-                <span className="text-slate-500">Video: </span>
-                <span className="font-semibold text-indigo-400">
-                  {videoInfo.width}x{videoInfo.height} ({videoInfo.codec})
-                </span>
-              </div>
-            )}
-            <div className="h-3 w-px bg-slate-800" />
+        {isVideo && videoInfo && (
+          <div className="flex items-center gap-3 bg-studio-950 px-3.5 py-1.5 rounded-xl border border-white/[0.06] text-xs font-mono">
             <div>
-              <span className="text-slate-500">Audio Track: </span>
-              <span className="font-semibold text-emerald-400 uppercase">
-                {audioInfo ? audioInfo.codec : 'Detected'}
-              </span>
+              <span className="text-studio-500 text-[10px] uppercase">RESOLUTION: </span>
+              <span className="font-bold text-purple-400">{videoInfo.width}x{videoInfo.height}</span>
+            </div>
+            <span className="text-studio-700">|</span>
+            <div>
+              <span className="text-studio-500 text-[10px] uppercase">VIDEO CODEC: </span>
+              <span className="font-bold text-studio-200 uppercase">{videoInfo.codec}</span>
+            </div>
+            <span className="text-studio-700">|</span>
+            <div>
+              <span className="text-studio-500 text-[10px] uppercase">AUDIO STREAM: </span>
+              <span className="font-bold text-emerald-400 uppercase">{audioInfo ? audioInfo.codec : 'Detected'}</span>
             </div>
           </div>
         )}
       </div>
 
       {!isVideo ? (
-        <div className="p-8 text-center bg-slate-950/60 rounded-xl border border-dashed border-slate-800 flex flex-col items-center justify-center gap-3">
-          <Film className="w-12 h-12 text-slate-600" />
-          <div className="text-sm font-medium text-slate-300">Currently loaded file is an audio file</div>
-          <p className="text-xs text-slate-500 max-w-md">
-            You can still convert this audio here, or drop a video file (MP4, MKV, MOV, WebM) into the app to use the full video preview player and range cutter!
+        <div className="p-8 text-center bg-studio-950/70 rounded-xl border border-dashed border-studio-800 flex flex-col items-center justify-center gap-3">
+          <Film className="w-10 h-10 text-studio-600" />
+          <div className="text-sm font-mono font-bold text-studio-200">ACTIVE SESSION IS AN AUDIO FILE</div>
+          <p className="text-xs text-studio-500 max-w-md">
+            Drop or browse a video file (MP4, MKV, MOV, WebM) to unlock the synchronized cinema player and range extraction deck.
           </p>
           {onUploadNewVideo && (
-            <label className="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-2 transition-colors">
+            <label className="mt-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono font-bold px-4 py-2 rounded-xl cursor-pointer flex items-center gap-2 transition-colors">
               <UploadCloud className="w-4 h-4" />
-              Upload Video File
+              UPLOAD VIDEO FILE
               <input
                 type="file"
                 accept="video/*"
@@ -128,10 +130,10 @@ export const VideoToAudioTab: React.FC<VideoToAudioTabProps> = ({
           )}
         </div>
       ) : (
-        /* Video Player Preview and Scrubbing */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Cinema Preview Player */}
           <div className="flex flex-col gap-3">
-            <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-slate-800 shadow-md flex items-center justify-center">
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-white/[0.08] shadow-2xl flex items-center justify-center group">
               <video
                 ref={videoRef}
                 src={currentFile.streamUrl}
@@ -141,22 +143,22 @@ export const VideoToAudioTab: React.FC<VideoToAudioTabProps> = ({
               />
               <button
                 onClick={toggleVideoPlay}
-                className="absolute inset-0 m-auto w-14 h-14 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-xl transition-all opacity-0 hover:opacity-100 focus:opacity-100"
+                className="absolute inset-0 m-auto w-12 h-12 bg-purple-600/80 hover:bg-purple-600 text-white rounded-full flex items-center justify-center backdrop-blur-md shadow-neon-rose transition-all opacity-0 group-hover:opacity-100"
               >
-                {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-1" />}
+                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
               </button>
             </div>
 
-            {/* Video scrub & play controls */}
-            <div className="flex items-center gap-3 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
+            {/* Video Transport Scrubber */}
+            <div className="flex items-center gap-3 bg-studio-950 p-2.5 rounded-xl border border-white/[0.06] text-xs font-mono">
               <button
                 onClick={toggleVideoPlay}
-                className="p-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white"
+                className="p-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white"
               >
                 {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
               </button>
 
-              <span className="font-mono text-cyan-400 font-semibold">{formatTime(currentTime)}</span>
+              <span className="text-purple-400 font-bold">{formatTime(currentTime)}</span>
               <input
                 type="range"
                 min="0"
@@ -168,54 +170,53 @@ export const VideoToAudioTab: React.FC<VideoToAudioTabProps> = ({
                   if (videoRef.current) videoRef.current.currentTime = val;
                   setCurrentTime(val);
                 }}
-                className="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                className="flex-1 h-1.5 bg-studio-850 rounded-lg cursor-pointer"
               />
-              <span className="font-mono text-slate-400">{formatTime(duration)}</span>
+              <span className="text-studio-500">{formatTime(duration)}</span>
             </div>
           </div>
 
-          {/* Extraction Settings */}
+          {/* Extraction Control Desk */}
           <div className="flex flex-col gap-4">
-            {/* Mode selection: Full Video vs Trim Range */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Extraction Range
+              <label className="text-[10px] font-mono font-bold tracking-widest uppercase text-studio-400">
+                EXTRACTION RANGE
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setExtractMode('full')}
-                  className={`p-3 rounded-xl border text-xs font-semibold transition-all ${
+                  className={`p-3 rounded-xl border text-xs font-mono font-bold transition-all ${
                     extractMode === 'full'
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white'
-                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                      ? 'bg-purple-600/20 border-purple-500 text-white shadow-neon-rose'
+                      : 'bg-studio-950/70 border-white/[0.06] text-studio-400 hover:text-white'
                   }`}
                 >
-                  Full Video Audio Track
+                  FULL VIDEO SOUNDTRACK
                 </button>
                 <button
                   onClick={() => setExtractMode('range')}
-                  className={`p-3 rounded-xl border text-xs font-semibold transition-all ${
+                  className={`p-3 rounded-xl border text-xs font-mono font-bold transition-all ${
                     extractMode === 'range'
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white'
-                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                      ? 'bg-purple-600/20 border-purple-500 text-white shadow-neon-rose'
+                      : 'bg-studio-950/70 border-white/[0.06] text-studio-400 hover:text-white'
                   }`}
                 >
-                  Trim Audio Range
+                  CROP TIME RANGE
                 </button>
               </div>
             </div>
 
             {extractMode === 'range' && (
-              <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 flex flex-col gap-3">
+              <div className="p-4 bg-studio-950/70 rounded-xl border border-white/[0.06] flex flex-col gap-3 font-mono">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Range:</span>
-                  <span className="font-mono text-indigo-400 font-semibold">
+                  <span className="text-studio-400">WINDOW:</span>
+                  <span className="text-purple-400 font-bold">
                     {formatTime(startTime)} → {formatTime(endTime)} ({(endTime - startTime).toFixed(1)}s)
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] text-emerald-400 font-medium">Start (sec)</label>
+                    <label className="text-[10px] text-emerald-400 uppercase font-bold">START (SEC)</label>
                     <input
                       type="number"
                       step="0.1"
@@ -223,11 +224,11 @@ export const VideoToAudioTab: React.FC<VideoToAudioTabProps> = ({
                       max={endTime}
                       value={startTime}
                       onChange={(e) => setStartTime(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-studio-900 border border-studio-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-rose-400 font-medium">End (sec)</label>
+                    <label className="text-[10px] text-rose-400 uppercase font-bold">END (SEC)</label>
                     <input
                       type="number"
                       step="0.1"
@@ -235,39 +236,38 @@ export const VideoToAudioTab: React.FC<VideoToAudioTabProps> = ({
                       max={duration}
                       value={endTime}
                       onChange={(e) => setEndTime(parseFloat(e.target.value) || duration)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      className="w-full bg-studio-900 border border-studio-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
                     />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Target Output Format */}
+            {/* Target Output Format and Bitrate */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-300">Target Audio Format</label>
+                <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">TARGET FORMAT</label>
                 <select
                   value={targetFormat}
                   onChange={(e) => setTargetFormat(e.target.value)}
-                  className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full mt-1 bg-studio-900 border border-studio-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
                 >
-                  <option value="mp3">MP3 (Universal)</option>
-                  <option value="wav">WAV (Lossless)</option>
-                  <option value="aac">AAC (Crisp)</option>
-                  <option value="m4a">M4A (Apple)</option>
-                  <option value="flac">FLAC (Lossless)</option>
-                  <option value="ogg">OGG (Vorbis)</option>
-                  <option value="opus">OPUS (Modern)</option>
+                  <option value="mp3">MP3 Universal</option>
+                  <option value="wav">WAV Lossless PCM</option>
+                  <option value="aac">AAC Direct</option>
+                  <option value="m4a">M4A Apple</option>
+                  <option value="flac">FLAC Hi-Fi</option>
+                  <option value="opus">OPUS Next-Gen</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-xs text-slate-300">Bitrate</label>
+                <label className="text-[10px] font-mono uppercase text-studio-400 tracking-wider">TARGET BITRATE</label>
                 <select
                   value={bitrate}
                   onChange={(e) => setBitrate(e.target.value)}
                   disabled={targetFormat === 'wav' || targetFormat === 'flac'}
-                  className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 disabled:opacity-40 focus:outline-none focus:border-indigo-500"
+                  className="w-full mt-1 bg-studio-900 border border-studio-800 rounded-xl px-3 py-2 text-xs text-white font-mono disabled:opacity-40 focus:outline-none focus:border-purple-500"
                 >
                   <option value="320k">320 kbps (Studio)</option>
                   <option value="256k">256 kbps (High)</option>
@@ -282,27 +282,27 @@ export const VideoToAudioTab: React.FC<VideoToAudioTabProps> = ({
       )}
 
       {error && (
-        <div className="bg-rose-950/50 border border-rose-800/80 text-rose-300 p-3 rounded-xl text-xs">
-          {error}
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-xl text-xs font-mono">
+          ERROR: {error}
         </div>
       )}
 
       {/* Extract Button */}
-      <div className="flex justify-end pt-2 border-t border-slate-800">
+      <div className="flex justify-end pt-2 border-t border-white/[0.06]">
         <button
           onClick={handleExtract}
           disabled={isProcessing}
-          className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium px-6 py-2.5 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 text-sm transition-all disabled:opacity-50"
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold px-6 py-2.5 rounded-xl shadow-neon-rose flex items-center gap-2 text-xs font-mono tracking-wider uppercase transition-all disabled:opacity-50"
         >
           {isProcessing ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Extracting Audio from Video...
+              EXTRACTING SOUNDTRACK...
             </>
           ) : (
             <>
               <Music className="w-4 h-4" />
-              Extract Audio to {targetFormat.toUpperCase()} ({bitrate})
+              EXTRACT AUDIO ({targetFormat.toUpperCase()} {bitrate})
             </>
           )}
         </button>
