@@ -23,149 +23,152 @@ interface HomeHubProps {
 
 export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
       {/* Hero Header */}
-      <div className="text-center max-w-3xl mx-auto mb-14">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-semibold mb-4 shadow-2xs">
+      <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/80 text-indigo-700 text-xs font-semibold mb-3 shadow-2xs">
           <Sparkles className="w-3.5 h-3.5 fill-current" />
           <span>Professional Web Workstation Suite</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+        <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
           Everything You Need to Edit <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-indigo-600 to-violet-600">
-            PDFs & Audio Files
+            PDFs, Office & Audio Files
           </span>
         </h1>
-        <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
+        <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
           Choose a workstation below. Fast, secure, and 100% free right in your browser.
         </p>
       </div>
 
-      {/* Primary Category Master Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-        {/* CARD 1: PDF TOOLS */}
+      {/* Primary Category Master Cards (Compact) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
+        {/* CARD 1: PDF & OFFICE TOOLS */}
         <div
           onClick={() => onOpenPdf()}
-          className="group relative bg-white rounded-3xl border-2 border-slate-200/90 hover:border-red-500 p-8 sm:p-10 flex flex-col justify-between shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden"
+          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-red-500 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
         >
           {/* Subtle background glow */}
-          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 rounded-full bg-red-100/60 blur-3xl group-hover:bg-red-200/60 transition-colors pointer-events-none" />
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-red-100/50 blur-2xl group-hover:bg-red-200/50 transition-colors pointer-events-none" />
 
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                <FileText className="w-8 h-8" />
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-tight">
+                    PDF & Office Studio
+                  </h2>
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    PDF, Word, Excel, PowerPoint & Images
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200/80 px-3 py-1 rounded-full">
-                32+ Tools Available
+              <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200/80 px-2.5 py-0.5 rounded-full shrink-0">
+                32+ Tools
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-red-600 transition-colors">
-              PDF & Office Studio
-            </h2>
-
-            <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-              Complete document & image workstation. Merge, split, compress, Word, Excel, PowerPoint conversions, OCR text extraction, watermark, image editor, protect, and electronically sign files with zero software installation.
+            <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed mb-3">
+              Merge, split, compress, convert Word/Excel/PPT, OCR scan, watermark, resize images, protect, and e-sign files.
             </p>
 
-            {/* Included tools badge list */}
-            <div className="flex flex-wrap gap-2 mt-6">
+            {/* Compact feature chips */}
+            <div className="flex flex-wrap gap-1.5">
               {[
-                'Merge PDF',
-                'Split PDF',
+                'Merge & Split',
                 'Compress PDF',
-                'Word to PDF',
-                'PDF to Word',
-                'Excel to PDF',
-                'PDF to Excel (.xlsx)',
-                'PPT to PDF',
-                'PDF to PPTX',
-                'Compress Image',
-                'Resize Image',
-                'Convert Image',
-                'Watermark Image',
-                'Sign PDF',
-                'OCR Scan',
-                'Protect & Unlock',
+                'Word ⇄ PDF',
+                'Excel ⇄ PDF',
+                'PPT ⇄ PDF',
+                'Image Tools',
+                'Sign & Protect',
               ].map((toolName) => (
                 <span
                   key={toolName}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold group-hover:bg-red-50 group-hover:text-red-700 transition-colors"
+                  className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium group-hover:bg-red-50 group-hover:text-red-700 transition-colors"
                 >
                   {toolName}
                 </span>
               ))}
+              <span className="px-2 py-0.5 rounded-md bg-red-50 text-red-600 text-[11px] font-bold border border-red-100">
+                +25 More
+              </span>
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-sm font-bold text-red-600 flex items-center gap-2">
+          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-bold text-red-600 flex items-center gap-1.5">
               <span>Open PDF Studio</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </span>
-            <span className="text-xs text-slate-400 font-medium">100% Free • Private</span>
+            <span className="text-[11px] text-slate-400 font-medium">100% Free • In-Browser</span>
           </div>
         </div>
 
         {/* CARD 2: AUDIO STUDIO */}
         <div
           onClick={() => onOpenAudio()}
-          className="group relative bg-white rounded-3xl border-2 border-slate-200/90 hover:border-indigo-600 p-8 sm:p-10 flex flex-col justify-between shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden"
+          className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-600 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
         >
           {/* Subtle background glow */}
-          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 rounded-full bg-indigo-100/60 blur-3xl group-hover:bg-indigo-200/60 transition-colors pointer-events-none" />
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-indigo-100/50 blur-2xl group-hover:bg-indigo-200/50 transition-colors pointer-events-none" />
 
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                <Music className="w-8 h-8" />
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <Music className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
+                    Audio Studio
+                  </h2>
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Visual Editor & DSP Sound Processing
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-3 py-1 rounded-full">
-                FFmpeg 8.1 Engine
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full shrink-0">
+                FFmpeg 8.1
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors">
-              Audio Studio
-            </h2>
-
-            <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-              Professional audio workstation. Convert between formats, customize kbps bitrates, extract audio from videos, trim with visual waveform editors, apply DSP audio effects, and edit ID3 tags.
+            <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed mb-3">
+              Visual waveform trimmer, universal format converter, video audio extractor, 8D audio & pitch DSP, and ID3 tag editor.
             </p>
 
-            {/* Included tools badge list */}
-            <div className="flex flex-wrap gap-2 mt-6">
+            {/* Compact feature chips */}
+            <div className="flex flex-wrap gap-1.5">
               {[
                 'Waveform Trimmer',
                 'Universal Converter',
-                '32k - 320k kbps',
                 'Video to Audio',
                 'Pitch & Speed DSP',
                 '8D Audio Effect',
-                'Loudness Normalizer',
-                '3-Band EQ',
-                'Vocal Remover',
-                'Multi-Track Merger',
                 'ID3 Tag Editor',
-                'Mic Voice Recorder',
               ].map((toolName) => (
                 <span
                   key={toolName}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold group-hover:bg-indigo-50 group-hover:text-indigo-700 transition-colors"
+                  className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium group-hover:bg-indigo-50 group-hover:text-indigo-700 transition-colors"
                 >
                   {toolName}
                 </span>
               ))}
+              <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[11px] font-bold border border-indigo-100">
+                +More
+              </span>
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-sm font-bold text-indigo-600 flex items-center gap-2">
+          <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-bold text-indigo-600 flex items-center gap-1.5">
               <span>Launch Audio Studio</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </span>
-            <span className="text-xs text-slate-400 font-medium">Native Speed • 1 GB Limit</span>
+            <span className="text-[11px] text-slate-400 font-medium">Native Speed • 1 GB Limit</span>
           </div>
         </div>
       </div>
