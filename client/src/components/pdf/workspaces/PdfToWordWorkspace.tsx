@@ -25,6 +25,8 @@ export const PdfToWordWorkspace: React.FC<PdfToWordWorkspaceProps> = ({ onBack }
   const [file, setFile] = useState<PdfFileInfo | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [enableOcr, setEnableOcr] = useState(true);
+  const [statusMessage, setStatusMessage] = useState('');
 
   const handleFileSelected = async (files: File[]) => {
     if (files.length > 0) {
@@ -36,15 +38,20 @@ export const PdfToWordWorkspace: React.FC<PdfToWordWorkspaceProps> = ({ onBack }
   const handleConvert = async () => {
     if (!file) return;
     setIsProcessing(true);
+    setStatusMessage('Initializing conversion...');
     try {
       const buf = await getBufferFromFile(file);
-      const docxBlob = await convertPdfToDocx(buf);
+      const docxBlob = await convertPdfToDocx(buf, {
+        enableOcr,
+        onProgress: (msg) => setStatusMessage(msg),
+      });
       downloadBlob(docxBlob, `${file.name.replace(/\.pdf$/i, '')}.docx`);
       setIsDone(true);
     } catch (err: any) {
       alert(err.message || 'Failed to convert PDF to Word');
     } finally {
       setIsProcessing(false);
+      setStatusMessage('');
     }
   };
 
@@ -122,11 +129,36 @@ export const PdfToWordWorkspace: React.FC<PdfToWordWorkspaceProps> = ({ onBack }
             <div className="space-y-4">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <FileCode className="w-4 h-4 text-blue-600" />
-                Word Options
+                Word Conversion Options
               </h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 Extracts text, paragraphs, and structure from all pages into an editable Word document compatible with Microsoft Word and Google Docs.
               </p>
+
+              {/* OCR Toggle */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 hover:border-blue-200 transition-colors">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enableOcr}
+                    onChange={(e) => setEnableOcr(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900">
+                        OCR Text Recognition
+                      </span>
+                      <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-200">
+                        Scanned & Images
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                      Automatically performs OCR on scanned pages, photos, and voter cards to extract editable text paragraphs into your Word document.
+                    </p>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <button
@@ -135,10 +167,10 @@ export const PdfToWordWorkspace: React.FC<PdfToWordWorkspaceProps> = ({ onBack }
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-4 rounded-2xl text-sm shadow-md transition-all hover:scale-102 flex items-center justify-center gap-2"
             >
               {isProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Converting to Word...</span>
-                </>
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span className="text-xs truncate max-w-[220px]">{statusMessage || 'Converting to Word...'}</span>
+                </div>
               ) : (
                 <span>Convert to Word (.docx) →</span>
               )}

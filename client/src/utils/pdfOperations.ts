@@ -524,10 +524,22 @@ export async function extractFirstImageFromPdf(buffer: ArrayBuffer): Promise<Uin
   return null;
 }
 
+export interface PdfToDocxOptions {
+  enableOcr?: boolean;
+  onProgress?: (status: string) => void;
+}
+
 /**
  * 12. PDF TO WORD (.docx)
  */
-export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
+export async function convertPdfToDocx(
+  buffer: ArrayBuffer,
+  options?: PdfToDocxOptions
+): Promise<Blob> {
+  const enableOcr = options?.enableOcr ?? true;
+  const onProgress = options?.onProgress;
+
+  if (onProgress) onProgress('Reading and analyzing PDF pages...');
   const pagesText = await extractPdfTextPages(buffer.slice(0));
   const embeddedImage = await extractFirstImageFromPdf(buffer.slice(0));
 
@@ -552,12 +564,14 @@ export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
       .map((l) => l.trim())
       .filter(Boolean);
 
-    if (validLines.length === 0) {
-      // Scanned document or image-only page (e.g. e-EPIC card)
+    // If page is scanned or has very little text (and OCR is enabled)
+    if (validLines.length === 0 || (enableOcr && validLines.length <= 2 && validLines.join('').length < 30)) {
       let imgBytes: Uint8Array | null = null;
+      let pageImgDataUrl: string | null = null;
+
       if (typeof window !== 'undefined') {
         try {
-          const pageImgDataUrl = await renderPdfPageToDataUrl(buffer.slice(0), pIdx + 1, 1.6);
+          pageImgDataUrl = await renderPdfPageToDataUrl(buffer.slice(0), pIdx + 1, 1.8);
           imgBytes = dataUrlToUint8Array(pageImgDataUrl);
         } catch (e) {
           console.warn('Could not render page image:', e);
@@ -567,6 +581,75 @@ export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
         imgBytes = embeddedImage;
       }
 
+      // OCR Processing with Tesseract
+      let ocrLines: string[] = [];
+      if (enableOcr && (pageImgDataUrl || imgBytes)) {
+        try {
+          if (onProgress) onProgress(`Running OCR recognition on page ${pIdx + 1}...`);
+          const { createWorker } = await import('tesseract.js');
+          const worker = await createWorker('eng');
+          const recognizeTarget = pageImgDataUrl || imgBytes;
+          if (recognizeTarget) {
+            const ret = await worker.recognize(recognizeTarget as any);
+            const recognized = ret?.data?.text || '';
+            ocrLines = recognized
+              .split('\n')
+              .map((l) => l.trim())
+              .filter(Boolean);
+          }
+          await worker.terminate();
+        } catch (ocrErr) {
+          console.warn('OCR error during Word conversion:', ocrErr);
+        }
+      }
+
+      // If OCR yielded lines, add them as editable Word paragraphs
+      if (ocrLines.length > 0) {
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '[OCR Extracted Text]',
+                bold: true,
+                italics: true,
+                size: 18,
+                color: '0f766e',
+              }),
+            ],
+          })
+        );
+        for (const line of ocrLines) {
+          docChildren.push(
+            new Paragraph({
+              children: [new TextRun({ text: sanitizeForPdfText(line), size: 22 })],
+            })
+          );
+        }
+
+        // Add visual divider before page visual reference
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '— Document Visual Reference —',
+                italics: true,
+                size: 18,
+                color: '888888',
+              }),
+            ],
+          })
+        );
+      } else if (validLines.length > 0) {
+        for (const line of validLines) {
+          docChildren.push(
+            new Paragraph({
+              children: [new TextRun({ text: sanitizeForPdfText(line), size: 22 })],
+            })
+          );
+        }
+      }
+
+      // Embed the visual card / page image below
       if (imgBytes) {
         const isPng = imgBytes[0] === 0x89 && imgBytes[1] === 0x50;
         docChildren.push(
@@ -583,7 +666,7 @@ export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
             ],
           })
         );
-      } else {
+      } else if (ocrLines.length === 0 && validLines.length === 0) {
         docChildren.push(
           new Paragraph({
             children: [
@@ -608,6 +691,7 @@ export async function convertPdfToDocx(buffer: ArrayBuffer): Promise<Blob> {
     }
   }
 
+  if (onProgress) onProgress('Compiling Microsoft Word (.docx) document...');
   const doc = new DocxDocument({
     sections: [
       {

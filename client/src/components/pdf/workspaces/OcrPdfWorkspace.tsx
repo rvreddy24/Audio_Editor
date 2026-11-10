@@ -8,7 +8,6 @@ import {
   Check,
   FileText,
 } from 'lucide-react';
-import { createWorker } from 'tesseract.js';
 import { PdfDropzone } from '../PdfDropzone';
 import { parsePdfFile, PdfFileInfo, downloadBlob } from '../../../utils/pdfOperations';
 import { renderPdfPageToDataUrl } from '../../../utils/pdfRenderer';
@@ -42,6 +41,7 @@ export const OcrPdfWorkspace: React.FC<OcrPdfWorkspaceProps> = ({ onBack }) => {
       const imageUrl = await renderPdfPageToDataUrl(file.data, 1, 1.5);
       setProgress(30);
 
+      const { createWorker } = await import('tesseract.js');
       const worker = await createWorker('eng');
       setProgress(50);
 
