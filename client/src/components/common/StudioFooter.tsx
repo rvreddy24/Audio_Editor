@@ -220,7 +220,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           <div>
             <div className="mb-3">
               <img
-                src="/rv-banner.jpg"
+                src="/rv-banner.png"
                 alt="rajvarshith.com"
                 className="h-10 w-auto rounded-lg object-contain border border-slate-800 shadow-xs"
               />

@@ -28,7 +28,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({ onOpenPdf, onOpenAudio }) => {
       <div className="flex justify-center mb-6 sm:mb-8">
         <div className="relative group overflow-hidden rounded-2xl bg-black border border-slate-800/80 shadow-md hover:shadow-xl hover:border-orange-500/40 transition-all duration-300 max-w-lg w-full">
           <img
-            src="/rv-banner.jpg"
+            src="/rv-banner.png"
             alt="rajvarshith.com Official Studio Banner"
             className="w-full h-auto object-cover transform group-hover:scale-[1.01] transition-transform duration-300"
           />
