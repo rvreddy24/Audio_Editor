@@ -14,6 +14,17 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
+  Contact,
+  Crop,
+  Circle,
+  Square,
+  Sliders,
+  ShieldAlert,
+  Type,
+  RotateCw,
+  Grid,
+  Pipette,
+  FileSearch,
 } from 'lucide-react';
 import { ImageToolKey, ImageCategory, IMAGE_TOOLS, ImageToolMeta } from './types';
 import { TargetCompressor } from './TargetCompressor';
@@ -21,6 +32,15 @@ import { DimensionResizer } from './DimensionResizer';
 import { PassportPhotoMaker } from './PassportPhotoMaker';
 import { SignatureResizer } from './SignatureResizer';
 import { NameDatePhotoStamp } from './NameDatePhotoStamp';
+import { PhotoSignatureMergeWorkspace } from './PhotoSignatureMergeWorkspace';
+import { CropShapeWorkspace } from './CropShapeWorkspace';
+import { PhotoEffectsWorkspace } from './PhotoEffectsWorkspace';
+import { BlurCensorWorkspace } from './BlurCensorWorkspace';
+import { RotateFlipWorkspace } from './RotateFlipWorkspace';
+import { WatermarkImageStudioWorkspace } from './WatermarkImageStudioWorkspace';
+import { ImageSplitterWorkspace } from './ImageSplitterWorkspace';
+import { ColorPickerWorkspace } from './ColorPickerWorkspace';
+import { MetadataWorkspace } from './MetadataWorkspace';
 import { ImageJoinerWorkspace } from './ImageJoinerWorkspace';
 import { ConvertImageWorkspace } from '../pdf/workspaces/ConvertImageWorkspace';
 
@@ -38,11 +58,13 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const categories = [
-    { id: 'all', label: 'All Image Tools' },
+    { id: 'all', label: 'All Tools (20)' },
     { id: 'compress', label: 'Compress Size' },
-    { id: 'resize', label: 'Resize & DPI' },
     { id: 'official', label: 'Official Forms & Exams' },
-    { id: 'edit', label: 'Edit & Join' },
+    { id: 'resize', label: 'Resize & DPI' },
+    { id: 'crop', label: 'Crop & Shapes' },
+    { id: 'edit', label: 'Filters & Edit' },
+    { id: 'utility', label: 'Colors & Privacy' },
   ];
 
   const getToolIcon = (name: string) => {
@@ -63,6 +85,28 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
         return <Printer className="w-6 h-6 text-rose-600" />;
       case 'Combine':
         return <Combine className="w-6 h-6 text-teal-600" />;
+      case 'Contact':
+        return <Contact className="w-6 h-6 text-indigo-600" />;
+      case 'Crop':
+        return <Crop className="w-6 h-6 text-blue-600" />;
+      case 'Circle':
+        return <Circle className="w-6 h-6 text-sky-600" />;
+      case 'Square':
+        return <Square className="w-6 h-6 text-amber-600" />;
+      case 'Sliders':
+        return <Sliders className="w-6 h-6 text-purple-600" />;
+      case 'ShieldAlert':
+        return <ShieldAlert className="w-6 h-6 text-rose-600" />;
+      case 'Type':
+        return <Type className="w-6 h-6 text-indigo-600" />;
+      case 'RotateCw':
+        return <RotateCw className="w-6 h-6 text-indigo-600" />;
+      case 'Grid':
+        return <Grid className="w-6 h-6 text-teal-600" />;
+      case 'Pipette':
+        return <Pipette className="w-6 h-6 text-pink-600" />;
+      case 'FileSearch':
+        return <FileSearch className="w-6 h-6 text-cyan-600" />;
       case 'RefreshCw':
       default:
         return <RefreshCw className="w-6 h-6 text-slate-600" />;
@@ -99,6 +143,39 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
   if (activeTool === 'name-date-stamp') {
     return <NameDatePhotoStamp onBack={() => setActiveTool(null)} />;
   }
+  if (activeTool === 'photo-signature-merge') {
+    return <PhotoSignatureMergeWorkspace onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'crop-shape') {
+    return <CropShapeWorkspace initialMode="crop" onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'circle-crop') {
+    return <CropShapeWorkspace initialMode="circle" onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'round-corners') {
+    return <CropShapeWorkspace initialMode="round" onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'image-splitter') {
+    return <ImageSplitterWorkspace onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'rotate-flip') {
+    return <RotateFlipWorkspace onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'photo-effects') {
+    return <PhotoEffectsWorkspace onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'blur-censor') {
+    return <BlurCensorWorkspace onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'watermark-text') {
+    return <WatermarkImageStudioWorkspace onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'color-picker') {
+    return <ColorPickerWorkspace onBack={() => setActiveTool(null)} />;
+  }
+  if (activeTool === 'metadata-cleaner') {
+    return <MetadataWorkspace onBack={() => setActiveTool(null)} />;
+  }
   if (activeTool === 'image-joiner') {
     return <ImageJoinerWorkspace onBack={() => setActiveTool(null)} />;
   }
@@ -122,7 +199,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
           Complete Image & Document Photo Suite
         </h1>
         <p className="mt-3 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Compress photos to exact KB limits, resize signatures, create passport photos with printable sheets, and inject DPI. 100% private in-browser processing with zero server uploads.
+          Compress photos to exact KB limits, resize signatures, create passport photos with printable sheets, crop shapes, apply filters, and censor private info. 100% private in-browser processing with zero server uploads.
         </p>
 
         {/* Feature Badges */}
@@ -133,76 +210,75 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>100% Private (No File Leaves Device)</span>
+            <span>Zero Server Uploads & Total Privacy</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Official Recruitment Portal Compliant</span>
+            <span>20 Professional Image Tools</span>
           </div>
         </div>
-      </div>
 
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-        {/* Categories */}
-        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCategory(c.id)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                selectedCategory === c.id
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/80'
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search Input */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        {/* Global Search Bar */}
+        <div className="mt-8 max-w-lg mx-auto relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+            <Search className="w-4 h-4" />
+          </div>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search image tools (e.g. 50kb, passport, signature)..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+            placeholder="Search any image tool... (e.g. 20KB, Passport, Signature, Crop, Blur, Watermark)"
+            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 rounded-2xl text-xs sm:text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
           />
         </div>
       </div>
 
-      {/* Tools Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Category Filter Tabs */}
+      <div className="flex items-center justify-center flex-wrap gap-2 mb-8">
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setSelectedCategory(cat.id)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+              selectedCategory === cat.id
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tool Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredTools.map((tool) => (
           <div
             key={tool.key}
             onClick={() => setActiveTool(tool.key)}
-            className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group flex flex-col justify-between"
+            className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-emerald-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
           >
             <div>
               <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
                   {getToolIcon(tool.icon)}
                 </div>
                 {tool.badge && (
-                  <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200/80">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
                     {tool.badge}
                   </span>
                 )}
               </div>
 
-              <h3 className="font-bold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors">
+              <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
                 {tool.title}
               </h3>
-              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                 {tool.shortDesc}
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-600 group-hover:text-emerald-700">
+            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600 group-hover:text-emerald-700">
               <span>Launch Tool</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>

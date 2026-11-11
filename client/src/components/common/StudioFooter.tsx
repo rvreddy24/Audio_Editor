@@ -80,17 +80,22 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           {/* Column 2: Image Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              Image Studio
+              Image Studio (20 Tools)
             </h4>
             <ul className="space-y-2">
               <li>
                 <button onClick={() => onOpenImage?.('compress-kb')} className="hover:text-white transition-colors">
-                  Compress to KB (20, 50, 100KB)
+                  Exact KB Compression
                 </button>
               </li>
               <li>
                 <button onClick={() => onOpenImage?.('passport-photo')} className="hover:text-white transition-colors">
-                  Passport Photo Maker
+                  Passport Photo & 4x6 Sheets
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('photo-signature-merge')} className="hover:text-white transition-colors">
+                  Merge Photo & Signature
                 </button>
               </li>
               <li>
@@ -99,18 +104,23 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenImage?.('resize-dimensions')} className="hover:text-white transition-colors">
-                  Resize by Pixels & CM
+                <button onClick={() => onOpenImage?.('crop-shape')} className="hover:text-white transition-colors">
+                  Crop & Circle Avatar Maker
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenImage?.('name-date-stamp')} className="hover:text-white transition-colors">
-                  Name & Date on Photo (DoP)
+                <button onClick={() => onOpenImage?.('blur-censor')} className="hover:text-white transition-colors">
+                  Blur & Censor Private Info
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenImage?.('dpi-converter')} className="hover:text-white transition-colors">
-                  Convert DPI (200, 300 DPI)
+                <button onClick={() => onOpenImage?.('image-splitter')} className="hover:text-white transition-colors">
+                  Instagram Grid Splitter
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('color-picker')} className="hover:text-white transition-colors">
+                  Eyedropper Color Picker
                 </button>
               </li>
             </ul>

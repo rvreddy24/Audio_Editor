@@ -728,3 +728,470 @@ export function downloadImageBlob(blob: Blob, filename: string): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// -------------------------------------------------------------
+// Extended Suite Functions for Image Studio
+// -------------------------------------------------------------
+
+/**
+ * 10. CROP IMAGE (Free / Fixed Aspect Ratio)
+ */
+export async function cropImage(
+  img: HTMLImageElement,
+  crop: ImageCropRect,
+  format: 'image/jpeg' | 'image/png' | 'image/webp' = 'image/jpeg',
+  quality = 0.92
+): Promise<{ blob: Blob; dataUrl: string; width: number; height: number }> {
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(crop.width));
+  canvas.height = Math.max(1, Math.round(crop.height));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context failed');
+
+  if (format === 'image/jpeg') {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  ctx.drawImage(
+    img,
+    crop.x,
+    crop.y,
+    crop.width,
+    crop.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const blob = await canvasToBlob(canvas, format, quality);
+  const dataUrl = await blobToDataUrl(blob);
+  return { blob, dataUrl, width: canvas.width, height: canvas.height };
+}
+
+/**
+ * 11. CIRCLE CROP (Profile Avatar / Social Badge)
+ */
+export async function circleCropImage(
+  img: HTMLImageElement,
+  options?: {
+    borderWidth?: number;
+    borderColor?: string;
+    bgColor?: string;
+    format?: 'image/png' | 'image/jpeg';
+  }
+): Promise<{ blob: Blob; dataUrl: string; size: number }> {
+  const size = Math.min(img.naturalWidth, img.naturalHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context failed');
+
+  const format = options?.format || 'image/png';
+  if (format === 'image/jpeg' || options?.bgColor) {
+    ctx.fillStyle = options?.bgColor || '#FFFFFF';
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  const radius = size / 2;
+  const sx = (img.naturalWidth - size) / 2;
+  const sy = (img.naturalHeight - size) / 2;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(radius, radius, radius - (options?.borderWidth || 0), 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+  ctx.restore();
+
+  if (options?.borderWidth && options.borderWidth > 0) {
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - options.borderWidth / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = options.borderColor || '#FFFFFF';
+    ctx.lineWidth = options.borderWidth;
+    ctx.stroke();
+  }
+
+  const blob = await canvasToBlob(canvas, format, 0.95);
+  const dataUrl = await blobToDataUrl(blob);
+  return { blob, dataUrl, size };
+}
+
+/**
+ * 12. ROUND CORNERS (Smooth Border Radius)
+ */
+export async function roundCornersImage(
+  img: HTMLImageElement,
+  radius: number,
+  format: 'image/png' | 'image/jpeg' = 'image/png'
+): Promise<{ blob: Blob; dataUrl: string }> {
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context failed');
+
+  const r = Math.min(radius, Math.min(w, h) / 2);
+
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(w - r, 0);
+  ctx.quadraticCurveTo(w, 0, w, r);
+  ctx.lineTo(w, h - r);
+  ctx.quadraticCurveTo(w, h, w - r, h);
+  ctx.lineTo(r, h);
+  ctx.quadraticCurveTo(0, h, 0, h - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.clip();
+
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const blob = await canvasToBlob(canvas, format, 0.95);
+  const dataUrl = await blobToDataUrl(blob);
+  return { blob, dataUrl };
+}
+
+/**
+ * 13. ROTATE & FLIP
+ */
+export async function rotateAndFlipImage(
+  img: HTMLImageElement,
+  angle: number,
+  flipH: boolean,
+  flipV: boolean
+): Promise<{ blob: Blob; dataUrl: string; width: number; height: number }> {
+  const rad = (angle * Math.PI) / 180;
+  const sin = Math.abs(Math.sin(rad));
+  const cos = Math.abs(Math.cos(rad));
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const newW = Math.round(w * cos + h * sin);
+  const newH = Math.round(w * sin + h * cos);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = newW;
+  canvas.height = newH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context failed');
+
+  ctx.translate(newW / 2, newH / 2);
+  ctx.rotate(rad);
+  ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+  ctx.drawImage(img, -w / 2, -h / 2);
+
+  const blob = await canvasToBlob(canvas, 'image/jpeg', 0.95);
+  const dataUrl = await blobToDataUrl(blob);
+  return { blob, dataUrl, width: newW, height: newH };
+}
+
+/**
+ * 14. PHOTO EFFECTS & FILTERS
+ */
+export interface PhotoEffectOptions {
+  filter?: 'none' | 'grayscale' | 'sepia' | 'invert' | 'vintage' | 'high-contrast' | 'blur' | 'pixelate';
+  brightness?: number; // 0 to 200 (100 = normal)
+  contrast?: number; // 0 to 200 (100 = normal)
+  saturation?: number; // 0 to 200 (100 = normal)
+  blurRadius?: number; // 0 to 40 px
+  pixelateSize?: number; // 2 to 50 px
+  border?: { width: number; color: string; padding?: number };
+}
+
+export async function applyPhotoEffects(
+  img: HTMLImageElement,
+  options: PhotoEffectOptions
+): Promise<{ blob: Blob; dataUrl: string }> {
+  const borderWidth = options.border?.width || 0;
+  const padding = options.border?.padding || 0;
+  const extra = (borderWidth + padding) * 2;
+  const w = img.naturalWidth + extra;
+  const h = img.naturalHeight + extra;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('Canvas context failed');
+
+  if (borderWidth > 0 || padding > 0) {
+    ctx.fillStyle = options.border?.color || '#FFFFFF';
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  const innerX = borderWidth + padding;
+  const innerY = borderWidth + padding;
+  const innerW = img.naturalWidth;
+  const innerH = img.naturalHeight;
+
+  // Build CSS filter string
+  const filters: string[] = [];
+  if (options.brightness !== undefined && options.brightness !== 100) {
+    filters.push(`brightness(${options.brightness}%)`);
+  }
+  if (options.contrast !== undefined && options.contrast !== 100) {
+    filters.push(`contrast(${options.contrast}%)`);
+  }
+  if (options.saturation !== undefined && options.saturation !== 100) {
+    filters.push(`saturate(${options.saturation}%)`);
+  }
+
+  if (options.filter === 'grayscale') filters.push('grayscale(100%)');
+  else if (options.filter === 'sepia') filters.push('sepia(100%)');
+  else if (options.filter === 'invert') filters.push('invert(100%)');
+  else if (options.filter === 'vintage') filters.push('sepia(50%) contrast(120%) brightness(90%)');
+  else if (options.filter === 'high-contrast') filters.push('contrast(160%) brightness(105%)');
+  else if (options.filter === 'blur' && options.blurRadius) filters.push(`blur(${options.blurRadius}px)`);
+
+  if (filters.length > 0) {
+    ctx.filter = filters.join(' ');
+  }
+
+  ctx.drawImage(img, innerX, innerY, innerW, innerH);
+  ctx.filter = 'none';
+
+  // Pixelate effect if requested
+  if (options.filter === 'pixelate' && options.pixelateSize && options.pixelateSize > 1) {
+    const pxSize = Math.max(2, options.pixelateSize);
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = Math.max(1, Math.round(innerW / pxSize));
+    pCanvas.height = Math.max(1, Math.round(innerH / pxSize));
+    const pCtx = pCanvas.getContext('2d');
+    if (pCtx) {
+      pCtx.drawImage(canvas, innerX, innerY, innerW, innerH, 0, 0, pCanvas.width, pCanvas.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(pCanvas, 0, 0, pCanvas.width, pCanvas.height, innerX, innerY, innerW, innerH);
+    }
+  }
+
+  const blob = await canvasToBlob(canvas, 'image/jpeg', 0.94);
+  const dataUrl = await blobToDataUrl(blob);
+  return { blob, dataUrl };
+}
+
+/**
+ * 15. WATERMARK & TEXT STAMP
+ */
+export interface WatermarkOptions {
+  text: string;
+  fontSize?: number;
+  color?: string;
+  opacity?: number;
+  position?: 'center' | 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'tile';
+  rotation?: number;
+}
+
+export async function addWatermarkToImage(
+  img: HTMLImageElement,
+  options: WatermarkOptions
+): Promise<{ blob: Blob; dataUrl: string }> {
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context failed');
+
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const fontSize = options.fontSize || Math.max(18, Math.round(w / 25));
+  ctx.font = `bold ${fontSize}px sans-serif`;
+  ctx.fillStyle = options.color || '#FFFFFF';
+  ctx.globalAlpha = options.opacity !== undefined ? options.opacity : 0.6;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const position = options.position || 'center';
+  const text = options.text || 'rajvarshith.com';
+
+  if (position === 'tile') {
+    const angle = ((options.rotation || -30) * Math.PI) / 180;
+    const stepX = fontSize * text.length * 1.2;
+    const stepY = fontSize * 4;
+
+    for (let y = -h; y < h * 2; y += stepY) {
+      for (let x = -w; x < w * 2; x += stepX) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+      }
+    }
+  } else {
+    let tx = w / 2;
+    let ty = h / 2;
+    const pad = Math.max(20, Math.round(w * 0.04));
+
+    if (position === 'top-left') {
+      ctx.textAlign = 'left';
+      tx = pad;
+      ty = pad + fontSize;
+    } else if (position === 'top-right') {
+      ctx.textAlign = 'right';
+      tx = w - pad;
+      ty = pad + fontSize;
+    } else if (position === 'bottom-left') {
+      ctx.textAlign = 'left';
+      tx = pad;
+      ty = h - pad;
+    } else if (position === 'bottom-right') {
+      ctx.textAlign = 'right';
+      tx = w - pad;
+      ty = h - pad;
+    }
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    if (options.rotation) {
+      ctx.rotate((options.rotation * Math.PI) / 180);
+    }
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+  }
+
+  const blob = await canvasToBlob(canvas, 'image/jpeg', 0.94);
+  const dataUrl = await blobToDataUrl(blob);
+  return { blob, dataUrl };
+}
+
+/**
+ * 16. IMAGE SPLITTER / GRID (Instagram 3x3, 3x1, Slices)
+ */
+export async function splitImageGrid(
+  img: HTMLImageElement,
+  cols: number,
+  rows: number
+): Promise<Array<{ col: number; row: number; blob: Blob; dataUrl: string }>> {
+  const pieceW = Math.floor(img.naturalWidth / cols);
+  const pieceH = Math.floor(img.naturalHeight / rows);
+  const results: Array<{ col: number; row: number; blob: Blob; dataUrl: string }> = [];
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const canvas = document.createElement('canvas');
+      canvas.width = pieceW;
+      canvas.height = pieceH;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) continue;
+
+      ctx.drawImage(
+        img,
+        c * pieceW,
+        r * pieceH,
+        pieceW,
+        pieceH,
+        0,
+        0,
+        pieceW,
+        pieceH
+      );
+
+      const blob = await canvasToBlob(canvas, 'image/jpeg', 0.95);
+      const dataUrl = await blobToDataUrl(blob);
+      results.push({ col: c + 1, row: r + 1, blob, dataUrl });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 17. MERGE PHOTO & SIGNATURE (Official Combined Card <= 50KB)
+ */
+export async function mergePhotoAndSignature(
+  photoImg: HTMLImageElement,
+  signImg: HTMLImageElement,
+  options: {
+    layout: 'vertical' | 'horizontal';
+    candidateName?: string;
+    dop?: string;
+    targetKb?: number;
+  }
+): Promise<{ blob: Blob; dataUrl: string; actualKb: number }> {
+  const name = options.candidateName?.trim().toUpperCase();
+  const dop = options.dop?.trim();
+
+  const cardW = 420;
+  const photoH = 360;
+  const signH = 120;
+  const bannerH = name || dop ? 60 : 0;
+  const totalH = photoH + signH + bannerH;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = cardW;
+  canvas.height = totalH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context failed');
+
+  // Fill white card background
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, cardW, totalH);
+
+  // Outer border
+  ctx.strokeStyle = '#CBD5E1';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, cardW - 2, totalH - 2);
+
+  // 1. Draw Photo on top
+  ctx.drawImage(photoImg, 10, 10, cardW - 20, photoH - 20);
+
+  // Divider
+  let curY = photoH;
+  ctx.strokeStyle = '#E2E8F0';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(10, curY);
+  ctx.lineTo(cardW - 10, curY);
+  ctx.stroke();
+
+  // 2. Candidate text banner if present
+  if (name || dop) {
+    ctx.fillStyle = '#0F172A';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (name) {
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(name, cardW / 2, curY + 20);
+    }
+    if (dop) {
+      ctx.font = '12px sans-serif';
+      ctx.fillStyle = '#475569';
+      ctx.fillText(`DoP: ${dop}`, cardW / 2, curY + (name ? 42 : 30));
+    }
+    curY += bannerH;
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.beginPath();
+    ctx.moveTo(10, curY);
+    ctx.lineTo(cardW - 10, curY);
+    ctx.stroke();
+  }
+
+  // 3. Draw Signature
+  const sigPad = 10;
+  const sigBoxW = cardW - sigPad * 2;
+  const sigBoxH = totalH - curY - sigPad * 2;
+  const sRatio = signImg.naturalWidth / signImg.naturalHeight;
+  let sw = sigBoxW;
+  let sh = sigBoxH;
+  if (sw / sh > sRatio) {
+    sw = sh * sRatio;
+  } else {
+    sh = sw / sRatio;
+  }
+  const sx = (cardW - sw) / 2;
+  const sy = curY + (totalH - curY - sh) / 2;
+  ctx.drawImage(signImg, sx, sy, sw, sh);
+
+  const targetKb = options.targetKb || 50;
+  const comp = await compressToTargetKb(canvas, targetKb, 'image/jpeg');
+  return { blob: comp.blob, dataUrl: comp.dataUrl, actualKb: comp.actualKb };
+}

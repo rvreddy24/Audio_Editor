@@ -5,11 +5,22 @@ export type ImageToolKey =
   | 'passport-photo'
   | 'signature-resizer'
   | 'name-date-stamp'
+  | 'photo-signature-merge'
   | 'dpi-converter'
+  | 'crop-shape'
+  | 'circle-crop'
+  | 'round-corners'
+  | 'image-splitter'
+  | 'rotate-flip'
+  | 'photo-effects'
+  | 'blur-censor'
+  | 'watermark-text'
+  | 'color-picker'
+  | 'metadata-cleaner'
   | 'image-joiner'
   | 'format-convert';
 
-export type ImageCategory = 'compress' | 'resize' | 'official' | 'edit';
+export type ImageCategory = 'compress' | 'resize' | 'official' | 'crop' | 'edit' | 'utility';
 
 export interface ImageToolMeta {
   key: ImageToolKey;
@@ -21,6 +32,7 @@ export interface ImageToolMeta {
 }
 
 export const IMAGE_TOOLS: ImageToolMeta[] = [
+  // 1. Compression
   {
     key: 'compress-kb',
     title: 'Compress Image to KB / MB',
@@ -37,6 +49,42 @@ export const IMAGE_TOOLS: ImageToolMeta[] = [
     badge: 'Utility',
     icon: 'Maximize2',
   },
+
+  // 2. Official Forms & Exams
+  {
+    key: 'passport-photo',
+    title: 'Passport Size Photo Maker',
+    shortDesc: 'Create official passport photos for India, US, UK, EU with face guide oval, manual adjusters, and printable sheets.',
+    category: 'official',
+    badge: 'Essential',
+    icon: 'UserCheck',
+  },
+  {
+    key: 'signature-resizer',
+    title: 'Signature Resizer & Cleaner',
+    shortDesc: 'Crop digital signatures, clean grey paper shadows, and compress strictly under 10KB–20KB for recruitment forms.',
+    category: 'official',
+    badge: 'Fast',
+    icon: 'PenTool',
+  },
+  {
+    key: 'name-date-stamp',
+    title: 'Name & Date on Photo (DoP)',
+    shortDesc: 'Add candidate Name and Date of Photograph stamp at the bottom, mandatory for SSC, UPSC, and NEET.',
+    category: 'official',
+    badge: 'Govt Exams',
+    icon: 'Calendar',
+  },
+  {
+    key: 'photo-signature-merge',
+    title: 'Merge Photo & Signature',
+    shortDesc: 'Combine passport photograph and signature into one official candidate card with candidate name under 50KB.',
+    category: 'official',
+    badge: 'Official',
+    icon: 'Contact',
+  },
+
+  // 3. Resize & Dimensions
   {
     key: 'resize-dimensions',
     title: 'Resize by Dimensions & DPI',
@@ -46,48 +94,104 @@ export const IMAGE_TOOLS: ImageToolMeta[] = [
     icon: 'Scaling',
   },
   {
-    key: 'passport-photo',
-    title: 'Passport Size Photo Maker',
-    shortDesc: 'Create official passport photos for India, US, UK, EU with background tint and printable A4/4x6 sheets.',
-    category: 'official',
-    badge: 'Official Forms',
-    icon: 'UserCheck',
-  },
-  {
-    key: 'signature-resizer',
-    title: 'Signature Resizer & Cleaner',
-    shortDesc: 'Crop digital signatures, clean grey paper shadows, and compress under 10KB–20KB for recruitment forms.',
-    category: 'official',
-    badge: 'Fast',
-    icon: 'PenTool',
-  },
-  {
-    key: 'name-date-stamp',
-    title: 'Name & Date on Photo (DoP)',
-    shortDesc: 'Add candidate Name and Date of Photograph stamp at the bottom, required for SSC, UPSC, and NEET.',
-    category: 'official',
-    badge: 'Govt Exams',
-    icon: 'Calendar',
-  },
-  {
     key: 'dpi-converter',
     title: 'Convert Image DPI',
-    shortDesc: 'Change image resolution to 200, 300, or 600 DPI for high-resolution document and photo uploads.',
+    shortDesc: 'Change image resolution to 200, 300, or 600 DPI with embedded JFIF APP0 headers for printing.',
     category: 'resize',
     icon: 'Printer',
   },
   {
+    key: 'image-splitter',
+    title: 'Image Splitter & Grid Maker',
+    shortDesc: 'Split images into Instagram grids (3×1, 3×2, 3×3) or vertical/horizontal slices and download as ZIP.',
+    category: 'resize',
+    badge: 'Social Grid',
+    icon: 'Grid',
+  },
+
+  // 4. Crop & Shapes
+  {
+    key: 'crop-shape',
+    title: 'Crop Image & Aspect Ratio',
+    shortDesc: 'Crop unwanted edges with standard aspect ratios (1:1 Square, 4:5 Portrait, 16:9 Landscape, 9:16 Story).',
+    category: 'crop',
+    icon: 'Crop',
+  },
+  {
+    key: 'circle-crop',
+    title: 'Circle Crop / Avatar Maker',
+    shortDesc: 'Crop pictures into perfect circular profile photos with transparent background or colored borders.',
+    category: 'crop',
+    badge: 'Profile DP',
+    icon: 'Circle',
+  },
+  {
+    key: 'round-corners',
+    title: 'Round Image Corners',
+    shortDesc: 'Add smooth rounded corners (border radius) to pictures for modern web and card designs.',
+    category: 'crop',
+    icon: 'Square',
+  },
+
+  // 5. Creative & Filters
+  {
+    key: 'photo-effects',
+    title: 'Photo Effects & Filters',
+    shortDesc: 'Enhance photos with Grayscale, Black & White, Sepia, Invert, Brightness, Contrast, and Polaroid borders.',
+    category: 'edit',
+    icon: 'Sliders',
+  },
+  {
+    key: 'blur-censor',
+    title: 'Blur & Censor Private Info',
+    shortDesc: 'Conceal faces, phone numbers, addresses, and sensitive document details with blur and pixelate censor bars.',
+    category: 'edit',
+    badge: 'Privacy',
+    icon: 'ShieldAlert',
+  },
+  {
+    key: 'watermark-text',
+    title: 'Add Watermark & Text',
+    shortDesc: 'Stamp copyright notices, logos, or repeated diagonal tiled watermarks to protect your photos.',
+    category: 'edit',
+    icon: 'Type',
+  },
+  {
+    key: 'rotate-flip',
+    title: 'Rotate & Flip Image',
+    shortDesc: 'Rotate 90°, 180°, flip horizontally (mirror), flip vertically, or fine-tune angles to straighten tilted photos.',
+    category: 'edit',
+    icon: 'RotateCw',
+  },
+  {
     key: 'image-joiner',
-    title: 'Join & Merge Images',
-    shortDesc: 'Merge multiple images side-by-side or stacked vertically (e.g., Photo + Signature combined card).',
+    title: 'Join & Merge Multiple Images',
+    shortDesc: 'Merge multiple images side-by-side horizontally or stacked vertically with custom gaps and background colors.',
     category: 'edit',
     icon: 'Combine',
   },
+
+  // 6. Utility & Conversions
   {
     key: 'format-convert',
     title: 'Image Format Converter',
-    shortDesc: 'Convert between JPG, PNG, and WebP instantly inside your browser without data uploads.',
-    category: 'edit',
+    shortDesc: 'Convert between JPG, PNG, and WebP instantly inside your browser without uploading to any server.',
+    category: 'utility',
     icon: 'RefreshCw',
+  },
+  {
+    key: 'color-picker',
+    title: 'Image Color Picker (Eyedropper)',
+    shortDesc: 'Inspect and extract exact HEX, RGB, and HSL color codes from any pixel with interactive magnifier loupe.',
+    category: 'utility',
+    badge: 'Eyedropper',
+    icon: 'Pipette',
+  },
+  {
+    key: 'metadata-cleaner',
+    title: 'EXIF Metadata Viewer & Stripper',
+    shortDesc: 'Inspect camera, location, and date metadata and strip all EXIF tags in one click for 100% photo privacy.',
+    category: 'utility',
+    icon: 'FileSearch',
   },
 ];
