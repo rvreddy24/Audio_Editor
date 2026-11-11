@@ -28,6 +28,7 @@ import {
   FileText,
   FileCheck,
   Highlighter,
+  X,
 } from 'lucide-react';
 import { PdfFileInfo, parsePdfFile, downloadBytes, getBufferFromFile } from '../../../utils/pdfOperations';
 import { getPdfDocument } from '../../../utils/pdfRenderer';
@@ -74,9 +75,9 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
   const [zoom, setZoom] = useState<number>(1.25);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
-  // Active Tool state
+  // Active Tool state: default to 'select' so clicking/moving does not accidentally stamp text
   const [activeTool, setActiveTool] = useState<EditorTool>(
-    mode === 'sign' ? 'sign' : mode === 'redact' ? 'redact' : 'text'
+    mode === 'sign' ? 'sign' : mode === 'redact' ? 'redact' : 'select'
   );
 
   // Placed items & freehand drawings
@@ -405,24 +406,29 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     };
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!draggingItem.current) return;
-      const dx = (moveEvent.clientX - draggingItem.current.startX) / zoom;
-      const dy = (moveEvent.clientY - draggingItem.current.startY) / zoom;
+      const currentDrag = draggingItem.current;
+      if (!currentDrag) return;
+      const dx = (moveEvent.clientX - currentDrag.startX) / zoom;
+      const dy = (moveEvent.clientY - currentDrag.startY) / zoom;
 
       if (Math.hypot(dx, dy) > 2) {
-        draggingItem.current.hasMoved = true;
+        currentDrag.hasMoved = true;
         wasDraggingOrResizing.current = true;
       }
 
       moveEvent.preventDefault();
 
+      const newX = Math.max(0, currentDrag.initialItemX + dx);
+      const newY = Math.max(0, currentDrag.initialItemY + dy);
+      const dragId = currentDrag.id;
+
       setItems((prev) =>
         prev.map((it) =>
-          it.id === draggingItem.current?.id
+          it.id === dragId
             ? {
                 ...it,
-                x: Math.max(0, draggingItem.current.initialItemX + dx),
-                y: Math.max(0, draggingItem.current.initialItemY + dy),
+                x: newX,
+                y: newY,
               }
             : it
         )
@@ -460,18 +466,23 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     wasDraggingOrResizing.current = true;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!resizingItem.current) return;
+      const currentResize = resizingItem.current;
+      if (!currentResize) return;
       moveEvent.preventDefault();
-      const dx = (moveEvent.clientX - resizingItem.current.startX) / zoom;
-      const dy = (moveEvent.clientY - resizingItem.current.startY) / zoom;
+      const dx = (moveEvent.clientX - currentResize.startX) / zoom;
+      const dy = (moveEvent.clientY - currentResize.startY) / zoom;
+
+      const newW = Math.max(20, currentResize.initialWidth + dx);
+      const newH = Math.max(16, currentResize.initialHeight + dy);
+      const resizeId = currentResize.id;
 
       setItems((prev) =>
         prev.map((it) =>
-          it.id === resizingItem.current?.id
+          it.id === resizeId
             ? {
                 ...it,
-                width: Math.max(20, resizingItem.current.initialWidth + dx),
-                height: Math.max(16, resizingItem.current.initialHeight + dy),
+                width: newW,
+                height: newH,
               }
             : it
         )
@@ -1432,6 +1443,23 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
                               <span>Delete</span>
                             </button>
                           </div>
+                        )}
+
+                        {/* Corner Quick-Delete (X) Button */}
+                        {isSelected && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleDeleteItem(item.id, e);
+                            }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            className="absolute -top-3 -right-3 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer z-50 transition-transform hover:scale-110 border-2 border-white"
+                            title="Delete this item"
+                          >
+                            <X className="w-3.5 h-3.5 stroke-[3]" />
+                          </button>
                         )}
 
                         {/* Corner Resize Handle */}
