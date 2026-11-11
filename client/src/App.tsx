@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Scissors,
   RefreshCw,
@@ -87,19 +87,29 @@ import { WatermarkImageWorkspace } from './components/pdf/workspaces/WatermarkIm
 import { uploadFile, checkHealth } from './api';
 import { LoadedFile, ProcessingResult } from './types';
 import { formatTime, formatFileSize } from './utils/formatters';
+import {
+  parseRouteFromLocation,
+  syncRouteToUrl,
+  RouteState,
+  AudioTabKey,
+  ViewMode,
+} from './utils/router';
 
 type TabKey = 'trim' | 'convert' | 'video' | 'effects' | 'merge' | 'tags';
 
 export function App() {
-  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video' | 'media'
-  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video' | 'media'>('home');
-  const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>('home');
-  const [activeCalc, setActiveCalc] = useState<CalculatorKey>('home');
-  const [activeImageTool, setActiveImageTool] = useState<ImageToolKey | undefined>(undefined);
+  // Parse initial route from URL on page load / browser reload
+  const initialRoute = useRef<RouteState>(parseRouteFromLocation());
+
+  // Navigation Router state
+  const [viewMode, setViewMode] = useState<ViewMode>(initialRoute.current.viewMode);
+  const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>(initialRoute.current.pdfTool);
+  const [activeCalc, setActiveCalc] = useState<CalculatorKey>(initialRoute.current.calcTool);
+  const [activeImageTool, setActiveImageTool] = useState<ImageToolKey | undefined>(initialRoute.current.imageTool);
 
   // Audio state
   const [currentFile, setCurrentFile] = useState<LoadedFile | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>('trim');
+  const [activeTab, setActiveTab] = useState<TabKey>(initialRoute.current.audioTab || 'trim');
 
   // Trimmer states
   const [startTime, setStartTime] = useState<number>(0);
@@ -121,39 +131,79 @@ export function App() {
     });
   }, []);
 
+  // Listen to browser Back and Forward navigation buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextRoute = parseRouteFromLocation();
+      setViewMode(nextRoute.viewMode);
+      setActivePdfTool(nextRoute.pdfTool);
+      setActiveCalc(nextRoute.calcTool);
+      setActiveImageTool(nextRoute.imageTool);
+      if (nextRoute.audioTab) {
+        setActiveTab(nextRoute.audioTab as TabKey);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
+
+  const handleOpenHome = () => {
+    setViewMode('home');
+    setActivePdfTool('home');
+    setActiveCalc('home');
+    setActiveImageTool(undefined);
+    syncRouteToUrl({ viewMode: 'home' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleOpenPdf = (specificTool: PdfToolKey = 'home') => {
     setViewMode('pdf');
     setActivePdfTool(specificTool);
+    syncRouteToUrl({ viewMode: 'pdf', pdfTool: specificTool });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenAudio = (tab?: string) => {
     setViewMode('audio');
-    if (tab && ['trim', 'convert', 'video', 'effects', 'merge', 'tags'].includes(tab)) {
-      setActiveTab(tab as TabKey);
+    const validTab = tab && ['trim', 'convert', 'video', 'effects', 'merge', 'tags'].includes(tab)
+      ? (tab as TabKey)
+      : activeTab;
+    if (tab && validTab) {
+      setActiveTab(validTab);
     }
+    syncRouteToUrl({ viewMode: 'audio', audioTab: validTab as AudioTabKey });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenCalc = (tool: CalculatorKey = 'home') => {
     setViewMode('calc');
     setActiveCalc(tool);
+    syncRouteToUrl({ viewMode: 'calc', calcTool: tool });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleOpenImage = (tool?: ImageToolKey) => {
+  const handleOpenImage = (tool?: ImageToolKey | null) => {
     setViewMode('image');
-    setActiveImageTool(tool);
+    const selected = tool || undefined;
+    setActiveImageTool(selected);
+    syncRouteToUrl({ viewMode: 'image', imageTool: selected });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenVideo = () => {
     setViewMode('video');
+    syncRouteToUrl({ viewMode: 'video' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenMedia = () => {
     setViewMode('media');
+    syncRouteToUrl({ viewMode: 'media' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -228,12 +278,7 @@ export function App() {
         activePdfToolTitle={activePdfTool !== 'home' ? currentPdfToolMeta?.title : undefined}
         activeCalcTitle={activeCalc !== 'home' ? currentCalcMeta?.name : undefined}
         activeImageToolTitle={currentImageToolMeta?.title}
-        onNavigateHome={() => {
-          setViewMode('home');
-          setActivePdfTool('home');
-          setActiveCalc('home');
-          setActiveImageTool(undefined);
-        }}
+        onNavigateHome={handleOpenHome}
         onNavigatePdf={() => handleOpenPdf('home')}
         onNavigateVideo={() => handleOpenVideo()}
         onNavigateAudio={() => handleOpenAudio()}
@@ -262,7 +307,7 @@ export function App() {
           <MediaStudioHub
             onSelectVideo={() => handleOpenVideo()}
             onSelectAudio={() => handleOpenAudio()}
-            onBackToHome={() => setViewMode('home')}
+            onBackToHome={handleOpenHome}
           />
         </main>
       )}
@@ -273,7 +318,7 @@ export function App() {
           {/* PDF Section Subheader */}
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
-              onClick={() => setViewMode('home')}
+              onClick={handleOpenHome}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-red-600 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -299,142 +344,142 @@ export function App() {
               <PdfGrid
                 onSelectTool={(tool) => {
                   if (tool === 'audio') handleOpenAudio();
-                  else setActivePdfTool(tool);
+                  else handleOpenPdf(tool);
                 }}
               />
             </>
           )}
 
           {activePdfTool === 'merge' && (
-            <MergeWorkspace onBack={() => setActivePdfTool('home')} />
+            <MergeWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'split' && (
-            <SplitWorkspace onBack={() => setActivePdfTool('home')} />
+            <SplitWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'compress' && (
-            <CompressWorkspace onBack={() => setActivePdfTool('home')} />
+            <CompressWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'organize' && (
-            <OrganizeWorkspace onBack={() => setActivePdfTool('home')} />
+            <OrganizeWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'rotate' && (
-            <RotateWorkspace onBack={() => setActivePdfTool('home')} />
+            <RotateWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pdf-to-jpg' && (
-            <PdfToJpgWorkspace onBack={() => setActivePdfTool('home')} />
+            <PdfToJpgWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'jpg-to-pdf' && (
-            <JpgToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <JpgToPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'watermark' && (
-            <WatermarkWorkspace onBack={() => setActivePdfTool('home')} />
+            <WatermarkWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'page-numbers' && (
-            <PageNumbersWorkspace onBack={() => setActivePdfTool('home')} />
+            <PageNumbersWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'protect' && (
-            <ProtectWorkspace onBack={() => setActivePdfTool('home')} />
+            <ProtectWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'unlock' && (
-            <UnlockWorkspace onBack={() => setActivePdfTool('home')} />
+            <UnlockWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'sign' && (
-            <SignWorkspace onBack={() => setActivePdfTool('home')} />
+            <SignWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pdf-to-word' && (
-            <PdfToWordWorkspace onBack={() => setActivePdfTool('home')} />
+            <PdfToWordWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'word-to-pdf' && (
-            <WordToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <WordToPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'crop' && (
-            <CropPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <CropPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'redact' && (
-            <RedactPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <RedactPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'compare' && (
-            <ComparePdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <ComparePdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'html-to-pdf' && (
-            <HtmlToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <HtmlToPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'scan-pdf' && (
-            <ScanPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <ScanPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'ocr-pdf' && (
-            <OcrPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <OcrPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pdf-to-markdown' && (
-            <PdfToMarkdownWorkspace onBack={() => setActivePdfTool('home')} />
+            <PdfToMarkdownWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pdf-to-excel' && (
-            <PdfToExcelWorkspace onBack={() => setActivePdfTool('home')} />
+            <PdfToExcelWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'repair-pdf' && (
-            <RepairPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <RepairPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pdf-to-pdfa' && (
-            <PdfToPdfaWorkspace onBack={() => setActivePdfTool('home')} />
+            <PdfToPdfaWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'edit-pdf' && (
-            <EditPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <EditPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'excel-to-pdf' && (
-            <ExcelToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <ExcelToPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pdf-to-excel-xlsx' && (
-            <PdfToExcelXlsxWorkspace onBack={() => setActivePdfTool('home')} />
+            <PdfToExcelXlsxWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pptx-to-pdf' && (
-            <PptxToPdfWorkspace onBack={() => setActivePdfTool('home')} />
+            <PptxToPdfWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'pdf-to-pptx' && (
-            <PdfToPptxWorkspace onBack={() => setActivePdfTool('home')} />
+            <PdfToPptxWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'compress-image' && (
-            <CompressImageWorkspace onBack={() => setActivePdfTool('home')} />
+            <CompressImageWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'resize-image' && (
-            <ResizeImageWorkspace onBack={() => setActivePdfTool('home')} />
+            <ResizeImageWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'convert-image' && (
-            <ConvertImageWorkspace onBack={() => setActivePdfTool('home')} />
+            <ConvertImageWorkspace onBack={() => handleOpenPdf('home')} />
           )}
 
           {activePdfTool === 'watermark-image' && (
-            <WatermarkImageWorkspace onBack={() => setActivePdfTool('home')} />
+            <WatermarkImageWorkspace onBack={() => handleOpenPdf('home')} />
           )}
         </main>
       )}
@@ -445,7 +490,7 @@ export function App() {
           {/* Audio Section Subheader */}
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
-              onClick={() => setViewMode('media')}
+              onClick={handleOpenMedia}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -599,7 +644,10 @@ export function App() {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as TabKey)}
+                        onClick={() => {
+                          setActiveTab(tab.id as TabKey);
+                          syncRouteToUrl({ viewMode: 'audio', audioTab: tab.id as AudioTabKey }, true);
+                        }}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition-all ${
                           isActive
                             ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/90 font-bold'
@@ -688,8 +736,8 @@ export function App() {
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
               onClick={() => {
-                if (activeCalc !== 'home') setActiveCalc('home');
-                else setViewMode('home');
+                if (activeCalc !== 'home') handleOpenCalc('home');
+                else handleOpenHome();
               }}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-orange-600 transition-colors"
             >
@@ -705,7 +753,7 @@ export function App() {
 
           <CalculatorHub
             activeCalc={activeCalc}
-            onSelectCalc={(key) => setActiveCalc(key)}
+            onSelectCalc={(key) => handleOpenCalc(key)}
           />
         </main>
       )}
@@ -717,8 +765,8 @@ export function App() {
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
               onClick={() => {
-                if (activeImageTool) setActiveImageTool(undefined);
-                else setViewMode('home');
+                if (activeImageTool) handleOpenImage(undefined);
+                else handleOpenHome();
               }}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-emerald-600 transition-colors"
             >
@@ -734,7 +782,8 @@ export function App() {
 
           <ImageStudioHub
             initialTool={activeImageTool}
-            onBackToHome={() => setViewMode('home')}
+            onSelectTool={(tool) => handleOpenImage(tool)}
+            onBackToHome={handleOpenHome}
           />
         </main>
       )}
@@ -745,7 +794,7 @@ export function App() {
           {/* Video Subheader Bar */}
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
-              onClick={() => setViewMode('media')}
+              onClick={handleOpenMedia}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -776,7 +825,7 @@ export function App() {
             </div>
           </div>
 
-          <VideoStudioHub onBack={() => setViewMode('media')} />
+          <VideoStudioHub onBack={handleOpenMedia} />
         </main>
       )}
 
@@ -788,6 +837,7 @@ export function App() {
         onOpenAudio={() => handleOpenAudio()}
         onOpenCalc={(tool) => handleOpenCalc(tool)}
         onOpenImage={(tool) => handleOpenImage(tool)}
+        onNavigateHome={handleOpenHome}
       />
     </div>
   );

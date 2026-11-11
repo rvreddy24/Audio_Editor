@@ -10,6 +10,7 @@ interface StudioFooterProps {
   onOpenImage?: (tool?: ImageToolKey) => void;
   onOpenVideo?: () => void;
   onOpenMedia?: () => void;
+  onNavigateHome?: () => void;
 }
 
 export const StudioFooter: React.FC<StudioFooterProps> = ({
@@ -19,6 +20,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
   onOpenImage,
   onOpenVideo,
   onOpenMedia,
+  onNavigateHome,
 }) => {
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
@@ -226,13 +228,17 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           {/* Column 5: Platform */}
           <div>
             <div className="mb-3">
-              <div className="bg-white rounded-xl p-2 inline-block shadow-xs">
+              <button
+                type="button"
+                onClick={onNavigateHome}
+                className="bg-white rounded-xl p-2 inline-block shadow-xs hover:opacity-90 transition-opacity cursor-pointer focus:outline-none"
+              >
                 <img
                   src="/rv-banner.png"
                   alt="rajvarshith.com"
                   className="h-8 w-auto object-contain"
                 />
-              </div>
+              </button>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed mb-4">
               A private, fast, and 100% free web workstation suite for PDF manipulation, client image processing, professional audio editing, and comprehensive calculators.
@@ -246,9 +252,13 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
         {/* Bottom copyright */}
         <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-white rounded-md p-0.5 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={onNavigateHome}
+              className="w-5 h-5 bg-white rounded-md p-0.5 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer focus:outline-none"
+            >
               <img src="/rv-logo.png" alt="logo" className="w-full h-full object-contain" />
-            </div>
+            </button>
             <span>© {new Date().getFullYear()} rajvarshith.com. All rights reserved.</span>
           </div>
           <div className="flex items-center gap-6">

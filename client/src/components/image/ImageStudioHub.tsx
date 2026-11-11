@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Minimize2,
   Maximize2,
@@ -46,16 +46,27 @@ import { ConvertImageWorkspace } from '../pdf/workspaces/ConvertImageWorkspace';
 
 interface ImageStudioHubProps {
   initialTool?: ImageToolKey;
+  onSelectTool?: (tool: ImageToolKey | null) => void;
   onBackToHome?: () => void;
 }
 
 export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
   initialTool,
+  onSelectTool,
   onBackToHome,
 }) => {
   const [activeTool, setActiveTool] = useState<ImageToolKey | null>(initialTool || null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  useEffect(() => {
+    setActiveTool(initialTool || null);
+  }, [initialTool]);
+
+  const handleSelectTool = (toolKey: ImageToolKey | null) => {
+    setActiveTool(toolKey);
+    onSelectTool?.(toolKey);
+  };
 
   const categories = [
     { id: 'all', label: 'All Tools (20)' },
@@ -123,64 +134,64 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
 
   // If a tool is currently open, render its workspace
   if (activeTool === 'compress-kb') {
-    return <TargetCompressor mode="compress" onBack={() => setActiveTool(null)} />;
+    return <TargetCompressor mode="compress" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'increase-kb') {
-    return <TargetCompressor mode="increase" onBack={() => setActiveTool(null)} />;
+    return <TargetCompressor mode="increase" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'resize-dimensions') {
-    return <DimensionResizer onBack={() => setActiveTool(null)} />;
+    return <DimensionResizer onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'dpi-converter') {
-    return <DimensionResizer defaultDpiMode onBack={() => setActiveTool(null)} />;
+    return <DimensionResizer defaultDpiMode onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'passport-photo') {
-    return <PassportPhotoMaker onBack={() => setActiveTool(null)} />;
+    return <PassportPhotoMaker onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'signature-resizer') {
-    return <SignatureResizer onBack={() => setActiveTool(null)} />;
+    return <SignatureResizer onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'name-date-stamp') {
-    return <NameDatePhotoStamp onBack={() => setActiveTool(null)} />;
+    return <NameDatePhotoStamp onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'photo-signature-merge') {
-    return <PhotoSignatureMergeWorkspace onBack={() => setActiveTool(null)} />;
+    return <PhotoSignatureMergeWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'crop-shape') {
-    return <CropShapeWorkspace initialMode="crop" onBack={() => setActiveTool(null)} />;
+    return <CropShapeWorkspace initialMode="crop" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'circle-crop') {
-    return <CropShapeWorkspace initialMode="circle" onBack={() => setActiveTool(null)} />;
+    return <CropShapeWorkspace initialMode="circle" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'round-corners') {
-    return <CropShapeWorkspace initialMode="round" onBack={() => setActiveTool(null)} />;
+    return <CropShapeWorkspace initialMode="round" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'image-splitter') {
-    return <ImageSplitterWorkspace onBack={() => setActiveTool(null)} />;
+    return <ImageSplitterWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'rotate-flip') {
-    return <RotateFlipWorkspace onBack={() => setActiveTool(null)} />;
+    return <RotateFlipWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'photo-effects') {
-    return <PhotoEffectsWorkspace onBack={() => setActiveTool(null)} />;
+    return <PhotoEffectsWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'blur-censor') {
-    return <BlurCensorWorkspace onBack={() => setActiveTool(null)} />;
+    return <BlurCensorWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'watermark-text') {
-    return <WatermarkImageStudioWorkspace onBack={() => setActiveTool(null)} />;
+    return <WatermarkImageStudioWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'color-picker') {
-    return <ColorPickerWorkspace onBack={() => setActiveTool(null)} />;
+    return <ColorPickerWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'metadata-cleaner') {
-    return <MetadataWorkspace onBack={() => setActiveTool(null)} />;
+    return <MetadataWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'image-joiner') {
-    return <ImageJoinerWorkspace onBack={() => setActiveTool(null)} />;
+    return <ImageJoinerWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'format-convert') {
-    return <ConvertImageWorkspace onBack={() => setActiveTool(null)} />;
+    return <ConvertImageWorkspace onBack={() => handleSelectTool(null)} />;
   }
 
   // Otherwise render Image Studio Hub Dashboard
@@ -255,7 +266,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
         {filteredTools.map((tool) => (
           <div
             key={tool.key}
-            onClick={() => setActiveTool(tool.key)}
+            onClick={() => handleSelectTool(tool.key)}
             className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-emerald-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
           >
             <div>
