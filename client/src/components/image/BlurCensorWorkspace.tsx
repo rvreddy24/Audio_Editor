@@ -117,14 +117,23 @@ export const BlurCensorWorkspace: React.FC<BlurCensorWorkspaceProps> = ({ onBack
     }
   };
 
-  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return { x: 0, y: 0 };
     const rect = canvasRef.current.getBoundingClientRect();
+    let clientX = 0;
+    let clientY = 0;
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if ('clientX' in e) {
+      clientX = (e as React.MouseEvent<HTMLCanvasElement>).clientX;
+      clientY = (e as React.MouseEvent<HTMLCanvasElement>).clientY;
+    }
     const scaleX = canvasRef.current.width / rect.width;
     const scaleY = canvasRef.current.height / rect.height;
     return {
-      x: Math.round((e.clientX - rect.left) * scaleX),
-      y: Math.round((e.clientY - rect.top) * scaleY),
+      x: Math.round((clientX - rect.left) * scaleX),
+      y: Math.round((clientY - rect.top) * scaleY),
     };
   };
 
@@ -135,7 +144,24 @@ export const BlurCensorWorkspace: React.FC<BlurCensorWorkspaceProps> = ({ onBack
     setCurrentBox({ x: coords.x, y: coords.y, w: 0, h: 0 });
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const coords = getCanvasCoords(e);
+    setIsDrawing(true);
+    setDrawStart(coords);
+    setCurrentBox({ x: coords.x, y: coords.y, w: 0, h: 0 });
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !drawStart) return;
+    const coords = getCanvasCoords(e);
+    const x = Math.min(drawStart.x, coords.x);
+    const y = Math.min(drawStart.y, coords.y);
+    const w = Math.abs(coords.x - drawStart.x);
+    const h = Math.abs(coords.y - drawStart.y);
+    setCurrentBox({ x, y, w, h });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !drawStart) return;
     const coords = getCanvasCoords(e);
     const x = Math.min(drawStart.x, coords.x);
@@ -295,7 +321,10 @@ export const BlurCensorWorkspace: React.FC<BlurCensorWorkspaceProps> = ({ onBack
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
-                className="max-h-[480px] max-w-full h-auto w-auto object-contain cursor-crosshair select-none shadow-xs"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleMouseUp}
+                className="max-h-[480px] max-w-full h-auto w-auto object-contain cursor-crosshair select-none shadow-xs touch-none"
               />
             </div>
           </div>

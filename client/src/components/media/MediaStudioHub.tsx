@@ -35,20 +35,20 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
   return (
     <div className="min-h-[85vh] bg-slate-50 text-slate-900 flex flex-col">
       {/* Subheader Bar */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-2">
         <button
           onClick={onBackToHome}
-          className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Home Dashboard</span>
+          <span>Back<span className="hidden sm:inline"> to Home Dashboard</span></span>
         </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
-            Audio & Video Media Suite
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 sm:px-3 py-1 rounded-full border border-purple-200">
+            Audio & Video<span className="hidden sm:inline"> Media Suite</span>
           </span>
-          <span className="hidden sm:inline-block text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+          <span className="hidden md:inline-block text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
             High-Speed Processing Engine
           </span>
         </div>

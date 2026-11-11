@@ -216,9 +216,9 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Calculator */}
-        <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 text-white flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-3.5 sm:p-6 lg:p-8 shadow-xl border border-slate-800 text-white flex flex-col justify-between">
           {/* Top Bar */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsRad(!isRad)}
@@ -248,23 +248,23 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
           </div>
 
           {/* LCD Display */}
-          <div className="bg-slate-950/80 rounded-2xl p-4 sm:p-6 mb-6 border border-slate-800 text-right">
+          <div className="bg-slate-950/80 rounded-2xl p-3 sm:p-5 mb-4 sm:mb-6 border border-slate-800 text-right">
             <div className="h-5 text-xs text-slate-500 font-mono tracking-wider overflow-hidden truncate">
               {equation || ' '}
             </div>
-            <div className="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono text-white mt-1 overflow-x-auto whitespace-nowrap">
+            <div className="text-2xl sm:text-4xl font-extrabold tracking-tight font-mono text-white mt-1 overflow-x-auto whitespace-nowrap">
               {display}
             </div>
           </div>
 
           {/* Keypad Grid */}
-          <div className="grid grid-cols-5 gap-2 sm:gap-2.5 text-xs sm:text-sm font-semibold">
+          <div className="grid grid-cols-5 gap-1.5 sm:gap-2.5 text-xs sm:text-sm font-semibold">
             {/* Row 1: Memory & Trig */}
             <button onClick={() => handleMemory('mc')} className="calc-fn-btn">MC</button>
             <button onClick={() => handleMemory('mr')} className="calc-fn-btn">MR</button>
             <button onClick={() => handleMemory('m+')} className="calc-fn-btn">M+</button>
             <button onClick={() => handleMemory('m-')} className="calc-fn-btn">M-</button>
-            <button onClick={handleClear} className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 p-2.5 sm:p-3 rounded-xl transition-all">AC</button>
+            <button onClick={handleClear} className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 active:scale-95 p-2 sm:p-3 rounded-xl transition-all font-mono font-bold text-[11px] sm:text-xs">AC</button>
 
             {/* Row 2: Sci Functions */}
             <button onClick={() => handleFunction('sin')} className="calc-fn-btn">sin</button>
@@ -305,8 +305,8 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
             <button onClick={() => handleFunction('plusminus')} className="calc-fn-btn">±</button>
             <button onClick={() => handleDigit('0')} className="calc-num-btn">0</button>
             <button onClick={handleDecimal} className="calc-num-btn">.</button>
-            <button onClick={handleDelete} className="bg-slate-800 text-slate-300 hover:bg-slate-700 p-2.5 sm:p-3 rounded-xl transition-all">DEL</button>
-            <button onClick={handleEqual} className="bg-orange-500 hover:bg-orange-600 text-white font-bold p-2.5 sm:p-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all">=</button>
+            <button onClick={handleDelete} className="bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-95 p-2 sm:p-3 rounded-xl transition-all font-mono font-bold text-[11px] sm:text-xs">DEL</button>
+            <button onClick={handleEqual} className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold p-2 sm:p-3 rounded-xl shadow-lg shadow-orange-500/20 transition-all font-mono text-sm sm:text-base">=</button>
           </div>
         </div>
 

@@ -24,24 +24,24 @@ export const Header: React.FC<HeaderProps> = ({
   duration = 0,
 }) => {
   return (
-    <header className="border-b border-slate-200/80 bg-white sticky top-0 z-40 px-4 sm:px-6 lg:px-8 py-3.5 shadow-sm">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+    <header className="border-b border-slate-200/80 bg-white px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 shadow-xs">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         {/* Brand Logo & Name */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
             <img src="/rv-logo.png" alt="rajvarshith.com logo" className="w-full h-full object-contain" />
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-black tracking-tight text-slate-900 m-0 p-0 font-sans">
+              <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900 m-0 p-0 font-sans">
                 Audio Studio
               </h1>
-              <span className="bg-orange-50 text-orange-700 border border-orange-200/60 text-[11px] font-bold px-2 py-0.5 rounded-md">
+              <span className="bg-orange-50 text-orange-700 border border-orange-200/60 text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md">
                 Studio 320k
               </span>
             </div>
-            <p className="text-xs text-slate-500 m-0 p-0 font-normal">
+            <p className="text-[11px] sm:text-xs text-slate-500 m-0 p-0 font-normal">
               rajvarshith.com Pro Audio Suite
             </p>
           </div>

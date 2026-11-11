@@ -272,20 +272,41 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     drawWaveform();
   }, [drawWaveform]);
 
-  // Mouse interaction
-  const getTimeFromMouseEvent = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Mouse & Touch interaction
+  const getTimeFromEvent = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return 0;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    let clientX = 0;
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+    } else if ('clientX' in e) {
+      clientX = (e as React.MouseEvent<HTMLCanvasElement>).clientX;
+    }
+    const x = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, x / rect.width));
     return ratio * (duration || 1);
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const time = getTimeFromMouseEvent(e);
+    const time = getTimeFromEvent(e);
     const totalDur = duration || 1;
-    const threshold = totalDur * 0.025;
+    const threshold = totalDur * 0.03;
+
+    if (Math.abs(time - startTime) < threshold) {
+      setDragTarget('start');
+    } else if (Math.abs(time - endTime) < threshold) {
+      setDragTarget('end');
+    } else {
+      setDragTarget('playhead');
+      seek(time);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const time = getTimeFromEvent(e);
+    const totalDur = duration || 1;
+    const threshold = totalDur * 0.05;
 
     if (Math.abs(time - startTime) < threshold) {
       setDragTarget('start');
@@ -299,7 +320,22 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!dragTarget) return;
-    const time = getTimeFromMouseEvent(e);
+    const time = getTimeFromEvent(e);
+
+    if (dragTarget === 'start') {
+      const newStart = Math.min(time, endTime - 0.05);
+      onRangeChange(Math.max(0, newStart), endTime);
+    } else if (dragTarget === 'end') {
+      const newEnd = Math.max(time, startTime + 0.05);
+      onRangeChange(startTime, Math.min(duration, newEnd));
+    } else if (dragTarget === 'playhead') {
+      seek(time);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!dragTarget) return;
+    const time = getTimeFromEvent(e);
 
     if (dragTarget === 'start') {
       const newStart = Math.min(time, endTime - 0.05);
@@ -460,14 +496,17 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className="block"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
+          className="block touch-none"
         />
       </div>
 
       {/* Helper Footer */}
-      <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-        <span>Click anywhere to move playhead • Drag Start / End flags to trim</span>
-        <span>Space: Play/Pause</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] sm:text-xs text-slate-500 font-medium gap-1">
+        <span>Tap / Click to move playhead • Drag Start / End flags to trim</span>
+        <span className="hidden sm:inline">Space: Play/Pause</span>
       </div>
     </div>
   );

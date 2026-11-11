@@ -478,13 +478,13 @@ export function App() {
       {viewMode === 'audio' && (
         <div className="flex-1 flex flex-col">
           {/* Audio Section Subheader */}
-          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+          <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
             <button
               onClick={handleOpenMedia}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Media Studio</span>
+              <span>Back<span className="hidden sm:inline"> to Media Studio</span></span>
             </button>
 
             {/* Media Studio Dual Switcher */}

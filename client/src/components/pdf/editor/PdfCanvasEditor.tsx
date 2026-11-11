@@ -503,6 +503,71 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
     window.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleItemTouchStart = (item: EditorItem, e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (e.touches.length === 0) return;
+    const touch = e.touches[0];
+    setSelectedItemId(item.id);
+
+    draggingItem.current = {
+      id: item.id,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      initialItemX: item.x,
+      initialItemY: item.y,
+      hasMoved: false,
+    };
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      const currentDrag = draggingItem.current;
+      if (!currentDrag || moveEvent.touches.length === 0) return;
+      const moveTouch = moveEvent.touches[0];
+      const dx = (moveTouch.clientX - currentDrag.startX) / zoom;
+      const dy = (moveTouch.clientY - currentDrag.startY) / zoom;
+
+      if (Math.hypot(dx, dy) > 2) {
+        currentDrag.hasMoved = true;
+        wasDraggingOrResizing.current = true;
+      }
+
+      moveEvent.preventDefault();
+
+      const newX = Math.max(0, currentDrag.initialItemX + dx);
+      const newY = Math.max(0, currentDrag.initialItemY + dy);
+      const dragId = currentDrag.id;
+
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === dragId
+            ? {
+                ...it,
+                x: newX,
+                y: newY,
+              }
+            : it
+        )
+      );
+    };
+
+    const handleTouchEnd = () => {
+      const didMove = draggingItem.current?.hasMoved;
+      draggingItem.current = null;
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+
+      if (didMove) {
+        setTimeout(() => {
+          wasDraggingOrResizing.current = false;
+        }, 150);
+      } else {
+        wasDraggingOrResizing.current = false;
+      }
+    };
+
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+  };
+
   const handleResizeMouseDown = (item: EditorItem, e: React.MouseEvent) => {
     e.stopPropagation();
     resizingItem.current = {
@@ -551,6 +616,57 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
     window.addEventListener('mouseup', handleMouseUp);
   };
 
+  const handleResizeTouchStart = (item: EditorItem, e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (e.touches.length === 0) return;
+    const touch = e.touches[0];
+    resizingItem.current = {
+      id: item.id,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      initialWidth: item.width,
+      initialHeight: item.height,
+    };
+    wasDraggingOrResizing.current = true;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      const currentResize = resizingItem.current;
+      if (!currentResize || moveEvent.touches.length === 0) return;
+      moveEvent.preventDefault();
+      const moveTouch = moveEvent.touches[0];
+      const dx = (moveTouch.clientX - currentResize.startX) / zoom;
+      const dy = (moveTouch.clientY - currentResize.startY) / zoom;
+
+      const newW = Math.max(20, currentResize.initialWidth + dx);
+      const newH = Math.max(16, currentResize.initialHeight + dy);
+      const resizeId = currentResize.id;
+
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === resizeId
+            ? {
+                ...it,
+                width: newW,
+                height: newH,
+              }
+            : it
+        )
+      );
+    };
+
+    const handleTouchEnd = () => {
+      resizingItem.current = null;
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      setTimeout(() => {
+        wasDraggingOrResizing.current = false;
+      }, 150);
+    };
+
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+  };
+
   // --- 6. FREEHAND DRAWING & HIGHLIGHTING HANDLERS ---
   const handleDrawingMouseDown = (pageIndex: number, e: React.MouseEvent<HTMLCanvasElement>) => {
     if (activeTool !== 'draw' && activeTool !== 'highlight') return;
@@ -574,6 +690,30 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
     currentStroke.current = stroke;
   };
 
+  const handleDrawingTouchStart = (pageIndex: number, e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (activeTool !== 'draw' && activeTool !== 'highlight') return;
+    if (e.touches.length === 0) return;
+    const canvas = drawingCanvasRefs.current[pageIndex];
+    if (!canvas) return;
+
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / zoom;
+    const y = (touch.clientY - rect.top) / zoom;
+
+    const isHighlighter = activeTool === 'highlight';
+    const stroke: DrawingStroke = {
+      id: `str-${Date.now()}`,
+      pageIndex,
+      points: [{ x, y }],
+      color: isHighlighter ? highlighterColor : penColor,
+      lineWidth: isHighlighter ? 18 : penWidth,
+      isHighlighter,
+    };
+
+    currentStroke.current = stroke;
+  };
+
   const handleDrawingMouseMove = (pageIndex: number, e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!currentStroke.current || currentStroke.current.pageIndex !== pageIndex) return;
     const canvas = drawingCanvasRefs.current[pageIndex];
@@ -582,6 +722,48 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) / zoom;
     const y = (e.clientY - rect.top) / zoom;
+
+    currentStroke.current.points.push({ x, y });
+
+    // Live draw on overlay canvas
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.save();
+    ctx.scale(zoom, zoom);
+    if (currentStroke.current.isHighlighter) {
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = currentStroke.current.color;
+      ctx.lineWidth = currentStroke.current.lineWidth;
+      ctx.lineCap = 'square';
+    } else {
+      ctx.globalAlpha = 1.0;
+      ctx.strokeStyle = currentStroke.current.color;
+      ctx.lineWidth = currentStroke.current.lineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+
+    const pts = currentStroke.current.points;
+    if (pts.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(pts[pts.length - 2].x, pts[pts.length - 2].y);
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  };
+
+  const handleDrawingTouchMove = (pageIndex: number, e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!currentStroke.current || currentStroke.current.pageIndex !== pageIndex) return;
+    if (e.touches.length === 0) return;
+    const canvas = drawingCanvasRefs.current[pageIndex];
+    if (!canvas) return;
+
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / zoom;
+    const y = (touch.clientY - rect.top) / zoom;
 
     currentStroke.current.points.push({ x, y });
 
@@ -829,53 +1011,53 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
       {/* 1. TOP DOCUMENT EDITING SUBHEADER & TOOLBAR */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-xs">
         {/* Top Info Bar */}
-        <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100">
-          <div className="flex items-center gap-3">
+        <div className="px-2.5 sm:px-4 py-2 flex items-center justify-between border-b border-slate-100 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={onBack}
-              className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-red-600 transition-colors"
+              className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-red-600 transition-colors shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Tools</span>
+              <span className="hidden sm:inline">Back to Tools</span>
             </button>
-            <div className="h-4 w-px bg-slate-200" />
-            <span className="text-xs font-bold text-slate-900 truncate max-w-xs sm:max-w-md">
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
+            <span className="text-xs font-bold text-slate-900 truncate max-w-[100px] xs:max-w-[150px] sm:max-w-md">
               {file.name}
             </span>
-            <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+            <span className="text-[11px] text-slate-400 font-mono hidden md:inline shrink-0">
               ({pagesMeta.length} pages • {formatFileSize(file.size)})
             </span>
           </div>
 
           {/* Zoom, Delete Item & Apply Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Delete Selected Item Button in Header */}
             {selectedItem && (
               <button
                 type="button"
                 onClick={(e) => handleDeleteItem(selectedItem.id, e)}
-                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                 title="Delete selected item (Delete or Backspace key)"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete {selectedItem.type}</span>
+                <span className="hidden sm:inline">Delete {selectedItem.type}</span>
               </button>
             )}
 
-            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
               <button
                 onClick={() => setZoom((z) => Math.max(0.75, Number((z - 0.25).toFixed(2))))}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 hover:bg-white hover:text-slate-900 transition-colors"
+                className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-600 hover:bg-white hover:text-slate-900 transition-colors"
                 title="Zoom Out"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
-              <span className="text-[11px] font-bold text-slate-700 px-2 min-w-[42px] text-center font-mono">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 px-1 sm:px-2 min-w-[36px] sm:min-w-[42px] text-center font-mono">
                 {Math.round(zoom * 100)}%
               </span>
               <button
                 onClick={() => setZoom((z) => Math.min(2.5, Number((z + 0.25).toFixed(2))))}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 hover:bg-white hover:text-slate-900 transition-colors"
+                className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg text-slate-600 hover:bg-white hover:text-slate-900 transition-colors"
                 title="Zoom In"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -896,7 +1078,7 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
             <button
               onClick={handleApplyChanges}
               disabled={isApplying}
-              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-5 py-2 rounded-xl text-xs shadow-sm hover:shadow flex items-center gap-2 transition-all hover:scale-102"
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-3 sm:px-5 py-2 rounded-xl text-xs shadow-sm hover:shadow flex items-center gap-1 sm:gap-2 transition-all hover:scale-102"
             >
               {isApplying ? (
                 <>
@@ -905,7 +1087,7 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
                 </>
               ) : (
                 <>
-                  <span>Apply Changes</span>
+                  <span>Apply<span className="hidden sm:inline"> Changes</span></span>
                   <Download className="w-3.5 h-3.5" />
                 </>
               )}
@@ -1220,7 +1402,10 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
                   onMouseDown={(e) => handleDrawingMouseDown(idx, e)}
                   onMouseMove={(e) => handleDrawingMouseMove(idx, e)}
                   onMouseUp={() => handleDrawingMouseUp(idx)}
-                  className={`absolute inset-0 z-10 ${
+                  onTouchStart={(e) => handleDrawingTouchStart(idx, e)}
+                  onTouchMove={(e) => handleDrawingTouchMove(idx, e)}
+                  onTouchEnd={() => handleDrawingMouseUp(idx)}
+                  className={`absolute inset-0 z-10 touch-none ${
                     activeTool === 'draw' || activeTool === 'highlight' ? 'cursor-crosshair' : 'pointer-events-none'
                   }`}
                   style={{ width: `${pageWidthPx}px`, height: `${pageHeightPx}px` }}
@@ -1249,6 +1434,7 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
                           setSelectedItemId(item.id);
                         }}
                         onMouseDown={(e) => handleItemMouseDown(item, e)}
+                        onTouchStart={(e) => handleItemTouchStart(item, e)}
                         className={`absolute group cursor-move select-none transition-shadow ${
                           isSelected ? 'ring-2 ring-blue-500 shadow-md z-30' : 'hover:ring-1 hover:ring-blue-300 z-20'
                         }`}
@@ -1492,7 +1678,8 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
                         {isSelected && (
                           <div
                             onMouseDown={(e) => handleResizeMouseDown(item, e)}
-                            className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-600 border border-white rounded-full cursor-se-resize shadow-xs z-30"
+                            onTouchStart={(e) => handleResizeTouchStart(item, e)}
+                            className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-600 border border-white rounded-full cursor-se-resize shadow-xs z-30 touch-none"
                           />
                         )}
                       </div>

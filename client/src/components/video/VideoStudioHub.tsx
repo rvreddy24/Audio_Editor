@@ -527,7 +527,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
           <div className="lg:col-span-7 space-y-4">
             {/* Video Viewport Container with Live Framing */}
             <div className="bg-slate-950 rounded-3xl p-3 sm:p-4 shadow-md border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden">
-              <div className="w-full h-[460px] max-h-[460px] flex items-center justify-center relative overflow-hidden rounded-2xl transition-all duration-300 bg-slate-900">
+              <div className="w-full h-[240px] xs:h-[280px] sm:h-[380px] md:h-[460px] max-h-[460px] flex items-center justify-center relative overflow-hidden rounded-2xl transition-all duration-300 bg-slate-900">
                 <div
                   className="h-full max-h-full max-w-full flex items-center justify-center relative overflow-hidden rounded-xl transition-all duration-300"
                   style={getContainerStyle()}
