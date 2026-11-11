@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 interface StudioNavbarProps {
-  currentView: 'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video';
+  currentView: 'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video' | 'media';
   activePdfToolTitle?: string;
   activeCalcTitle?: string;
   activeImageToolTitle?: string;
@@ -21,6 +21,7 @@ interface StudioNavbarProps {
   onNavigateCalc: () => void;
   onNavigateImage: () => void;
   onNavigateVideo: () => void;
+  onNavigateMedia?: () => void;
 }
 
 export const StudioNavbar: React.FC<StudioNavbarProps> = ({
@@ -34,6 +35,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
   onNavigateCalc,
   onNavigateImage,
   onNavigateVideo,
+  onNavigateMedia,
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
@@ -70,19 +72,17 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
                   onClick={
                     currentView === 'pdf'
                       ? onNavigatePdf
-                      : currentView === 'audio'
-                      ? onNavigateAudio
+                      : currentView === 'audio' || currentView === 'video' || currentView === 'media'
+                      ? (onNavigateMedia || onNavigateVideo)
                       : currentView === 'calc'
                       ? onNavigateCalc
-                      : currentView === 'image'
-                      ? onNavigateImage
-                      : onNavigateVideo
+                      : onNavigateImage
                   }
                   className="font-semibold text-slate-700 hover:text-orange-600 transition-colors"
                 >
                   {currentView === 'pdf'
                     ? 'PDF Tools'
-                    : currentView === 'audio' || currentView === 'video'
+                    : currentView === 'audio' || currentView === 'video' || currentView === 'media'
                     ? 'Audio & Video'
                     : currentView === 'calc'
                     ? 'Calculator Studio'
@@ -162,11 +162,12 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
             {/* Audio & Video Studio button */}
             <button
               onClick={() => {
-                if (currentView === 'audio') onNavigateAudio();
+                if (onNavigateMedia) onNavigateMedia();
+                else if (currentView === 'audio') onNavigateAudio();
                 else onNavigateVideo();
               }}
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                currentView === 'video' || currentView === 'audio'
+                currentView === 'video' || currentView === 'audio' || currentView === 'media'
                   ? 'bg-purple-600 text-white shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-purple-600 hover:bg-purple-50/60'
               }`}

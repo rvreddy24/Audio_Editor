@@ -29,6 +29,7 @@ interface HomeHubProps {
   onOpenCalc: (specificTool?: CalculatorKey) => void;
   onOpenImage?: (specificTool?: ImageToolKey) => void;
   onOpenVideo?: () => void;
+  onOpenMedia?: () => void;
 }
 
 export const HomeHub: React.FC<HomeHubProps> = ({
@@ -37,6 +38,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({
   onOpenCalc,
   onOpenImage,
   onOpenVideo,
+  onOpenMedia,
 }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -156,15 +158,15 @@ export const HomeHub: React.FC<HomeHubProps> = ({
           </div>
         </div>
 
-        {/* CARD 3: AUDIO & VIDEO STUDIO (Unified Media Master Card with Dual Sub-Cards) */}
+        {/* CARD 3: AUDIO & VIDEO STUDIO */}
         <div
-          onClick={() => onOpenVideo ? onOpenVideo() : onOpenAudio()}
+          onClick={() => (onOpenMedia ? onOpenMedia() : onOpenVideo ? onOpenVideo() : onOpenAudio())}
           className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-purple-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
         >
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-purple-100/50 blur-2xl group-hover:bg-purple-200/50 transition-colors pointer-events-none" />
 
           <div>
-            <div className="flex items-start justify-between gap-3 mb-2.5">
+            <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 via-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
                   <Film className="w-5 h-5" />
@@ -181,83 +183,15 @@ export const HomeHub: React.FC<HomeHubProps> = ({
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed mb-3">
-              Full-featured video and audio workstation. Choose your editor below:
+              All-in-one multimedia suite: edit video timelines, make 9:16 Shorts, cut audio waveforms, convert formats & apply pro DSP effects.
             </p>
 
-            {/* Sub-Card 1: Video Editor */}
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onOpenVideo) onOpenVideo();
-              }}
-              className="group/sub mb-2.5 bg-slate-50/90 hover:bg-rose-50/90 border border-slate-200/80 hover:border-rose-300 rounded-xl p-2.5 transition-all cursor-pointer shadow-2xs"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-md bg-rose-100 text-rose-600 flex items-center justify-center group-hover/sub:scale-110 transition-transform">
-                    <Film className="w-3 h-3" />
-                  </div>
-                  <span className="text-xs font-bold text-slate-900 group-hover/sub:text-rose-600 transition-colors">
-                    Video Editor & Shorts
-                  </span>
-                </div>
-                <span className="text-[9px] font-bold uppercase text-rose-600 bg-white px-1.5 py-0.5 rounded border border-rose-200">
-                  FFmpeg 8.1
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Video Editor', '9:16 Shorts', 'Waveform', '320k MP3', 'GIF'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
+                  {t}
                 </span>
-              </div>
-              <p className="text-[11px] text-slate-500 line-clamp-1 mb-1.5">
-                Trim, 9:16 Shorts crop, speed, music mix & GIF.
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-1">
-                  {['Trim', '9:16 Shorts', 'Speed', 'GIF'].map((t) => (
-                    <span key={t} className="px-1 py-0.2 rounded bg-white text-slate-600 text-[9px] font-medium border border-slate-200/60">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <span className="text-[11px] font-bold text-rose-600 group-hover/sub:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                  Open →
-                </span>
-              </div>
-            </div>
-
-            {/* Sub-Card 2: Audio Editor */}
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenAudio();
-              }}
-              className="group/sub mb-3 bg-slate-50/90 hover:bg-indigo-50/90 border border-slate-200/80 hover:border-indigo-300 rounded-xl p-2.5 transition-all cursor-pointer shadow-2xs"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover/sub:scale-110 transition-transform">
-                    <Music className="w-3 h-3" />
-                  </div>
-                  <span className="text-xs font-bold text-slate-900 group-hover/sub:text-indigo-600 transition-colors">
-                    Audio Editor & Tools
-                  </span>
-                </div>
-                <span className="text-[9px] font-bold uppercase text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-indigo-200">
-                  Pro DSP
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 line-clamp-1 mb-1.5">
-                Waveform cutting, 320k converter, pitch & tags.
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-1">
-                  {['Waveform', '320k MP3', 'Pitch', '8D'].map((t) => (
-                    <span key={t} className="px-1 py-0.2 rounded bg-white text-slate-600 text-[9px] font-medium border border-slate-200/60">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <span className="text-[11px] font-bold text-indigo-600 group-hover/sub:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                  Open →
-                </span>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -349,33 +283,23 @@ export const HomeHub: React.FC<HomeHubProps> = ({
           </button>
 
           <button
-            onClick={() => onOpenVideo ? onOpenVideo() : undefined}
-            className="bg-white hover:bg-rose-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-rose-300 flex flex-col items-center gap-1.5 text-center transition-all group"
+            onClick={() => onOpenImage ? onOpenImage('signature-resizer') : undefined}
+            className="bg-white hover:bg-purple-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-purple-300 flex flex-col items-center gap-1.5 text-center transition-all group"
           >
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <PenTool className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-purple-600">Sign Resizer</span>
+          </button>
+
+          <button
+            onClick={() => onOpenMedia ? onOpenMedia() : onOpenVideo ? onOpenVideo() : onOpenAudio()}
+            className="bg-white hover:bg-purple-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-purple-300 flex flex-col items-center gap-1.5 text-center transition-all group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Film className="w-4 h-4" />
             </div>
-            <span className="text-[11px] font-bold text-slate-800 group-hover:text-rose-600">Video Editor</span>
-          </button>
-
-          <button
-            onClick={() => onOpenAudio('trim')}
-            className="bg-white hover:bg-indigo-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-indigo-300 flex flex-col items-center gap-1.5 text-center transition-all group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Scissors className="w-4 h-4" />
-            </div>
-            <span className="text-[11px] font-bold text-slate-800 group-hover:text-indigo-600">Trim Audio</span>
-          </button>
-
-          <button
-            onClick={() => onOpenAudio('convert')}
-            className="bg-white hover:bg-violet-50/50 p-3.5 rounded-2xl border border-slate-200 hover:border-violet-300 flex flex-col items-center gap-1.5 text-center transition-all group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <RefreshCw className="w-4 h-4" />
-            </div>
-            <span className="text-[11px] font-bold text-slate-800 group-hover:text-violet-600">Audio 320k</span>
+            <span className="text-[11px] font-bold text-slate-800 group-hover:text-purple-600">Audio & Video</span>
           </button>
 
           <button

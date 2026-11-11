@@ -46,6 +46,9 @@ import { ImageToolKey, IMAGE_TOOLS } from './components/image/types';
 // Video Studio
 import { VideoStudioHub } from './components/video/VideoStudioHub';
 
+// Media Studio (Unified Audio & Video Landing Hub)
+import { MediaStudioHub } from './components/media/MediaStudioHub';
+
 // PDF Workspaces
 import { MergeWorkspace } from './components/pdf/workspaces/MergeWorkspace';
 import { SplitWorkspace } from './components/pdf/workspaces/SplitWorkspace';
@@ -88,8 +91,8 @@ import { formatTime, formatFileSize } from './utils/formatters';
 type TabKey = 'trim' | 'convert' | 'video' | 'effects' | 'merge' | 'tags';
 
 export function App() {
-  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video'
-  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video'>('home');
+  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video' | 'media'
+  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video' | 'media'>('home');
   const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>('home');
   const [activeCalc, setActiveCalc] = useState<CalculatorKey>('home');
   const [activeImageTool, setActiveImageTool] = useState<ImageToolKey | undefined>(undefined);
@@ -146,6 +149,11 @@ export function App() {
 
   const handleOpenVideo = () => {
     setViewMode('video');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenMedia = () => {
+    setViewMode('media');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -229,19 +237,32 @@ export function App() {
         onNavigatePdf={() => handleOpenPdf('home')}
         onNavigateVideo={() => handleOpenVideo()}
         onNavigateAudio={() => handleOpenAudio()}
+        onNavigateMedia={() => handleOpenMedia()}
         onNavigateCalc={() => handleOpenCalc('home')}
         onNavigateImage={() => handleOpenImage()}
       />
 
-      {/* VIEW 1: HOME HUB (Master Cards for PDF & Audio) */}
+      {/* VIEW 1: HOME HUB (Master Cards for PDF, Image, Media & Calculators) */}
       {viewMode === 'home' && (
         <main className="flex-1">
           <HomeHub
             onOpenPdf={(tool) => handleOpenPdf(tool || 'home')}
             onOpenVideo={() => handleOpenVideo()}
             onOpenAudio={(tab) => handleOpenAudio(tab)}
+            onOpenMedia={() => handleOpenMedia()}
             onOpenCalc={(tool) => handleOpenCalc(tool || 'home')}
             onOpenImage={(tool) => handleOpenImage(tool)}
+          />
+        </main>
+      )}
+
+      {/* VIEW: MEDIA HUB (Unified Audio & Video Landing with Dedicated Cards) */}
+      {viewMode === 'media' && (
+        <main className="flex-1">
+          <MediaStudioHub
+            onSelectVideo={() => handleOpenVideo()}
+            onSelectAudio={() => handleOpenAudio()}
+            onBackToHome={() => setViewMode('home')}
           />
         </main>
       )}
@@ -424,11 +445,11 @@ export function App() {
           {/* Audio Section Subheader */}
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
-              onClick={() => setViewMode('home')}
+              onClick={() => setViewMode('media')}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Home</span>
+              <span>Back to Media Studio</span>
             </button>
 
             {/* Media Studio Dual Switcher */}
@@ -724,11 +745,11 @@ export function App() {
           {/* Video Subheader Bar */}
           <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
-              onClick={() => setViewMode('home')}
+              onClick={() => setViewMode('media')}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Home</span>
+              <span>Back to Media Studio</span>
             </button>
 
             {/* Media Studio Dual Switcher */}
@@ -755,13 +776,14 @@ export function App() {
             </div>
           </div>
 
-          <VideoStudioHub onBack={() => setViewMode('home')} />
+          <VideoStudioHub onBack={() => setViewMode('media')} />
         </main>
       )}
 
       {/* Universal Studio Footer */}
       <StudioFooter
         onSelectPdfTool={(tool) => handleOpenPdf(tool)}
+        onOpenMedia={() => handleOpenMedia()}
         onOpenVideo={() => handleOpenVideo()}
         onOpenAudio={() => handleOpenAudio()}
         onOpenCalc={(tool) => handleOpenCalc(tool)}

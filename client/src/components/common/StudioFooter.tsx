@@ -9,6 +9,7 @@ interface StudioFooterProps {
   onOpenCalc?: (tool?: CalculatorKey) => void;
   onOpenImage?: (tool?: ImageToolKey) => void;
   onOpenVideo?: () => void;
+  onOpenMedia?: () => void;
 }
 
 export const StudioFooter: React.FC<StudioFooterProps> = ({
@@ -17,6 +18,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
   onOpenCalc,
   onOpenImage,
   onOpenVideo,
+  onOpenMedia,
 }) => {
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
@@ -131,7 +133,12 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           {/* Column 3: Audio & Video Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              Audio & Video Studio
+              <button
+                onClick={onOpenMedia || onOpenVideo}
+                className="hover:text-purple-400 transition-colors"
+              >
+                Audio & Video Studio
+              </button>
             </h4>
             <ul className="space-y-2">
               <li>
