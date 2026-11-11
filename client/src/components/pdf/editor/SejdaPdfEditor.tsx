@@ -26,7 +26,6 @@ import {
   Sparkles,
   Maximize2,
   FileText,
-  FileCheck,
   Highlighter,
   X,
 } from 'lucide-react';
@@ -597,25 +596,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     reader.readAsDataURL(imgFile);
   };
 
-  // --- 8. LOAD SAMPLE TIRUPATI DARSHAN TICKET ---
-  const handleLoadSamplePdf = async () => {
-    setIsLoadingPdf(true);
-    try {
-      const res = await fetch('/sample-darshan-ticket.pdf');
-      if (res.ok) {
-        const blob = await res.blob();
-        const sampleFile = new File([blob], 'Tirumala_Darshan_Ticket.pdf', { type: 'application/pdf' });
-        const parsed = await parsePdfFile(sampleFile);
-        setFile(parsed);
-      }
-    } catch (err: any) {
-      console.warn('Could not load sample ticket:', err);
-    } finally {
-      setIsLoadingPdf(false);
-    }
-  };
-
-  // --- 9. APPLY EDITS & DOWNLOAD PDF ---
+  // --- 8. APPLY EDITS & DOWNLOAD PDF ---
   const handleApplyChanges = async () => {
     if (!file) return;
     setIsApplying(true);
@@ -711,8 +692,8 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
             Upload any document, ticket, or application form to edit and sign directly
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <label className="bg-[#e5322d] hover:bg-[#d02824] text-white font-bold px-6 py-3 rounded-2xl text-xs shadow-md hover:scale-102 transition-all cursor-pointer">
+          <div className="flex items-center justify-center">
+            <label className="bg-[#e5322d] hover:bg-[#d02824] text-white font-bold px-8 py-3.5 rounded-2xl text-xs shadow-md hover:scale-102 transition-all cursor-pointer">
               <span>Select PDF File</span>
               <input
                 type="file"
@@ -726,14 +707,6 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
                 }}
               />
             </label>
-
-            <button
-              onClick={handleLoadSamplePdf}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-3 rounded-2xl text-xs border border-slate-200 transition-colors flex items-center gap-2"
-            >
-              <FileCheck className="w-4 h-4 text-emerald-600" />
-              <span>Load Sample Darshan Ticket</span>
-            </button>
           </div>
         </div>
       </div>
