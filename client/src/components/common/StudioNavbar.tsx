@@ -82,14 +82,20 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
                 >
                   {currentView === 'pdf'
                     ? 'PDF Tools'
-                    : currentView === 'audio'
-                    ? 'Audio Studio'
+                    : currentView === 'audio' || currentView === 'video'
+                    ? 'Audio & Video'
                     : currentView === 'calc'
                     ? 'Calculator Studio'
-                    : currentView === 'image'
-                    ? 'Image Studio'
-                    : 'Video Studio'}
+                    : 'Image Studio'}
                 </button>
+                {(currentView === 'audio' || currentView === 'video') && (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                    <span className="font-bold text-slate-900">
+                      {currentView === 'video' ? 'Video Editor' : 'Audio Editor'}
+                    </span>
+                  </>
+                )}
                 {activePdfToolTitle && currentView === 'pdf' && (
                   <>
                     <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
@@ -140,32 +146,6 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
               <span>PDF Tools</span>
             </button>
 
-            {/* Video Studio button */}
-            <button
-              onClick={onNavigateVideo}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                currentView === 'video'
-                  ? 'bg-rose-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/60'
-              }`}
-            >
-              <Film className="w-3.5 h-3.5 text-rose-500" />
-              <span>Video Studio</span>
-            </button>
-
-            {/* Audio Studio button */}
-            <button
-              onClick={onNavigateAudio}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                currentView === 'audio'
-                  ? 'bg-indigo-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/60'
-              }`}
-            >
-              <Music className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Audio Studio</span>
-            </button>
-
             {/* Image Studio button */}
             <button
               onClick={onNavigateImage}
@@ -177,6 +157,23 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
             >
               <Camera className="w-3.5 h-3.5 text-emerald-500" />
               <span>Image Studio</span>
+            </button>
+
+            {/* Audio & Video Studio button */}
+            <button
+              onClick={() => {
+                if (currentView === 'audio') onNavigateAudio();
+                else onNavigateVideo();
+              }}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                currentView === 'video' || currentView === 'audio'
+                  ? 'bg-purple-600 text-white shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-purple-600 hover:bg-purple-50/60'
+              }`}
+            >
+              <Film className="w-3.5 h-3.5 text-rose-500" />
+              <Music className="w-3 h-3 text-indigo-400 -ml-1" />
+              <span>Audio & Video</span>
             </button>
 
             {/* Calculator Studio button */}

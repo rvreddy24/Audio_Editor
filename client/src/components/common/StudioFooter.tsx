@@ -131,12 +131,12 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           {/* Column 3: Audio & Video Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              Media Studios
+              Audio & Video Studio
             </h4>
             <ul className="space-y-2">
               <li>
-                <button onClick={onOpenVideo} className="hover:text-white transition-colors text-rose-400 font-semibold">
-                  Video Studio (Editor)
+                <button onClick={onOpenVideo} className="hover:text-white transition-colors text-rose-400 font-bold">
+                  🎬 Video Editor & Shorts
                 </button>
               </li>
               <li>
@@ -146,12 +146,22 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </li>
               <li>
                 <button onClick={onOpenVideo} className="hover:text-white transition-colors">
+                  9:16 Shorts / Reels Crop
+                </button>
+              </li>
+              <li>
+                <button onClick={onOpenVideo} className="hover:text-white transition-colors">
                   Video to Animated GIF
+                </button>
+              </li>
+              <li className="pt-2 border-t border-slate-800">
+                <button onClick={onOpenAudio} className="hover:text-white transition-colors text-indigo-400 font-bold">
+                  🎵 Audio Editor & DSP
                 </button>
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Audio Waveform Trimmer
+                  Waveform Trimmer
                 </button>
               </li>
               <li>
@@ -161,7 +171,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Video to Audio Extractor
+                  Extract Video Audio
                 </button>
               </li>
             </ul>
