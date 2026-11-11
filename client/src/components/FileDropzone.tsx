@@ -53,7 +53,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/90 backdrop-blur-xs rounded-3xl p-6 gap-3.5">
           <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
           <div className="text-sm font-semibold text-slate-900">
-            Analyzing media with FFmpeg...
+            Analyzing audio media...
           </div>
           <div className="w-64 h-2 bg-slate-200 rounded-full overflow-hidden">
             <div

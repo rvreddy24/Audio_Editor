@@ -356,7 +356,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
               <h1 className="text-lg font-black text-slate-900 tracking-tight leading-tight flex items-center gap-2">
                 <span>Video Studio</span>
                 <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-full">
-                  FFmpeg 8.1 Engine
+                  Studio HD Suite
                 </span>
               </h1>
             </div>
@@ -1033,7 +1033,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                 </div>
 
                 <p className="text-[11px] text-slate-500">
-                  Speed affects output duration: <span className="font-mono font-bold text-slate-800">{(duration / speed).toFixed(1)}s</span> (Audio pitch automatically preserved via FFmpeg atempo).
+                  Speed affects output duration: <span className="font-mono font-bold text-slate-800">{(duration / speed).toFixed(1)}s</span> (Audio pitch automatically preserved).
                 </p>
               </div>
             )}
@@ -1371,7 +1371,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Processing with FFmpeg Engine...</span>
+                    <span>Rendering Your Video...</span>
                   </>
                 ) : (
                   <>
@@ -1384,7 +1384,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
               </button>
 
               <p className="text-[10px] text-center text-slate-400">
-                Processed via high-performance FFmpeg 8.1 container • Fast, secure & watermark-free
+                High-performance rendering • Fast, secure & watermark-free
               </p>
             </div>
           </div>

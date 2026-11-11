@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
                 Audio Studio
               </h1>
               <span className="bg-orange-50 text-orange-700 border border-orange-200/60 text-[11px] font-bold px-2 py-0.5 rounded-md">
-                FFmpeg 8.1
+                Studio 320k
               </span>
             </div>
             <p className="text-xs text-slate-500 m-0 p-0 font-normal">

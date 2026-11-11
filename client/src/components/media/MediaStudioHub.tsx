@@ -49,7 +49,7 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
             Audio & Video Media Suite
           </span>
           <span className="hidden sm:inline-block text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-            FFmpeg 8.1 & Pro DSP
+            High-Speed Processing Engine
           </span>
         </div>
       </div>
@@ -65,7 +65,7 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
             Audio & Video Studio
           </h1>
           <p className="mt-2.5 text-sm sm:text-base text-slate-600 leading-relaxed">
-            Choose an editor below to launch its dedicated toolset. High-performance video editing and audio DSP right in your browser.
+            Choose an editor below to launch its dedicated toolset. High-performance video editing and studio audio tools right in your browser.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
                   </div>
                 </div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full shrink-0">
-                  FFmpeg 8.1
+                  HD & 4K Suite
                 </span>
               </div>
 
@@ -161,12 +161,12 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
                       Audio Editor & Tools
                     </h2>
                     <p className="text-xs font-semibold text-indigo-600 mt-0.5">
-                      Waveform Trimmer, 320k Converter & DSP
+                      Waveform Trimmer, 320k Converter & Effects
                     </p>
                   </div>
                 </div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-full shrink-0">
-                  Pro DSP
+                  Studio Sound 320k
                 </span>
               </div>
 
@@ -234,7 +234,7 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
                 <Zap className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-slate-900">FFmpeg 8.1 Engine</h4>
+                <h4 className="text-xs font-bold text-slate-900">Lightning-Fast Engine</h4>
                 <p className="text-[11px] text-slate-500">Fast frame-accurate rendering & encoding</p>
               </div>
             </div>

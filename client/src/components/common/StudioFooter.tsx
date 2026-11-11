@@ -163,7 +163,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               </li>
               <li className="pt-2 border-t border-slate-800">
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors text-indigo-400 font-bold">
-                  🎵 Audio Editor & DSP
+                  🎵 Audio Editor & Tools
                 </button>
               </li>
               <li>

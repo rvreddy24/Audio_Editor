@@ -338,7 +338,7 @@ export const PDF_TOOLS: ToolMeta[] = [
   {
     key: 'audio',
     title: 'Audio Studio',
-    shortDesc: 'Full-featured audio editing workstation: convert, trim, compress, extract audio, and DSP effects.',
+    shortDesc: 'Full-featured audio editing workstation: convert, trim, compress, extract audio, and studio effects.',
     category: 'audio',
     badgeColor: 'bg-violet-600',
     iconName: 'Music',

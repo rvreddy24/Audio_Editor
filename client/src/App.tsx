@@ -471,7 +471,7 @@ export function App() {
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200 hidden sm:inline-block">
-                SoundCraft Audio DSP
+                Studio Audio Suite
               </span>
             </div>
           </div>
@@ -771,7 +771,7 @@ export function App() {
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 hidden sm:inline-block">
-                FFmpeg 8.1 Video
+                Pro Video Suite
               </span>
             </div>
           </div>

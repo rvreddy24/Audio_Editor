@@ -138,7 +138,7 @@ export const TagEditorTab: React.FC<TagEditorTabProps> = ({ currentFile, onProce
             type="text"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="e.g. Mastered in SoundCraft Studio"
+            placeholder="e.g. Mastered in Studio"
             className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
           />
         </div>

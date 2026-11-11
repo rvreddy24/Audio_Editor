@@ -183,7 +183,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed mb-3">
-              All-in-one multimedia suite: edit video timelines, make 9:16 Shorts, cut audio waveforms, convert formats & apply pro DSP effects.
+              All-in-one multimedia suite: edit video timelines, make 9:16 Shorts, cut audio waveforms, convert formats & apply studio audio effects.
             </p>
 
             <div className="flex flex-wrap gap-1 mb-4">
