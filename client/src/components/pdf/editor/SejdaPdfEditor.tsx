@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
+  MousePointer,
   Type,
   PenTool,
   Eraser,
-  Highlighter,
   Square,
   Circle,
   CheckSquare,
@@ -27,6 +27,7 @@ import {
   Maximize2,
   FileText,
   FileCheck,
+  Highlighter,
 } from 'lucide-react';
 import { PdfFileInfo, parsePdfFile, downloadBytes, getBufferFromFile } from '../../../utils/pdfOperations';
 import { getPdfDocument } from '../../../utils/pdfRenderer';
@@ -115,6 +116,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     startY: number;
     initialItemX: number;
     initialItemY: number;
+    hasMoved: boolean;
   } | null>(null);
 
   const resizingItem = useRef<{
@@ -124,6 +126,8 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     initialWidth: number;
     initialHeight: number;
   } | null>(null);
+
+  const wasDraggingOrResizing = useRef(false);
 
   // --- 1. LOAD PDF PAGES & METADATA ---
   useEffect(() => {
@@ -200,6 +204,27 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     renderPagesToCanvas();
   }, [renderPagesToCanvas]);
 
+  // --- 3. KEYBOARD SHORTCUTS (DELETE / BACKSPACE) ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput = target && ['INPUT', 'TEXTAREA'].includes(target.tagName);
+      if (isInput) return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedItemId) {
+          e.preventDefault();
+          handleDeleteItem(selectedItemId);
+        }
+      } else if (e.key === 'Escape') {
+        setSelectedItemId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedItemId]);
+
   // Push history snapshot before modifications
   const recordHistory = () => {
     setHistory((prev) => [...prev.slice(-15), { items: [...items], strokes: [...strokes] }]);
@@ -213,10 +238,18 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     setHistory((prev) => prev.slice(0, -1));
   };
 
-  // --- 3. PAGE INTERACTION (CLICK TO ADD ITEMS) ---
+  // --- 4. PAGE INTERACTION (CLICK TO ADD ITEMS) ---
   const handlePageClick = (pageIndex: number, e: React.MouseEvent<HTMLDivElement>) => {
-    // If clicking an existing item or dragging, ignore
-    if (draggingItem.current || resizingItem.current) return;
+    // If just finished dragging or resizing, do NOT stamp anything!
+    if (wasDraggingOrResizing.current || draggingItem.current || resizingItem.current) {
+      return;
+    }
+
+    // In Select mode, clicking blank canvas deselects active item
+    if (activeTool === 'select') {
+      setSelectedItemId(null);
+      return;
+    }
 
     const overlay = e.currentTarget;
     const rect = overlay.getBoundingClientRect();
@@ -242,6 +275,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       };
       setItems((prev) => [...prev, newItem]);
       setSelectedItemId(newItem.id);
+      setActiveTool('select'); // Switch to select so user can drag/type without accidental stamps
     }
 
     // 2. Whiteout Tool (Solid White Box to cover/erase text)
@@ -257,6 +291,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       };
       setItems((prev) => [...prev, newItem]);
       setSelectedItemId(newItem.id);
+      setActiveTool('select');
     }
 
     // 3. Redact Tool (Solid Black Box)
@@ -272,6 +307,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       };
       setItems((prev) => [...prev, newItem]);
       setSelectedItemId(newItem.id);
+      setActiveTool('select');
     }
 
     // 4. Stamping Signature
@@ -289,6 +325,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
         };
         setItems((prev) => [...prev, newItem]);
         setSelectedItemId(newItem.id);
+        setActiveTool('select');
       } else {
         setIsSigModalOpen(true);
       }
@@ -311,6 +348,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       };
       setItems((prev) => [...prev, newItem]);
       setSelectedItemId(newItem.id);
+      setActiveTool('select');
     }
 
     // 6. Checkmark (✓)
@@ -329,6 +367,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       };
       setItems((prev) => [...prev, newItem]);
       setSelectedItemId(newItem.id);
+      setActiveTool('select');
     }
 
     // 7. Cross (✗)
@@ -347,10 +386,11 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       };
       setItems((prev) => [...prev, newItem]);
       setSelectedItemId(newItem.id);
+      setActiveTool('select');
     }
   };
 
-  // --- 4. ITEM DRAG & RESIZE HANDLERS ---
+  // --- 5. ITEM DRAG & RESIZE HANDLERS ---
   const handleItemMouseDown = (item: EditorItem, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedItemId(item.id);
@@ -361,12 +401,20 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       startY: e.clientY,
       initialItemX: item.x,
       initialItemY: item.y,
+      hasMoved: false,
     };
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!draggingItem.current) return;
       const dx = (moveEvent.clientX - draggingItem.current.startX) / zoom;
       const dy = (moveEvent.clientY - draggingItem.current.startY) / zoom;
+
+      if (Math.hypot(dx, dy) > 2) {
+        draggingItem.current.hasMoved = true;
+        wasDraggingOrResizing.current = true;
+      }
+
+      moveEvent.preventDefault();
 
       setItems((prev) =>
         prev.map((it) =>
@@ -382,9 +430,18 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     };
 
     const handleMouseUp = () => {
+      const didMove = draggingItem.current?.hasMoved;
       draggingItem.current = null;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+
+      if (didMove) {
+        setTimeout(() => {
+          wasDraggingOrResizing.current = false;
+        }, 150);
+      } else {
+        wasDraggingOrResizing.current = false;
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -400,9 +457,11 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       initialWidth: item.width,
       initialHeight: item.height,
     };
+    wasDraggingOrResizing.current = true;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!resizingItem.current) return;
+      moveEvent.preventDefault();
       const dx = (moveEvent.clientX - resizingItem.current.startX) / zoom;
       const dy = (moveEvent.clientY - resizingItem.current.startY) / zoom;
 
@@ -423,13 +482,16 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       resizingItem.current = null;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      setTimeout(() => {
+        wasDraggingOrResizing.current = false;
+      }, 150);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
   };
 
-  // --- 5. FREEHAND DRAWING & HIGHLIGHTING HANDLERS ---
+  // --- 6. FREEHAND DRAWING & HIGHLIGHTING HANDLERS ---
   const handleDrawingMouseDown = (pageIndex: number, e: React.MouseEvent<HTMLCanvasElement>) => {
     if (activeTool !== 'draw' && activeTool !== 'highlight') return;
     const canvas = drawingCanvasRefs.current[pageIndex];
@@ -499,7 +561,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     }
   };
 
-  // --- 6. IMAGE INSERTION ---
+  // --- 7. IMAGE INSERTION ---
   const handleInsertImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const imgFile = e.target.files?.[0];
     if (!imgFile) return;
@@ -519,33 +581,30 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
       };
       setItems((prev) => [...prev, newItem]);
       setSelectedItemId(newItem.id);
+      setActiveTool('select');
     };
     reader.readAsDataURL(imgFile);
   };
 
-  // --- 7. LOAD SAMPLE TIRUPATI DARSHAN TICKET ---
+  // --- 8. LOAD SAMPLE TIRUPATI DARSHAN TICKET ---
   const handleLoadSamplePdf = async () => {
     setIsLoadingPdf(true);
     try {
-      // Fetch user provided Darshan ticket
       const res = await fetch('/sample-darshan-ticket.pdf');
       if (res.ok) {
         const blob = await res.blob();
         const sampleFile = new File([blob], 'Tirumala_Darshan_Ticket.pdf', { type: 'application/pdf' });
         const parsed = await parsePdfFile(sampleFile);
         setFile(parsed);
-      } else {
-        // Fallback: create mock or load
-        alert('Sample ticket ready in system uploads.');
       }
     } catch (err: any) {
-      console.warn('Could not load sample ticket directly:', err);
+      console.warn('Could not load sample ticket:', err);
     } finally {
       setIsLoadingPdf(false);
     }
   };
 
-  // --- 8. APPLY EDITS & DOWNLOAD PDF ---
+  // --- 9. APPLY EDITS & DOWNLOAD PDF ---
   const handleApplyChanges = async () => {
     if (!file) return;
     setIsApplying(true);
@@ -573,14 +632,24 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     }
   };
 
-  // Delete an item
-  const handleDeleteItem = (id: string) => {
+  // Delete an item cleanly
+  const handleDeleteItem = (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    recordHistory();
     setItems((prev) => prev.filter((it) => it.id !== id));
-    if (selectedItemId === id) setSelectedItemId(null);
+    setSelectedItemId(null);
   };
 
-  // Duplicate an item
-  const handleDuplicateItem = (item: EditorItem) => {
+  // Duplicate an item cleanly
+  const handleDuplicateItem = (item: EditorItem, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    recordHistory();
     const clone: EditorItem = {
       ...item,
       id: `${item.type}-${Date.now()}`,
@@ -741,8 +810,21 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
             </span>
           </div>
 
-          {/* Zoom & Apply Actions */}
+          {/* Zoom, Delete Item & Apply Actions */}
           <div className="flex items-center gap-2.5">
+            {/* Delete Selected Item Button in Header */}
+            {selectedItem && (
+              <button
+                type="button"
+                onClick={(e) => handleDeleteItem(selectedItem.id, e)}
+                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                title="Delete selected item (Delete or Backspace key)"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete {selectedItem.type}</span>
+              </button>
+            )}
+
             <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
               <button
                 onClick={() => setZoom((z) => Math.max(0.75, Number((z - 0.25).toFixed(2))))}
@@ -796,14 +878,29 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
         {/* Primary Sejda Tool Selection Strip */}
         <div className="px-4 py-2 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
+          {/* Tool 0: Select / Move / Edit */}
+          <button
+            onClick={() => setActiveTool('select')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              activeTool === 'select'
+                ? 'bg-slate-900 text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+            title="Select, drag, resize, or delete existing items"
+          >
+            <MousePointer className="w-4 h-4" />
+            <span>Select</span>
+          </button>
+
           {/* Tool 1: Text */}
           <button
             onClick={() => setActiveTool('text')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
               activeTool === 'text'
-                ? 'bg-slate-900 text-white font-bold shadow-xs'
+                ? 'bg-blue-600 text-white font-bold shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
+            title="Click document to add text"
           >
             <Type className="w-4 h-4" />
             <span>Text</span>
@@ -931,9 +1028,15 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
         {/* Secondary Context Bar (Active Tool Options) */}
         <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
           <div className="flex items-center gap-4">
+            {activeTool === 'select' && (
+              <span className="font-semibold text-slate-700">
+                🖐️ Click any item to select, drag to reposition, use corner to resize, or hit Delete.
+              </span>
+            )}
+
             {activeTool === 'text' && (
-              <span className="font-semibold text-slate-600">
-                👉 Click anywhere on the document to type new text or edit.
+              <span className="font-semibold text-blue-700">
+                👉 Click anywhere on the document to add new text.
               </span>
             )}
 
@@ -1104,9 +1207,13 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
                     return (
                       <div
                         key={item.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedItemId(item.id);
+                        }}
                         onMouseDown={(e) => handleItemMouseDown(item, e)}
-                        className={`absolute group cursor-move transition-shadow ${
-                          isSelected ? 'ring-2 ring-blue-500 shadow-md' : 'hover:ring-1 hover:ring-blue-300'
+                        className={`absolute group cursor-move select-none transition-shadow ${
+                          isSelected ? 'ring-2 ring-blue-500 shadow-md z-30' : 'hover:ring-1 hover:ring-blue-300 z-20'
                         }`}
                         style={{
                           left: `${itemLeftPx}px`,
@@ -1117,17 +1224,24 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
                       >
                         {/* 1. Text Item */}
                         {item.type === 'text' && (
-                          <div className="w-full h-full relative flex items-center">
+                          <div className="w-full h-full relative flex items-center bg-white/30 rounded border border-blue-200">
+                            <div
+                              className="w-5 h-full flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-grab active:cursor-grabbing shrink-0"
+                              title="Drag to move"
+                            >
+                              <Move className="w-3.5 h-3.5" />
+                            </div>
                             <input
                               type="text"
                               value={item.text}
+                              onMouseDown={(e) => e.stopPropagation()} // Allow clicking inside to type
                               onChange={(e) => {
                                 const newTxt = e.target.value;
                                 setItems((prev) =>
                                   prev.map((it) => (it.id === item.id ? { ...it, text: newTxt } : it))
                                 );
                               }}
-                              className="w-full h-full px-1 bg-transparent border-none outline-none font-sans"
+                              className="flex-1 h-full px-1 bg-transparent border-none outline-none font-sans cursor-text"
                               style={{
                                 fontSize: `${(item.fontSize || 14) * zoom}px`,
                                 color: item.color || '#111827',
@@ -1140,25 +1254,29 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
                         {/* 2. Whiteout Item (Solid 100% White Box) */}
                         {item.type === 'whiteout' && (
-                          <div className="w-full h-full bg-white border border-dashed border-amber-300 group-hover:border-amber-500 flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-amber-500/80 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-full h-full bg-white border border-dashed border-amber-400 group-hover:border-amber-600 flex items-center justify-between px-1.5 cursor-grab active:cursor-grabbing shadow-2xs">
+                            <Move className="w-3 h-3 text-amber-500 opacity-60 group-hover:opacity-100" />
+                            <span className="text-[10px] font-bold text-amber-600/80 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                               Whiteout
                             </span>
+                            <span />
                           </div>
                         )}
 
                         {/* 3. Redact Item (Solid Black Box) */}
                         {item.type === 'redact' && (
-                          <div className="w-full h-full bg-black flex items-center justify-center">
+                          <div className="w-full h-full bg-black flex items-center justify-between px-1.5 cursor-grab active:cursor-grabbing">
+                            <Move className="w-3 h-3 text-slate-400 opacity-60 group-hover:opacity-100" />
                             <span className="text-[10px] font-bold text-slate-400 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                               Redacted
                             </span>
+                            <span />
                           </div>
                         )}
 
                         {/* 4. Signature & Image Items */}
                         {(item.type === 'signature' || item.type === 'image') && item.imageDataUrl && (
-                          <div className="w-full h-full p-0.5 flex items-center justify-center overflow-hidden">
+                          <div className="w-full h-full p-0.5 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
                             <img
                               src={item.imageDataUrl}
                               alt="stamp"
@@ -1169,7 +1287,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
                         {/* 5. Shapes (Rectangle / Circle / Check / Cross) */}
                         {item.type === 'shape' && (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing">
                             {item.shapeType === 'rectangle' && (
                               <div
                                 className="w-full h-full"
@@ -1207,21 +1325,32 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
                         {isSelected && (
                           <div
                             onMouseDown={(e) => e.stopPropagation()}
-                            className="absolute -top-10 left-0 bg-slate-900 text-white rounded-xl shadow-lg px-2 py-1 flex items-center gap-1.5 z-30 animate-in fade-in zoom-in-95 duration-100"
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute left-0 bg-slate-900 text-white rounded-xl shadow-xl px-2.5 py-1.5 flex items-center gap-1.5 z-40 animate-in fade-in zoom-in-95 duration-100"
+                            style={{
+                              top: item.y < 50 ? `${itemHeightPx + 8}px` : '-42px',
+                            }}
                           >
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-blue-400 border-r border-slate-700 pr-1.5">
+                              <Move className="w-3 h-3" />
+                              <span>{item.type.toUpperCase()}</span>
+                            </div>
+
                             {/* Font size +/- for text */}
                             {item.type === 'text' && (
                               <>
                                 <button
-                                  onClick={() =>
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     setItems((prev) =>
                                       prev.map((it) =>
                                         it.id === item.id
                                           ? { ...it, fontSize: Math.max(8, (it.fontSize || 14) - 2) }
                                           : it
                                       )
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="w-5 h-5 flex items-center justify-center hover:bg-slate-700 rounded text-xs font-bold"
                                   title="Decrease font size"
                                 >
@@ -1231,28 +1360,32 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
                                   {item.fontSize || 14}pt
                                 </span>
                                 <button
-                                  onClick={() =>
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     setItems((prev) =>
                                       prev.map((it) =>
                                         it.id === item.id
                                           ? { ...it, fontSize: Math.min(48, (it.fontSize || 14) + 2) }
                                           : it
                                       )
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="w-5 h-5 flex items-center justify-center hover:bg-slate-700 rounded text-xs font-bold"
                                   title="Increase font size"
                                 >
                                   +
                                 </button>
                                 <button
-                                  onClick={() =>
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     setItems((prev) =>
                                       prev.map((it) =>
                                         it.id === item.id ? { ...it, isBold: !it.isBold } : it
                                       )
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className={`px-1.5 py-0.5 rounded text-xs font-bold ${
                                     item.isBold ? 'bg-blue-600 text-white' : 'hover:bg-slate-700 text-slate-300'
                                   }`}
@@ -1263,13 +1396,14 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
                                 <input
                                   type="color"
                                   value={item.color || '#111827'}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
+                                    e.stopPropagation();
                                     setItems((prev) =>
                                       prev.map((it) =>
                                         it.id === item.id ? { ...it, color: e.target.value } : it
                                       )
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="w-4 h-4 bg-transparent border-0 cursor-pointer p-0"
                                   title="Change text color"
                                 />
@@ -1279,7 +1413,8 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
                             {/* Duplicate */}
                             <button
-                              onClick={() => handleDuplicateItem(item)}
+                              type="button"
+                              onClick={(e) => handleDuplicateItem(item, e)}
                               className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white"
                               title="Duplicate"
                             >
@@ -1288,11 +1423,13 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
                             {/* Delete */}
                             <button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="p-1 hover:bg-red-600 rounded text-slate-300 hover:text-white"
-                              title="Delete Item"
+                              type="button"
+                              onClick={(e) => handleDeleteItem(item.id, e)}
+                              className="px-2 py-0.5 bg-red-600 hover:bg-red-700 rounded text-white text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                              title="Delete Item (Delete or Backspace)"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3 h-3" />
+                              <span>Delete</span>
                             </button>
                           </div>
                         )}
