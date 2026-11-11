@@ -36,7 +36,7 @@ import { EditorItem, DrawingStroke, EditorTool, SavedSignature, FontFamily, Shap
 import { SignatureModal } from './SignatureModal';
 import { burnEditsIntoPdf } from './pdfBurner';
 
-interface SejdaPdfEditorProps {
+interface PdfCanvasEditorProps {
   initialFile?: PdfFileInfo | null;
   mode?: 'edit' | 'sign' | 'redact';
   onBack: () => void;
@@ -62,7 +62,7 @@ const PEN_COLORS = [
   { name: 'Green', hex: '#16a34a' },
 ];
 
-export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
+export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
   initialFile = null,
   mode = 'edit',
   onBack,
@@ -722,7 +722,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-bold mb-3">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Sejda-Style Interactive Document Studio</span>
+            <span>Interactive Document Studio</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
             {mode === 'sign' ? 'Sign PDF Document' : mode === 'redact' ? 'Redact & Blackout PDF' : 'Edit PDF Document'}
@@ -826,7 +826,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans select-none">
-      {/* 1. TOP SEJDA EDITING SUBHEADER & TOOLBAR */}
+      {/* 1. TOP DOCUMENT EDITING SUBHEADER & TOOLBAR */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-xs">
         {/* Top Info Bar */}
         <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100">
@@ -913,7 +913,7 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
           </div>
         </div>
 
-        {/* Primary Sejda Tool Selection Strip */}
+        {/* Primary Tool Selection Strip */}
         <div className="px-4 py-2 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
           {/* Tool 0: Select / Move / Edit */}
           <button

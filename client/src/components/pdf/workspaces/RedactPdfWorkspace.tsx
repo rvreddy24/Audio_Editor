@@ -1,10 +1,10 @@
 import React from 'react';
-import { SejdaPdfEditor } from '../editor/SejdaPdfEditor';
+import { PdfCanvasEditor } from '../editor/PdfCanvasEditor';
 
 interface RedactPdfWorkspaceProps {
   onBack: () => void;
 }
 
 export const RedactPdfWorkspace: React.FC<RedactPdfWorkspaceProps> = ({ onBack }) => {
-  return <SejdaPdfEditor mode="redact" onBack={onBack} />;
+  return <PdfCanvasEditor mode="redact" onBack={onBack} />;
 };
