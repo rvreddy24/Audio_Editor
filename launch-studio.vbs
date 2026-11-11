@@ -14,5 +14,5 @@ If Err.Number <> 0 Then
 End If
 On Error GoTo 0
 
-' Launch default web browser to SoundCraft Studio
+' Launch default web browser to rajvarshith.com Studio
 WshShell.Run "cmd /c start http://localhost:5000", 0, False

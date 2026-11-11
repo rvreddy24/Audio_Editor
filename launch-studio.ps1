@@ -1,4 +1,4 @@
-# SoundCraft Studio Launcher
+# rajvarshith.com Studio Launcher
 $port = 5000
 $tcp = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
 
@@ -7,5 +7,5 @@ if (-not $tcp) {
     Start-Sleep -Milliseconds 1000
 }
 
-# Open SoundCraft Studio in default browser
+# Open rajvarshith.com Studio in default browser
 Start-Process "http://localhost:5000"
