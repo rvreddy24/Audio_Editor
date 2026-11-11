@@ -328,13 +328,6 @@ export function App() {
               <span className="text-xs font-bold text-red-700 bg-red-50 px-3 py-1 rounded-full border border-red-200">
                 PDF Toolkit
               </span>
-              <button
-                onClick={() => handleOpenAudio()}
-                className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-violet-700 hover:bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200"
-              >
-                <Music className="w-3.5 h-3.5" />
-                <span>Switch to Audio Studio</span>
-              </button>
             </div>
           </div>
 
@@ -342,10 +335,7 @@ export function App() {
             <>
               <PdfHero />
               <PdfGrid
-                onSelectTool={(tool) => {
-                  if (tool === 'audio') handleOpenAudio();
-                  else handleOpenPdf(tool);
-                }}
+                onSelectTool={(tool) => handleOpenPdf(tool)}
               />
             </>
           )}

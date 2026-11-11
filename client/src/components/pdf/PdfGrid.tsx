@@ -36,7 +36,7 @@ import {
 import { PDF_TOOLS, PdfToolKey, ToolMeta } from './types';
 
 interface PdfGridProps {
-  onSelectTool: (tool: PdfToolKey | 'audio') => void;
+  onSelectTool: (tool: PdfToolKey) => void;
 }
 
 const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
@@ -84,7 +84,6 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
     { key: 'convert', label: 'Convert' },
     { key: 'edit', label: 'Edit & Review' },
     { key: 'security', label: 'Security' },
-    { key: 'audio', label: 'Audio Tools' },
   ];
 
   const filteredTools = PDF_TOOLS.filter((tool) => {

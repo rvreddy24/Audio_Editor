@@ -35,10 +35,10 @@ export type PdfToolKey =
   | 'watermark-image';
 
 export interface ToolMeta {
-  key: PdfToolKey | 'audio';
+  key: PdfToolKey;
   title: string;
   shortDesc: string;
-  category: 'organize' | 'optimize' | 'convert' | 'security' | 'edit' | 'audio' | 'office' | 'image';
+  category: 'organize' | 'optimize' | 'convert' | 'security' | 'edit' | 'office' | 'image';
   badgeColor: string;
   iconName: string;
   popular?: boolean;
@@ -332,16 +332,5 @@ export const PDF_TOOLS: ToolMeta[] = [
     category: 'security',
     badgeColor: 'bg-pink-600',
     iconName: 'Unlock',
-  },
-
-  // 6. Audio Suite
-  {
-    key: 'audio',
-    title: 'Audio Studio',
-    shortDesc: 'Full-featured audio editing workstation: convert, trim, compress, extract audio, and studio effects.',
-    category: 'audio',
-    badgeColor: 'bg-violet-600',
-    iconName: 'Music',
-    popular: true,
   },
 ];
