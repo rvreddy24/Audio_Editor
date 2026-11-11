@@ -83,6 +83,37 @@ async function renderPageStrokesToPng(
 }
 
 /**
+ * Ensures image data URL is in a format embeddable by pdf-lib (PNG or JPEG).
+ * Converts WebP, SVG, GIF or other formats to PNG via HTML canvas.
+ */
+async function ensurePngDataUrl(dataUrl: string): Promise<string> {
+  if (dataUrl.startsWith('data:image/png') || dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) {
+    return dataUrl;
+  }
+  if (typeof document !== 'undefined') {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 200;
+        canvas.height = img.naturalHeight || img.height || 200;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  }
+  return dataUrl;
+}
+
+/**
  * Main burn-in function: loads PDF buffer, burns all items, drawings, and page changes,
  * and saves into a fresh Uint8Array.
  */
@@ -199,10 +230,11 @@ export async function burnEditsIntoPdf(
       // 4. Signature & Image
       else if ((item.type === 'signature' || item.type === 'image') && item.imageDataUrl) {
         try {
-          const isPng = item.imageDataUrl.startsWith('data:image/png');
-          const embeddedImage = isPng
-            ? await pdfDoc.embedPng(item.imageDataUrl)
-            : await pdfDoc.embedJpg(item.imageDataUrl);
+          const safeDataUrl = await ensurePngDataUrl(item.imageDataUrl);
+          const isJpg = safeDataUrl.startsWith('data:image/jpeg') || safeDataUrl.startsWith('data:image/jpg');
+          const embeddedImage = isJpg
+            ? await pdfDoc.embedJpg(safeDataUrl)
+            : await pdfDoc.embedPng(safeDataUrl);
 
           page.drawImage(embeddedImage, {
             x: pdfX,

@@ -127,16 +127,18 @@ export const MergeWorkspace: React.FC<MergeWorkspaceProps> = ({ onBack }) => {
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 {files.length} {files.length === 1 ? 'file' : 'files'} selected
               </span>
-              <label className="text-xs font-semibold text-[#e5322d] hover:underline cursor-pointer flex items-center gap-1.5">
+              <label className={`text-xs font-semibold text-[#e5322d] hover:underline flex items-center gap-1.5 ${isProcessing ? 'pointer-events-none opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add more files</span>
                 <input
                   type="file"
                   accept="application/pdf"
                   multiple
+                  disabled={isProcessing}
                   className="hidden"
                   onChange={(e) => {
                     if (e.target.files) handleFilesSelected(Array.from(e.target.files));
+                    e.target.value = '';
                   }}
                 />
               </label>

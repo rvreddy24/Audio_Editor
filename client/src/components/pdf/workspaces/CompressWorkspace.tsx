@@ -93,19 +93,25 @@ export const CompressWorkspace: React.FC<CompressWorkspaceProps> = ({ onBack }) 
           </div>
           <div>
             <h2 className="text-2xl font-bold text-slate-900">PDF has been compressed!</h2>
-            <div className="flex items-center justify-center gap-4 text-xs font-mono font-bold mt-3">
-              <span className="text-slate-400 line-through">
-                {formatFileSize(result.originalSize)}
-              </span>
-              <span className="text-emerald-600 text-sm">
-                {formatFileSize(result.newSize)}
-              </span>
-              {savedPercent > 0 && (
-                <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[11px]">
-                  -{savedPercent}%
+            {result.newSize < result.originalSize ? (
+              <div className="flex items-center justify-center gap-4 text-xs font-mono font-bold mt-3">
+                <span className="text-slate-400 line-through">
+                  {formatFileSize(result.originalSize)}
                 </span>
-              )}
-            </div>
+                <span className="text-emerald-600 text-sm">
+                  {formatFileSize(result.newSize)}
+                </span>
+                {savedPercent > 0 && (
+                  <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[11px]">
+                    -{savedPercent}%
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs font-medium text-slate-500 mt-2">
+                Your PDF was already optimally compressed ({formatFileSize(result.originalSize)}).
+              </p>
+            )}
           </div>
           <button
             onClick={() => downloadBytes(result.bytes, `compressed_${file.name}`)}

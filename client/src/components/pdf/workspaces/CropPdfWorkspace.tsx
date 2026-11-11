@@ -29,11 +29,13 @@ export const CropPdfWorkspace: React.FC<CropPdfWorkspaceProps> = ({ onBack }) =>
   const [right, setRight] = useState(30);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [croppedBytes, setCroppedBytes] = useState<Uint8Array | null>(null);
 
   const handleFileSelected = async (files: File[]) => {
     if (files.length > 0) {
       const parsed = await parsePdfFile(files[0]);
       setFile(parsed);
+      setCroppedBytes(null);
     }
   };
 
@@ -43,6 +45,7 @@ export const CropPdfWorkspace: React.FC<CropPdfWorkspaceProps> = ({ onBack }) =>
     try {
       const buf = await getBufferFromFile(file);
       const resultBytes = await cropPdf(buf, { top, right, bottom, left });
+      setCroppedBytes(resultBytes);
       downloadBytes(resultBytes, `cropped_${file.name}`);
       setIsDone(true);
     } catch (err: any) {
@@ -89,10 +92,20 @@ export const CropPdfWorkspace: React.FC<CropPdfWorkspaceProps> = ({ onBack }) =>
             <h2 className="text-2xl font-bold text-slate-900">PDF has been cropped!</h2>
             <p className="text-xs text-slate-500 mt-1">Your cropped document has been downloaded.</p>
           </div>
+          {croppedBytes && (
+            <button
+              onClick={() => downloadBytes(croppedBytes, `cropped_${file.name}`)}
+              className="bg-lime-600 hover:bg-lime-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download cropped PDF again</span>
+            </button>
+          )}
           <button
             onClick={() => {
               setFile(null);
               setIsDone(false);
+              setCroppedBytes(null);
             }}
             className="text-xs font-semibold text-slate-500 hover:text-slate-900"
           >

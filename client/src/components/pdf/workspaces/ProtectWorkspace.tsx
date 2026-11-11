@@ -12,7 +12,7 @@ import {
 import { PdfDropzone } from '../PdfDropzone';
 import {
   parsePdfFile,
-  downloadBytes,
+  downloadBlob,
   PdfFileInfo,
 } from '../../../utils/pdfOperations';
 import { formatFileSize } from '../../../utils/formatters';
@@ -27,11 +27,13 @@ export const ProtectWorkspace: React.FC<ProtectWorkspaceProps> = ({ onBack }) =>
   const [showPassword, setShowPassword] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [protectedBlob, setProtectedBlob] = useState<Blob | null>(null);
 
   const handleFileSelected = async (files: File[]) => {
     if (files.length > 0) {
       const parsed = await parsePdfFile(files[0]);
       setFile(parsed);
+      setProtectedBlob(null);
     }
   };
 
@@ -49,18 +51,13 @@ export const ProtectWorkspace: React.FC<ProtectWorkspaceProps> = ({ onBack }) =>
       });
 
       if (!res.ok) {
-        // Fallback for offline or local preview
-        alert('Protecting PDF with password completed.');
-        setIsDone(true);
-        return;
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to encrypt PDF with password. Please check backend server.');
       }
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `protected_${file.name}`;
-      a.click();
+      setProtectedBlob(blob);
+      downloadBlob(blob, `protected_${file.name}`);
       setIsDone(true);
     } catch (err: any) {
       alert(err.message || 'Failed to protect PDF');
@@ -106,11 +103,21 @@ export const ProtectWorkspace: React.FC<ProtectWorkspaceProps> = ({ onBack }) =>
             <h2 className="text-2xl font-bold text-slate-900">PDF has been protected!</h2>
             <p className="text-xs text-slate-500 mt-1">Your password-encrypted PDF is ready.</p>
           </div>
+          {protectedBlob && (
+            <button
+              onClick={() => downloadBlob(protectedBlob, `protected_${file.name}`)}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download protected PDF again</span>
+            </button>
+          )}
           <button
             onClick={() => {
               setFile(null);
               setIsDone(false);
               setPassword('');
+              setProtectedBlob(null);
             }}
             className="text-xs font-semibold text-slate-500 hover:text-slate-900"
           >
@@ -120,7 +127,7 @@ export const ProtectWorkspace: React.FC<ProtectWorkspaceProps> = ({ onBack }) =>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center">
-            <div className="w-56 h-76 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center relative shadow-sm">
+            <div className="w-56 h-[304px] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center relative shadow-sm">
               {file.previewUrl ? (
                 <img src={file.previewUrl} alt="Preview" className="h-full object-contain" />
               ) : (

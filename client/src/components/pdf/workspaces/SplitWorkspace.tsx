@@ -29,25 +29,38 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
   const [rangeInput, setRangeInput] = useState<string>('1-2');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [cachedResult, setCachedResult] = useState<{ type: 'bytes' | 'blob'; data: Uint8Array | Blob } | null>(null);
 
   const handleFileSelected = async (files: File[]) => {
     if (files.length > 0) {
       const parsed = await parsePdfFile(files[0]);
       setFile(parsed);
       setRangeInput(`1-${Math.min(2, parsed.pageCount)}`);
+      setCachedResult(null);
     }
   };
 
   const handleSplit = async () => {
     if (!file) return;
+    if (cachedResult) {
+      if (cachedResult.type === 'bytes') {
+        downloadBytes(cachedResult.data as Uint8Array, `split_${file.name}`);
+      } else {
+        downloadBlob(cachedResult.data as Blob, `split_all_${file.name.replace(/\.pdf$/i, '')}.zip`);
+      }
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const buf = await getBufferFromFile(file);
       if (mode === 'ranges') {
         const resultBytes = await splitPdfByRanges(buf, rangeInput);
+        setCachedResult({ type: 'bytes', data: resultBytes });
         downloadBytes(resultBytes, `split_${file.name}`);
       } else {
         const zipBlob = await splitPdfAllPagesToZip(buf, file.name);
+        setCachedResult({ type: 'blob', data: zipBlob });
         downloadBlob(zipBlob, `split_all_${file.name.replace(/\.pdf$/i, '')}.zip`);
       }
       setIsDone(true);
@@ -186,7 +199,7 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
             </div>
 
             <button
-              disabled={isProcessing}
+              disabled={isProcessing || (mode === 'ranges' && !rangeInput.trim())}
               onClick={handleSplit}
               className="w-full bg-[#e5322d] hover:bg-[#d02824] disabled:opacity-50 text-white font-bold py-4 rounded-2xl text-sm shadow-md transition-all hover:scale-102 flex items-center justify-center gap-2"
             >

@@ -204,13 +204,25 @@ export async function compressPdf(
   level: 'extreme' | 'recommended' | 'less' = 'recommended'
 ): Promise<{ bytes: Uint8Array; originalSize: number; newSize: number }> {
   const originalSize = buffer.byteLength;
-  const srcDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const srcDoc = await PDFDocument.load(buffer, {
+    ignoreEncryption: true,
+    throwOnInvalidObject: false,
+  });
 
   // Re-save with object stream compression and stripped unused elements
   const bytes = await srcDoc.save({
     useObjectStreams: true,
     addDefaultPage: false,
   });
+
+  // If object stream repackaging did not reduce file size, return original
+  if (bytes.byteLength >= originalSize) {
+    return {
+      bytes: new Uint8Array(buffer),
+      originalSize,
+      newSize: originalSize,
+    };
+  }
 
   return {
     bytes,
@@ -358,7 +370,8 @@ export async function addWatermarkToPdf(
 
   pages.forEach((page) => {
     const { width, height } = page.getSize();
-    const textWidth = font.widthOfTextAtSize(options.text, options.fontSize);
+    const sanitized = sanitizeForPdfText(options.text, font);
+    const textWidth = font.widthOfTextAtSize(sanitized, options.fontSize);
     const textHeight = font.heightAtSize(options.fontSize);
 
     let x = (width - textWidth) / 2;
@@ -378,7 +391,7 @@ export async function addWatermarkToPdf(
       y = 60;
     }
 
-    page.drawText(sanitizeForPdfText(options.text), {
+    page.drawText(sanitized, {
       x,
       y,
       size: options.fontSize,
@@ -735,9 +748,18 @@ export async function convertPdfToDocx(
  * 13. WORD (.docx) TO PDF
  */
 export async function convertWordToPdf(file: File): Promise<Uint8Array> {
+  if (file.name.toLowerCase().endsWith('.doc') && !file.name.toLowerCase().endsWith('.docx')) {
+    throw new Error('Legacy binary .doc format is not supported. Please save the document as modern .docx format in Microsoft Word or Google Docs before converting.');
+  }
+
   const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  const rawText = result.value || 'Document has no extractable text.';
+  let rawText = '';
+  try {
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    rawText = result.value || 'Document has no extractable text.';
+  } catch (mErr: any) {
+    throw new Error('Could not read Word document: ' + (mErr?.message || 'Please ensure this is a valid .docx file.'));
+  }
 
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -833,13 +855,21 @@ export async function cropPdf(
   buffer: ArrayBuffer,
   margins: { top: number; right: number; bottom: number; left: number }
 ): Promise<Uint8Array> {
-  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const pdfDoc = await PDFDocument.load(buffer, {
+    ignoreEncryption: true,
+    throwOnInvalidObject: false,
+  });
   const pages = pdfDoc.getPages();
 
   pages.forEach((page) => {
-    const { width, height } = page.getSize();
-    const newX = margins.left;
-    const newY = margins.bottom;
+    const box = page.getCropBox() || page.getMediaBox() || { x: 0, y: 0, width: page.getSize().width, height: page.getSize().height };
+    const originX = box.x || 0;
+    const originY = box.y || 0;
+    const width = box.width || page.getSize().width;
+    const height = box.height || page.getSize().height;
+
+    const newX = originX + margins.left;
+    const newY = originY + margins.bottom;
     const newWidth = Math.max(50, width - margins.left - margins.right);
     const newHeight = Math.max(50, height - margins.top - margins.bottom);
 
@@ -925,8 +955,21 @@ export async function htmlToPdf(htmlOrText: string, title = 'Document'): Promise
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Clean html tags to plain formatted text
-  const cleanText = htmlOrText.replace(/<[^>]*>/g, '\n').replace(/\n\s*\n/g, '\n');
+  // Clean html tags and decode entities into plain formatted text
+  const cleanText = htmlOrText
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<\/h[1-6]>/gi, '\n\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\n\s*\n\s*\n/g, '\n\n');
   const lines = cleanText.split('\n');
 
   const pageWidth = 595.28;
@@ -975,6 +1018,7 @@ export async function repairPdf(buffer: ArrayBuffer): Promise<Uint8Array> {
   // fixing malformed xref tables and corrupted stream lengths
   const pdfDoc = await PDFDocument.load(buffer, {
     ignoreEncryption: true,
+    throwOnInvalidObject: false,
     updateMetadata: true,
   });
   return await pdfDoc.save({ useObjectStreams: false });
@@ -984,9 +1028,12 @@ export async function repairPdf(buffer: ArrayBuffer): Promise<Uint8Array> {
  * 19. PDF TO PDF/A (Archival standard metadata)
  */
 export async function convertToPdfA(buffer: ArrayBuffer): Promise<Uint8Array> {
-  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
-  pdfDoc.setTitle('Archival PDF/A Document');
-  pdfDoc.setAuthor('rajvarshith.com Studio');
+  const pdfDoc = await PDFDocument.load(buffer, {
+    ignoreEncryption: true,
+    throwOnInvalidObject: false,
+  });
+  if (!pdfDoc.getTitle()) pdfDoc.setTitle('Archival PDF/A Document');
+  if (!pdfDoc.getAuthor()) pdfDoc.setAuthor('rajvarshith.com Studio');
   pdfDoc.setSubject('PDF/A Conformance Archival Copy');
   pdfDoc.setProducer('rajvarshith.com PDF Engine');
   pdfDoc.setCreator('PDF/A Archival Converter');

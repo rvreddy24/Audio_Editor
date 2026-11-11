@@ -20,11 +20,13 @@ export const PdfToExcelXlsxWorkspace: React.FC<PdfToExcelXlsxWorkspaceProps> = (
   const [file, setFile] = useState<PdfFileInfo | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [xlsxBlob, setXlsxBlob] = useState<Blob | null>(null);
 
   const handleFileSelected = async (files: File[]) => {
     if (files.length > 0) {
       const parsed = await parsePdfFile(files[0]);
       setFile(parsed);
+      setXlsxBlob(null);
     }
   };
 
@@ -33,8 +35,9 @@ export const PdfToExcelXlsxWorkspace: React.FC<PdfToExcelXlsxWorkspaceProps> = (
     setIsProcessing(true);
     try {
       const buf = await getBufferFromFile(file);
-      const xlsxBlob = await convertPdfToExcelXlsx(buf);
-      downloadBlob(xlsxBlob, `${file.name.replace(/\.pdf$/i, '')}.xlsx`);
+      const outBlob = await convertPdfToExcelXlsx(buf);
+      setXlsxBlob(outBlob);
+      downloadBlob(outBlob, `${file.name.replace(/\.pdf$/i, '')}.xlsx`);
       setIsDone(true);
     } catch (err: any) {
       alert(err.message || 'Failed to convert PDF to Excel');
@@ -80,10 +83,20 @@ export const PdfToExcelXlsxWorkspace: React.FC<PdfToExcelXlsxWorkspaceProps> = (
             <h2 className="text-2xl font-bold text-slate-900">Converted to Excel (.xlsx)!</h2>
             <p className="text-xs text-slate-500 mt-1">Your editable Excel workbook has been downloaded.</p>
           </div>
+          {xlsxBlob && (
+            <button
+              onClick={() => downloadBlob(xlsxBlob, `${file.name.replace(/\.pdf$/i, '')}.xlsx`)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download Excel workbook again</span>
+            </button>
+          )}
           <button
             onClick={() => {
               setFile(null);
               setIsDone(false);
+              setXlsxBlob(null);
             }}
             className="text-xs font-semibold text-slate-500 hover:text-slate-900"
           >
@@ -93,7 +106,7 @@ export const PdfToExcelXlsxWorkspace: React.FC<PdfToExcelXlsxWorkspaceProps> = (
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center">
-            <div className="w-56 h-76 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center shadow-sm">
+            <div className="w-56 h-[304px] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center shadow-sm">
               {file.previewUrl ? (
                 <img src={file.previewUrl} alt="Preview" className="h-full object-contain" />
               ) : (

@@ -204,6 +204,22 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     renderPagesToCanvas();
   }, [renderPagesToCanvas]);
 
+  // Push history snapshot before modifications
+  const recordHistory = useCallback(() => {
+    setHistory((prev) => [...prev.slice(-15), { items: [...items], strokes: [...strokes] }]);
+  }, [items, strokes]);
+
+  // Delete an item cleanly
+  const handleDeleteItem = useCallback((id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    recordHistory();
+    setItems((prev) => prev.filter((it) => it.id !== id));
+    setSelectedItemId(null);
+  }, [recordHistory]);
+
   // --- 3. KEYBOARD SHORTCUTS (DELETE / BACKSPACE) ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -223,12 +239,46 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedItemId]);
+  }, [selectedItemId, handleDeleteItem]);
 
-  // Push history snapshot before modifications
-  const recordHistory = () => {
-    setHistory((prev) => [...prev.slice(-15), { items: [...items], strokes: [...strokes] }]);
-  };
+  // Repaint freehand drawing & highlighter strokes whenever strokes, zoom, or pages change
+  useEffect(() => {
+    pagesMeta.forEach((_meta, pIdx) => {
+      const canvas = drawingCanvasRefs.current[pIdx];
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const pageStrokes = strokes.filter((s) => s.pageIndex === pIdx);
+      for (const stroke of pageStrokes) {
+        if (stroke.points.length < 2) continue;
+        ctx.save();
+        ctx.scale(zoom, zoom);
+        if (stroke.isHighlighter) {
+          ctx.globalAlpha = 0.35;
+          ctx.strokeStyle = stroke.color;
+          ctx.lineWidth = stroke.lineWidth;
+          ctx.lineCap = 'square';
+        } else {
+          ctx.globalAlpha = 1.0;
+          ctx.strokeStyle = stroke.color;
+          ctx.lineWidth = stroke.lineWidth;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    });
+  }, [strokes, zoom, pagesMeta]);
 
   const handleUndo = () => {
     if (history.length === 0) return;
@@ -578,22 +628,36 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
 
     const reader = new FileReader();
     reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const newItem: EditorItem = {
-        id: `img-${Date.now()}`,
-        pageIndex: activePageIndex,
-        type: 'image',
-        x: 100,
-        y: 100,
-        width: 160,
-        height: 120,
-        imageDataUrl: dataUrl,
+      const rawDataUrl = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || 200;
+        canvas.height = img.naturalHeight || 150;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const pngDataUrl = canvas.toDataURL('image/png');
+          const newItem: EditorItem = {
+            id: `img-${Date.now()}`,
+            pageIndex: activePageIndex,
+            type: 'image',
+            x: 100,
+            y: 100,
+            width: Math.min(220, Math.round(canvas.width)),
+            height: Math.min(160, Math.round(canvas.height)),
+            imageDataUrl: pngDataUrl,
+          };
+          recordHistory();
+          setItems((prev) => [...prev, newItem]);
+          setSelectedItemId(newItem.id);
+          setActiveTool('select');
+        }
       };
-      setItems((prev) => [...prev, newItem]);
-      setSelectedItemId(newItem.id);
-      setActiveTool('select');
+      img.src = rawDataUrl;
     };
     reader.readAsDataURL(imgFile);
+    e.target.value = '';
   };
 
   // --- 8. APPLY EDITS & DOWNLOAD PDF ---
@@ -622,17 +686,6 @@ export const SejdaPdfEditor: React.FC<SejdaPdfEditorProps> = ({
     } finally {
       setIsApplying(false);
     }
-  };
-
-  // Delete an item cleanly
-  const handleDeleteItem = (id: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-    recordHistory();
-    setItems((prev) => prev.filter((it) => it.id !== id));
-    setSelectedItemId(null);
   };
 
   // Duplicate an item cleanly

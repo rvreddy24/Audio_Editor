@@ -38,14 +38,43 @@ export const JpgToPdfWorkspace: React.FC<JpgToPdfWorkspaceProps> = ({ onBack }) 
   const handleFilesSelected = async (files: File[]) => {
     const items: ImageItem[] = [];
     for (const f of files) {
-      const data = await f.arrayBuffer();
+      let data = await f.arrayBuffer();
+      let type = f.type;
       const previewUrl = URL.createObjectURL(f);
+
+      // Transcode WebP, GIF, SVG or other browser formats to PNG ArrayBuffer
+      if (!type.includes('jpeg') && !type.includes('jpg') && !type.includes('png') && typeof document !== 'undefined') {
+        try {
+          const transBlob = await new Promise<Blob | null>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth || img.width;
+              canvas.height = img.naturalHeight || img.height;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0);
+                canvas.toBlob((b) => resolve(b), 'image/png');
+              } else resolve(null);
+            };
+            img.onerror = () => resolve(null);
+            img.src = previewUrl;
+          });
+          if (transBlob) {
+            data = await transBlob.arrayBuffer();
+            type = 'image/png';
+          }
+        } catch (tErr) {
+          console.warn('Image transcoding warning:', tErr);
+        }
+      }
+
       items.push({
         id: `${Date.now()}-${Math.random()}`,
         name: f.name,
         size: f.size,
         previewUrl,
-        type: f.type,
+        type,
         data,
       });
     }
@@ -65,7 +94,13 @@ export const JpgToPdfWorkspace: React.FC<JpgToPdfWorkspaceProps> = ({ onBack }) 
   };
 
   const handleRemove = (id: string) => {
-    setImages((prev) => prev.filter((img) => img.id !== id));
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === id);
+      if (target?.previewUrl) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((img) => img.id !== id);
+    });
   };
 
   const handleConvert = async () => {

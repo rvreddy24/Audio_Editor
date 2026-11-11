@@ -55,6 +55,13 @@ export const ScanPdfWorkspace: React.FC<ScanPdfWorkspaceProps> = ({ onBack }) =>
   };
 
   useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch((e) => console.warn('Camera play warning:', e));
+    }
+  }, [isCameraActive]);
+
+  useEffect(() => {
     return () => {
       stopCamera();
     };

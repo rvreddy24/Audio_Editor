@@ -74,6 +74,12 @@ export const PdfToExcelWorkspace: React.FC<PdfToExcelWorkspaceProps> = ({ onBack
           title="Select PDF file"
           buttonLabel="Select PDF file"
         />
+      ) : isProcessing ? (
+        <div className="bg-white rounded-3xl border border-slate-200 p-16 text-center max-w-xl mx-auto shadow-sm flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
+          <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+          <h3 className="font-bold text-slate-800 text-base">Extracting tabular data from PDF...</h3>
+          <p className="text-xs text-slate-400">Parsing text rows and structuring columns</p>
+        </div>
       ) : (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs max-w-4xl mx-auto">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">

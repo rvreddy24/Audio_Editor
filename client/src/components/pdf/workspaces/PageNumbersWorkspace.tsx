@@ -113,7 +113,7 @@ export const PageNumbersWorkspace: React.FC<PageNumbersWorkspaceProps> = ({ onBa
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* File Card */}
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center">
-            <div className="w-56 h-76 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center relative shadow-sm">
+            <div className="w-56 h-[304px] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center relative shadow-sm">
               {file.previewUrl ? (
                 <img src={file.previewUrl} alt="Preview" className="h-full object-contain" />
               ) : (
@@ -125,6 +125,8 @@ export const PageNumbersWorkspace: React.FC<PageNumbersWorkspaceProps> = ({ onBa
                   ? `1 of ${file.pageCount}`
                   : format === 'Page 1 of n'
                   ? `Page 1 of ${file.pageCount}`
+                  : format === 'Page 1'
+                  ? 'Page 1'
                   : '1'}
               </div>
             </div>

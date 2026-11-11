@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import PptxGenJS from 'pptxgenjs';
+import JSZip from 'jszip';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { extractPdfTextPages, renderAllPagesToImages } from './pdfRenderer';
 import { sanitizeForPdfText } from './pdfOperations';
@@ -38,7 +39,8 @@ export async function convertExcelToPdf(file: File): Promise<Uint8Array> {
     color: rgb(0.1, 0.1, 0.1),
   });
 
-  const colWidth = Math.min(130, Math.floor((pageWidth - margin * 2) / Math.max(1, (rows[0] || []).length || 5)));
+  const maxCols = Math.max(1, ...rows.slice(0, 20).map((r) => (r || []).length), 5);
+  const colWidth = Math.min(130, Math.max(60, Math.floor((pageWidth - margin * 2) / maxCols)));
   const totalRowsToRender = Math.min(500, rows.length);
 
   for (let rIdx = 0; rIdx < totalRowsToRender; rIdx++) {
@@ -138,13 +140,27 @@ export async function convertPdfToPptx(buffer: ArrayBuffer, filename: string): P
 
   images.forEach((img) => {
     const slide = pptx.addSlide();
-    // Centered slide layout
+    const aspect = (img.width && img.height) ? (img.width / img.height) : 0.707;
+    let w = 7.0;
+    let h = 4.8;
+    if (aspect < 1) {
+      // Portrait page
+      h = 5.0;
+      w = Math.min(8.0, h * aspect);
+    } else {
+      // Landscape page
+      w = 8.5;
+      h = Math.min(5.0, w / aspect);
+    }
+    const x = Math.max(0.5, (10.0 - w) / 2);
+    const y = Math.max(0.3, (5.625 - h) / 2);
+
     slide.addImage({
       data: img.dataUrl,
-      x: 1.5,
-      y: 0.4,
-      w: 7.0,
-      h: 4.8,
+      x,
+      y,
+      w,
+      h,
     });
   });
 
@@ -156,19 +172,97 @@ export async function convertPdfToPptx(buffer: ArrayBuffer, filename: string): P
  * 4. POWERPOINT (.pptx) TO PDF
  */
 export async function convertPptxToPdf(file: File): Promise<Uint8Array> {
-  // Generates clean 16:9 slides in PDF format
+  const data = await file.arrayBuffer();
   const pdfDoc = await PDFDocument.create();
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  // 16:9 slide dimensions
+  // 16:9 slide dimensions in points (A4 landscape ratio / 16:9 standard: 960 x 540)
   const slideWidth = 960;
   const slideHeight = 540;
 
-  const page = pdfDoc.addPage([slideWidth, slideHeight]);
+  try {
+    const zip = await JSZip.loadAsync(data);
+    // Find all slide XML files: ppt/slides/slide1.xml, ppt/slides/slide2.xml, etc.
+    const slideFiles = Object.keys(zip.files).filter((k) =>
+      /^ppt\/slides\/slide\d+\.xml$/i.test(k)
+    );
 
-  // Clean presentation title slide
-  page.drawText(sanitizeForPdfText(file.name.replace(/\.pptx?$/i, '')), {
+    if (slideFiles.length > 0) {
+      // Sort numerically
+      slideFiles.sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, ''), 10) || 0;
+        const numB = parseInt(b.replace(/\D/g, ''), 10) || 0;
+        return numA - numB;
+      });
+
+      for (let i = 0; i < slideFiles.length; i++) {
+        const slideXmlStr = await zip.files[slideFiles[i]].async('text');
+        // Extract all text inside <a:t>...</a:t>
+        const matches = slideXmlStr.match(/<a:t[^>]*>([^<]*)<\/a:t>/g) || [];
+        const slideTexts: string[] = [];
+        matches.forEach((m) => {
+          const t = m.replace(/<[^>]+>/g, '').trim();
+          if (t) slideTexts.push(t);
+        });
+
+        const page = pdfDoc.addPage([slideWidth, slideHeight]);
+        // Slide header badge
+        page.drawText(`Slide ${i + 1}`, {
+          x: 60,
+          y: slideHeight - 45,
+          size: 11,
+          font: boldFont,
+          color: rgb(0.85, 0.2, 0.2),
+        });
+
+        let currentY = slideHeight - 90;
+        if (slideTexts.length > 0) {
+          // First text as Title
+          const titleText = sanitizeForPdfText(slideTexts[0], boldFont);
+          page.drawText(titleText.slice(0, 70), {
+            x: 60,
+            y: currentY,
+            size: 22,
+            font: boldFont,
+            color: rgb(0.1, 0.1, 0.1),
+          });
+          currentY -= 40;
+
+          // Subsequent text lines as bullet points
+          for (let tIdx = 1; tIdx < Math.min(15, slideTexts.length); tIdx++) {
+            const bodyLine = sanitizeForPdfText(slideTexts[tIdx], font);
+            if (!bodyLine) continue;
+            page.drawText(`•  ${bodyLine.slice(0, 95)}`, {
+              x: 80,
+              y: currentY,
+              size: 14,
+              font,
+              color: rgb(0.25, 0.25, 0.25),
+            });
+            currentY -= 26;
+            if (currentY < 60) break;
+          }
+        } else {
+          page.drawText(sanitizeForPdfText(file.name.replace(/\.pptx?$/i, ''), boldFont), {
+            x: 60,
+            y: currentY,
+            size: 20,
+            font: boldFont,
+            color: rgb(0.1, 0.1, 0.1),
+          });
+        }
+      }
+
+      return await pdfDoc.save();
+    }
+  } catch (err) {
+    console.warn('Could not parse PPTX slide XML, falling back to clean presentation slide:', err);
+  }
+
+  // Fallback presentation slide
+  const page = pdfDoc.addPage([slideWidth, slideHeight]);
+  page.drawText(sanitizeForPdfText(file.name.replace(/\.pptx?$/i, ''), boldFont), {
     x: 100,
     y: 300,
     size: 28,

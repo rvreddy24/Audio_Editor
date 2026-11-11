@@ -157,7 +157,7 @@ export const RotateWorkspace: React.FC<RotateWorkspaceProps> = ({ onBack }) => {
             </div>
 
             <button
-              disabled={isProcessing}
+              disabled={isProcessing || rotationAngle === 0}
               onClick={handleRotate}
               className="w-full bg-[#e5322d] hover:bg-[#d02824] disabled:opacity-50 text-white font-bold py-4 rounded-2xl text-sm shadow-md transition-all hover:scale-102 flex items-center justify-center gap-2"
             >

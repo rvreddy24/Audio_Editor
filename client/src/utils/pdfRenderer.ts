@@ -45,9 +45,9 @@ export async function renderPdfPageToDataUrl(
 export async function renderAllPagesToImages(
   data: ArrayBuffer,
   scale: number = 2.0
-): Promise<{ pageNum: number; dataUrl: string; blob: Blob }[]> {
+): Promise<{ pageNum: number; dataUrl: string; blob: Blob; width: number; height: number }[]> {
   const pdf = await getPdfDocument(data);
-  const results: { pageNum: number; dataUrl: string; blob: Blob }[] = [];
+  const results: { pageNum: number; dataUrl: string; blob: Blob; width: number; height: number }[] = [];
 
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -70,7 +70,7 @@ export async function renderAllPagesToImages(
       canvas.toBlob((b) => resolve(b || new Blob()), 'image/jpeg', 0.92);
     });
 
-    results.push({ pageNum: i, dataUrl, blob });
+    results.push({ pageNum: i, dataUrl, blob, width: viewport.width, height: viewport.height });
   }
 
   return results;

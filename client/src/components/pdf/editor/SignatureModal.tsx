@@ -118,7 +118,7 @@ export const SignatureModal: React.FC<SignatureModalProps> = ({
 
     ctx.beginPath();
     ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
-    ctx.quadraticCurveTo(lastPoint.current.x, lastPoint.current.y, midPoint.x, midPoint.y);
+    ctx.lineTo(currentPos.x, currentPos.y);
     ctx.stroke();
 
     lastPoint.current = currentPos;

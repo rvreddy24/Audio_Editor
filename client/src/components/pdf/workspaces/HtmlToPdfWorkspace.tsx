@@ -24,13 +24,15 @@ export const HtmlToPdfWorkspace: React.FC<HtmlToPdfWorkspaceProps> = ({ onBack }
 </ul>`);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [resultBytes, setResultBytes] = useState<Uint8Array | null>(null);
 
   const handleConvert = async () => {
     if (!htmlContent.trim()) return;
     setIsProcessing(true);
     try {
-      const pdfBytes = await htmlToPdf(htmlContent, title);
-      downloadBytes(pdfBytes, `${title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+      const bytes = await htmlToPdf(htmlContent, title);
+      setResultBytes(bytes);
+      downloadBytes(bytes, `${title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
       setIsDone(true);
     } catch (err: any) {
       alert(err.message || 'Failed to convert HTML to PDF');
@@ -69,8 +71,20 @@ export const HtmlToPdfWorkspace: React.FC<HtmlToPdfWorkspaceProps> = ({ onBack }
             <h2 className="text-2xl font-bold text-slate-900">HTML converted to PDF!</h2>
             <p className="text-xs text-slate-500 mt-1">Your PDF document has been downloaded.</p>
           </div>
+          {resultBytes && (
+            <button
+              onClick={() => downloadBytes(resultBytes, `${title.replace(/\s+/g, '_').toLowerCase()}.pdf`)}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download PDF again</span>
+            </button>
+          )}
           <button
-            onClick={() => setIsDone(false)}
+            onClick={() => {
+              setIsDone(false);
+              setResultBytes(null);
+            }}
             className="text-xs font-semibold text-slate-500 hover:text-slate-900"
           >
             Convert more HTML

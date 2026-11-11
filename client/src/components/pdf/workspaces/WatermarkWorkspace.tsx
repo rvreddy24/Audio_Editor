@@ -119,7 +119,7 @@ export const WatermarkWorkspace: React.FC<WatermarkWorkspaceProps> = ({ onBack }
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Live Preview */}
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center relative overflow-hidden">
-            <div className="w-64 h-88 bg-slate-50 rounded-2xl border border-slate-200 relative flex items-center justify-center overflow-hidden shadow-sm">
+            <div className="w-64 h-[352px] bg-slate-50 rounded-2xl border border-slate-200 relative flex items-center justify-center overflow-hidden shadow-sm">
               {file.previewUrl ? (
                 <img src={file.previewUrl} alt="Preview" className="h-full object-contain" />
               ) : (
@@ -128,7 +128,17 @@ export const WatermarkWorkspace: React.FC<WatermarkWorkspaceProps> = ({ onBack }
 
               {/* Watermark Overlay in preview */}
               <div
-                className="absolute font-bold text-red-600 pointer-events-none select-none tracking-wider whitespace-nowrap"
+                className={`absolute font-bold text-red-600 pointer-events-none select-none tracking-wider whitespace-nowrap ${
+                  position === 'top-left'
+                    ? 'top-4 left-4'
+                    : position === 'top-right'
+                    ? 'top-4 right-4'
+                    : position === 'bottom-left'
+                    ? 'bottom-4 left-4'
+                    : position === 'bottom-right'
+                    ? 'bottom-4 right-4'
+                    : ''
+                }`}
                 style={{
                   opacity,
                   fontSize: `${fontSize * 0.6}px`,

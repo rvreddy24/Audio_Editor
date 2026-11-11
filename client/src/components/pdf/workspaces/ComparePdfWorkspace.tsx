@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import {
   FileText,
   ArrowLeft,
-  SplitSquareVertical,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { parsePdfFile, PdfFileInfo } from '../../../utils/pdfOperations';
 import { renderPdfPageToDataUrl } from '../../../utils/pdfRenderer';
@@ -170,8 +169,10 @@ export const ComparePdfWorkspace: React.FC<ComparePdfWorkspaceProps> = ({ onBack
                 <span className="text-xs font-bold text-indigo-700">Original Document A</span>
                 <span className="text-[11px] text-slate-400">{formatFileSize(docA.size)}</span>
               </div>
-              <div className="w-full h-120 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden p-2">
-                {thumbA ? (
+              <div className="w-full h-[480px] bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden p-2 relative">
+                {isLoadingPage ? (
+                  <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+                ) : thumbA ? (
                   <img src={thumbA} alt="Page A" className="h-full object-contain shadow-xs" />
                 ) : (
                   <span className="text-xs text-slate-400">Page does not exist in Document A</span>
@@ -185,8 +186,10 @@ export const ComparePdfWorkspace: React.FC<ComparePdfWorkspaceProps> = ({ onBack
                 <span className="text-xs font-bold text-rose-700">Modified Document B</span>
                 <span className="text-[11px] text-slate-400">{formatFileSize(docB.size)}</span>
               </div>
-              <div className="w-full h-120 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden p-2">
-                {thumbB ? (
+              <div className="w-full h-[480px] bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden p-2 relative">
+                {isLoadingPage ? (
+                  <Loader2 className="w-6 h-6 text-rose-500 animate-spin" />
+                ) : thumbB ? (
                   <img src={thumbB} alt="Page B" className="h-full object-contain shadow-xs" />
                 ) : (
                   <span className="text-xs text-slate-400">Page does not exist in Document B</span>
