@@ -8,6 +8,7 @@ interface StudioFooterProps {
   onOpenAudio: () => void;
   onOpenCalc?: (tool?: CalculatorKey) => void;
   onOpenImage?: (tool?: ImageToolKey) => void;
+  onOpenVideo?: () => void;
 }
 
 export const StudioFooter: React.FC<StudioFooterProps> = ({
@@ -15,6 +16,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
   onOpenAudio,
   onOpenCalc,
   onOpenImage,
+  onOpenVideo,
 }) => {
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
@@ -126,40 +128,40 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             </ul>
           </div>
 
-          {/* Column 3: Audio Studio */}
+          {/* Column 3: Audio & Video Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              Audio Studio
+              Media Studios
             </h4>
             <ul className="space-y-2">
               <li>
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Waveform Trimmer
+                <button onClick={onOpenVideo} className="hover:text-white transition-colors text-rose-400 font-semibold">
+                  Video Studio (Editor)
+                </button>
+              </li>
+              <li>
+                <button onClick={onOpenVideo} className="hover:text-white transition-colors">
+                  Trim & Cut Video
+                </button>
+              </li>
+              <li>
+                <button onClick={onOpenVideo} className="hover:text-white transition-colors">
+                  Video to Animated GIF
                 </button>
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Format Converter
+                  Audio Waveform Trimmer
+                </button>
+              </li>
+              <li>
+                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
+                  Audio Format Converter
                 </button>
               </li>
               <li>
                 <button onClick={onOpenAudio} className="hover:text-white transition-colors">
                   Video to Audio Extractor
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  DSP Pitch & Speed
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  8D Audio Effect
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  ID3 Tag Editor
                 </button>
               </li>
             </ul>

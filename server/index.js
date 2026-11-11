@@ -685,7 +685,324 @@ app.get('/api/download/:fileId', (req, res) => {
   res.download(fileInfo.path, fileInfo.originalName);
 });
 
-// 12. PDF Protect endpoint
+// 12. VIDEO STUDIO PROCESSOR (Trim, Crop, Aspect Ratio, Speed, Rotate, Filters, Audio Mix, Watermark, GIF, MP4, Reverse)
+function getSystemFontFile() {
+  const candidates = [
+    'C:/Windows/Fonts/arial.ttf',
+    'C:/Windows/Fonts/segoeui.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+    '/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf'
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      return c.replace(':', '\\:');
+    }
+  }
+  return null;
+}
+
+app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'audio', maxCount: 1 }]), async (req, res) => {
+  try {
+    let fileInfo;
+    if (req.files && req.files.file && req.files.file[0]) {
+      const up = req.files.file[0];
+      const fid = path.parse(up.filename).name;
+      const probe = await probeFile(up.path);
+      fileInfo = { id: fid, originalName: up.originalname, path: up.path, size: up.size, probe };
+      fileRegistry.set(fid, fileInfo);
+    } else if (req.body.fileId) {
+      fileInfo = fileRegistry.get(req.body.fileId);
+    }
+
+    if (!fileInfo || !fs.existsSync(fileInfo.path)) {
+      return res.status(404).json({ error: 'Source video file not found' });
+    }
+
+    let audioFileInfo;
+    if (req.files && req.files.audio && req.files.audio[0]) {
+      const aup = req.files.audio[0];
+      const afid = path.parse(aup.filename).name;
+      audioFileInfo = { id: afid, originalName: aup.originalname, path: aup.path };
+      fileRegistry.set(afid, audioFileInfo);
+    } else if (req.body.audioFileId) {
+      audioFileInfo = fileRegistry.get(req.body.audioFileId);
+    }
+
+    const {
+      trimStart,
+      trimEnd,
+      aspectRatio,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      rotate = 0,
+      flip = 'none',
+      speed = 1.0,
+      volume = 1.0,
+      audioMode = 'original',
+      bgAudioVolume = 0.5,
+      watermarkText,
+      watermarkPosition = 'bottom-right',
+      filterType = 'none',
+      brightness = 0,
+      contrast = 1,
+      saturation = 1,
+      reverse = false,
+      resolution = 'original',
+      outputFormat = 'mp4',
+      quality = 'medium'
+    } = req.body;
+
+    const outputId = uuidv4();
+    const cleanFormat = (outputFormat || 'mp4').toLowerCase();
+    const outputFileName = `${outputId}.${cleanFormat}`;
+    const outputPath = path.join(OUTPUTS_DIR, outputFileName);
+
+    // Audio Extraction Mode (MP3, WAV, AAC, M4A)
+    if (cleanFormat === 'mp3' || cleanFormat === 'wav' || cleanFormat === 'aac' || cleanFormat === 'm4a') {
+      const s = parseFloat(trimStart) || 0;
+      const e = parseFloat(trimEnd) || 0;
+      const args = ['-y'];
+      if (s > 0) args.push('-ss', s.toString());
+      if (e > s) args.push('-to', e.toString());
+      args.push('-i', fileInfo.path, '-vn');
+      if (cleanFormat === 'mp3') {
+        args.push('-c:a', 'libmp3lame', '-b:a', '320k');
+      } else if (cleanFormat === 'wav') {
+        args.push('-c:a', 'pcm_s16le');
+      } else {
+        args.push('-c:a', 'aac', '-b:a', '256k');
+      }
+      args.push(outputPath);
+      await runFFmpeg(args);
+      const probe = await probeFile(outputPath);
+      const dlName = `${path.parse(fileInfo.originalName).name}_audio.${cleanFormat}`;
+      fileRegistry.set(outputId, { id: outputId, originalName: dlName, path: outputPath, size: probe.size, probe });
+      return res.json({
+        outputId,
+        downloadName: dlName,
+        downloadUrl: `/api/download/${outputId}`,
+        streamUrl: `/api/stream/${outputId}`,
+        probe
+      });
+    }
+
+    // High quality Animated GIF mode
+    if (cleanFormat === 'gif') {
+      const s = parseFloat(trimStart) || 0;
+      const e = parseFloat(trimEnd) || 0;
+      const args = ['-y'];
+      if (s > 0) args.push('-ss', s.toString());
+      if (e > s) {
+        args.push('-t', (e - s).toString());
+      } else if (s === 0 && (!e || e > 12)) {
+        args.push('-t', '10');
+      }
+      args.push('-i', fileInfo.path);
+
+      let vf = 'fps=15,scale=480:-1:flags=lanczos';
+      if (speed && parseFloat(speed) !== 1.0) {
+        vf = `setpts=(1/${parseFloat(speed)})*PTS,` + vf;
+      }
+      if (filterType === 'grayscale') vf += ',hue=s=0';
+      args.push('-vf', `${vf},split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer`, outputPath);
+
+      await runFFmpeg(args);
+      const stats = fs.statSync(outputPath);
+      const dlName = `${path.parse(fileInfo.originalName).name}_clip.gif`;
+      fileRegistry.set(outputId, { id: outputId, originalName: dlName, path: outputPath, size: stats.size });
+      return res.json({
+        outputId,
+        downloadName: dlName,
+        downloadUrl: `/api/download/${outputId}`,
+        streamUrl: `/api/stream/${outputId}`,
+        size: stats.size
+      });
+    }
+
+    // Standard Video Processing (MP4, WebM, MOV, MKV)
+    const vfParts = [];
+    const afParts = [];
+
+    // Speed
+    const spd = parseFloat(speed) || 1.0;
+    if (spd !== 1.0) {
+      vfParts.push(`setpts=(1/${spd})*PTS`);
+      if (spd >= 0.5 && spd <= 2.0) {
+        afParts.push(`atempo=${spd}`);
+      } else if (spd > 2.0) {
+        afParts.push(`atempo=2.0,atempo=${(spd / 2.0).toFixed(2)}`);
+      } else if (spd < 0.5) {
+        afParts.push(`atempo=0.5,atempo=${(spd / 0.5).toFixed(2)}`);
+      }
+    }
+
+    // Crop / Aspect Ratio
+    if (cropWidth && cropHeight) {
+      vfParts.push(`crop=${parseInt(cropWidth)}:${parseInt(cropHeight)}:${parseInt(cropX) || 0}:${parseInt(cropY) || 0}`);
+    } else if (aspectRatio && aspectRatio !== 'original' && aspectRatio !== 'free') {
+      if (aspectRatio === '16:9') {
+        vfParts.push(`crop='if(gt(a,16/9),ih*16/9,iw)':'if(gt(a,16/9),ih,iw*9/16)'`);
+      } else if (aspectRatio === '9:16') {
+        vfParts.push(`crop='if(gt(a,9/16),ih*9/16,iw)':'if(gt(a,9/16),ih,iw*16/9)'`);
+      } else if (aspectRatio === '1:1') {
+        vfParts.push(`crop='min(iw,ih)':'min(iw,ih)'`);
+      } else if (aspectRatio === '4:5') {
+        vfParts.push(`crop='if(gt(a,4/5),ih*4/5,iw)':'if(gt(a,4/5),ih,iw*5/4)'`);
+      } else if (aspectRatio === '21:9') {
+        vfParts.push(`crop='if(gt(a,21/9),ih*21/9,iw)':'if(gt(a,21/9),ih,iw*9/21)'`);
+      }
+    }
+
+    // Rotate
+    const rot = parseInt(rotate, 10) || 0;
+    if (rot === 90) vfParts.push('transpose=1');
+    else if (rot === 180) vfParts.push('transpose=1,transpose=1');
+    else if (rot === 270) vfParts.push('transpose=2');
+
+    // Flip
+    if (flip === 'horizontal') vfParts.push('hflip');
+    else if (flip === 'vertical') vfParts.push('vflip');
+    else if (flip === 'both') vfParts.push('hflip,vflip');
+
+    // Color Adjustments & Filters
+    const b = parseFloat(brightness) || 0;
+    const c = parseFloat(contrast) || 1;
+    const sat = parseFloat(saturation) || 1;
+    if (b !== 0 || c !== 1 || sat !== 1) {
+      vfParts.push(`eq=brightness=${b}:contrast=${c}:saturation=${sat}`);
+    }
+
+    if (filterType === 'grayscale') {
+      vfParts.push('hue=s=0');
+    } else if (filterType === 'sepia') {
+      vfParts.push('colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131');
+    } else if (filterType === 'vintage') {
+      vfParts.push('curves=vintage');
+    } else if (filterType === 'invert') {
+      vfParts.push('negate');
+    }
+
+    // Watermark text
+    if (watermarkText && watermarkText.trim()) {
+      const font = getSystemFontFile();
+      const cleanText = watermarkText.trim().replace(/['"\\]/g, '');
+      let pos = 'x=w-tw-25:y=h-th-25';
+      if (watermarkPosition === 'bottom-left') pos = 'x=25:y=h-th-25';
+      else if (watermarkPosition === 'top-right') pos = 'x=w-tw-25:y=25';
+      else if (watermarkPosition === 'top-left') pos = 'x=25:y=25';
+      else if (watermarkPosition === 'center') pos = 'x=(w-tw)/2:y=(h-th)/2';
+
+      let drawtext = `drawtext=text='${cleanText}':${pos}:fontsize=28:fontcolor=white@0.9:box=1:boxcolor=black@0.55:boxborderw=6`;
+      if (font) {
+        drawtext += `:fontfile='${font}'`;
+      }
+      vfParts.push(drawtext);
+    }
+
+    // Resolution Scaling
+    if (resolution === '1080p') vfParts.push('scale=-2:1080');
+    else if (resolution === '720p') vfParts.push('scale=-2:720');
+    else if (resolution === '480p') vfParts.push('scale=-2:480');
+    else if (resolution === '360p') vfParts.push('scale=-2:360');
+
+    // Ensure even width/height
+    vfParts.push('scale=trunc(iw/2)*2:trunc(ih/2)*2');
+
+    // Reverse
+    if (reverse === true || reverse === 'true') {
+      vfParts.push('reverse');
+      afParts.push('areverse');
+    }
+
+    // Volume
+    const vol = parseFloat(volume);
+    if (!isNaN(vol) && vol !== 1.0 && vol > 0) {
+      afParts.push(`volume=${vol}`);
+    }
+
+    const ffmpegArgs = ['-y'];
+
+    const tStart = parseFloat(trimStart) || 0;
+    const tEnd = parseFloat(trimEnd) || 0;
+    if (tStart > 0) ffmpegArgs.push('-ss', tStart.toString());
+    if (tEnd > tStart) ffmpegArgs.push('-to', tEnd.toString());
+
+    ffmpegArgs.push('-i', fileInfo.path);
+
+    const isMuted = audioMode === 'mute' || vol === 0;
+    const hasBgAudio = audioFileInfo && (audioMode === 'replace' || audioMode === 'mix');
+
+    if (hasBgAudio) {
+      ffmpegArgs.push('-i', audioFileInfo.path);
+    }
+
+    if (vfParts.length > 0) {
+      ffmpegArgs.push('-vf', vfParts.join(','));
+    }
+
+    if (isMuted) {
+      ffmpegArgs.push('-an');
+    } else if (hasBgAudio && audioMode === 'replace') {
+      ffmpegArgs.push('-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest');
+    } else if (hasBgAudio && audioMode === 'mix') {
+      const bgVol = parseFloat(bgAudioVolume) || 0.5;
+      const vVol = !isNaN(vol) ? vol : 1.0;
+      ffmpegArgs.push(
+        '-filter_complex',
+        `[0:a]volume=${vVol}[a0];[1:a]volume=${bgVol}[a1];[a0][a1]amix=inputs=2:duration=first:dropout_transition=2[aout]`,
+        '-map', '0:v', '-map', '[aout]',
+        '-c:a', 'aac', '-b:a', '192k'
+      );
+    } else if (afParts.length > 0) {
+      ffmpegArgs.push('-af', afParts.join(','));
+      ffmpegArgs.push('-c:a', 'aac', '-b:a', '192k');
+    } else {
+      ffmpegArgs.push('-c:a', 'copy');
+    }
+
+    let crf = '23';
+    if (quality === 'high') crf = '18';
+    else if (quality === 'low') crf = '28';
+
+    if (cleanFormat === 'webm') {
+      ffmpegArgs.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0');
+    } else {
+      ffmpegArgs.push('-c:v', 'libx264', '-crf', crf, '-preset', 'medium', '-pix_fmt', 'yuv420p');
+    }
+
+    ffmpegArgs.push(outputPath);
+
+    console.log('[Video Process] Executing FFmpeg with args:', ffmpegArgs.join(' '));
+    await runFFmpeg(ffmpegArgs);
+
+    const probe = await probeFile(outputPath);
+    const dlName = `${path.parse(fileInfo.originalName).name}_edited.${cleanFormat}`;
+
+    fileRegistry.set(outputId, {
+      id: outputId,
+      originalName: dlName,
+      path: outputPath,
+      size: probe.size,
+      probe
+    });
+
+    res.json({
+      outputId,
+      downloadName: dlName,
+      downloadUrl: `/api/download/${outputId}`,
+      streamUrl: `/api/stream/${outputId}`,
+      probe
+    });
+  } catch (err) {
+    console.error('[Video Process Error]:', err);
+    res.status(500).json({ error: err.message || 'Video processing failed' });
+  }
+});
+
+// 13. PDF Protect endpoint
 app.post('/api/pdf/protect', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No PDF file uploaded' });
   const password = req.body.password || '';

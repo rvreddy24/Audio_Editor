@@ -7,10 +7,11 @@ import {
   ChevronRight,
   Sparkles,
   Camera,
+  Film,
 } from 'lucide-react';
 
 interface StudioNavbarProps {
-  currentView: 'home' | 'pdf' | 'audio' | 'calc' | 'image';
+  currentView: 'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video';
   activePdfToolTitle?: string;
   activeCalcTitle?: string;
   activeImageToolTitle?: string;
@@ -19,6 +20,7 @@ interface StudioNavbarProps {
   onNavigateAudio: () => void;
   onNavigateCalc: () => void;
   onNavigateImage: () => void;
+  onNavigateVideo: () => void;
 }
 
 export const StudioNavbar: React.FC<StudioNavbarProps> = ({
@@ -31,6 +33,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
   onNavigateAudio,
   onNavigateCalc,
   onNavigateImage,
+  onNavigateVideo,
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
@@ -71,7 +74,9 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
                       ? onNavigateAudio
                       : currentView === 'calc'
                       ? onNavigateCalc
-                      : onNavigateImage
+                      : currentView === 'image'
+                      ? onNavigateImage
+                      : onNavigateVideo
                   }
                   className="font-semibold text-slate-700 hover:text-orange-600 transition-colors"
                 >
@@ -81,7 +86,9 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
                     ? 'Audio Studio'
                     : currentView === 'calc'
                     ? 'Calculator Studio'
-                    : 'Image Studio'}
+                    : currentView === 'image'
+                    ? 'Image Studio'
+                    : 'Video Studio'}
                 </button>
                 {activePdfToolTitle && currentView === 'pdf' && (
                   <>
@@ -106,7 +113,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
           </div>
 
           {/* Navigation Switchers */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Home button */}
             <button
               onClick={onNavigateHome}
@@ -123,7 +130,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
             {/* PDF Tools button */}
             <button
               onClick={onNavigatePdf}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 currentView === 'pdf'
                   ? 'bg-red-600 text-white shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-red-600 hover:bg-red-50/60'
@@ -133,10 +140,23 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
               <span>PDF Tools</span>
             </button>
 
+            {/* Video Studio button */}
+            <button
+              onClick={onNavigateVideo}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                currentView === 'video'
+                  ? 'bg-rose-600 text-white shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/60'
+              }`}
+            >
+              <Film className="w-3.5 h-3.5 text-rose-500" />
+              <span>Video Studio</span>
+            </button>
+
             {/* Audio Studio button */}
             <button
               onClick={onNavigateAudio}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 currentView === 'audio'
                   ? 'bg-indigo-600 text-white shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/60'
@@ -149,7 +169,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
             {/* Image Studio button */}
             <button
               onClick={onNavigateImage}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 currentView === 'image'
                   ? 'bg-emerald-600 text-white shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-emerald-600 hover:bg-emerald-50/60'
@@ -162,7 +182,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
             {/* Calculator Studio button */}
             <button
               onClick={onNavigateCalc}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 currentView === 'calc'
                   ? 'bg-orange-600 text-white shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-orange-600 hover:bg-orange-50/60'

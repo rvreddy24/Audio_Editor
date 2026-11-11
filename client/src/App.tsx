@@ -43,6 +43,9 @@ import { CalculatorKey, ALL_CALCULATORS } from './components/calculator/types';
 import { ImageStudioHub } from './components/image/ImageStudioHub';
 import { ImageToolKey, IMAGE_TOOLS } from './components/image/types';
 
+// Video Studio
+import { VideoStudioHub } from './components/video/VideoStudioHub';
+
 // PDF Workspaces
 import { MergeWorkspace } from './components/pdf/workspaces/MergeWorkspace';
 import { SplitWorkspace } from './components/pdf/workspaces/SplitWorkspace';
@@ -85,8 +88,8 @@ import { formatTime, formatFileSize } from './utils/formatters';
 type TabKey = 'trim' | 'convert' | 'video' | 'effects' | 'merge' | 'tags';
 
 export function App() {
-  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc' | 'image'
-  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc' | 'image'>('home');
+  // Navigation Router: 'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video'
+  const [viewMode, setViewMode] = useState<'home' | 'pdf' | 'audio' | 'calc' | 'image' | 'video'>('home');
   const [activePdfTool, setActivePdfTool] = useState<PdfToolKey>('home');
   const [activeCalc, setActiveCalc] = useState<CalculatorKey>('home');
   const [activeImageTool, setActiveImageTool] = useState<ImageToolKey | undefined>(undefined);
@@ -138,6 +141,11 @@ export function App() {
   const handleOpenImage = (tool?: ImageToolKey) => {
     setViewMode('image');
     setActiveImageTool(tool);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenVideo = () => {
+    setViewMode('video');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -219,6 +227,7 @@ export function App() {
           setActiveImageTool(undefined);
         }}
         onNavigatePdf={() => handleOpenPdf('home')}
+        onNavigateVideo={() => handleOpenVideo()}
         onNavigateAudio={() => handleOpenAudio()}
         onNavigateCalc={() => handleOpenCalc('home')}
         onNavigateImage={() => handleOpenImage()}
@@ -229,6 +238,7 @@ export function App() {
         <main className="flex-1">
           <HomeHub
             onOpenPdf={(tool) => handleOpenPdf(tool || 'home')}
+            onOpenVideo={() => handleOpenVideo()}
             onOpenAudio={(tab) => handleOpenAudio(tab)}
             onOpenCalc={(tool) => handleOpenCalc(tool || 'home')}
             onOpenImage={(tool) => handleOpenImage(tool)}
@@ -697,9 +707,33 @@ export function App() {
         </main>
       )}
 
+      {/* VIEW 6: VIDEO STUDIO WORKSTATION */}
+      {viewMode === 'video' && (
+        <main className="flex-1">
+          {/* Video Subheader Bar */}
+          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+            <button
+              onClick={() => setViewMode('home')}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-rose-600 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Home Dashboard</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+                Video Studio
+              </span>
+            </div>
+          </div>
+
+          <VideoStudioHub onBack={() => setViewMode('home')} />
+        </main>
+      )}
+
       {/* Universal Studio Footer */}
       <StudioFooter
         onSelectPdfTool={(tool) => handleOpenPdf(tool)}
+        onOpenVideo={() => handleOpenVideo()}
         onOpenAudio={() => handleOpenAudio()}
         onOpenCalc={(tool) => handleOpenCalc(tool)}
         onOpenImage={(tool) => handleOpenImage(tool)}
