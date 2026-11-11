@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, DollarSign, Scale, ArrowLeft, ArrowRightLeft, AlertTriangle } from 'lucide-react';
-import { CalculatorKey } from './types';
+import { CalculatorKey, parseCalcInput } from './types';
 
 interface EverydayCalcsProps {
   toolKey: CalculatorKey;
@@ -21,24 +21,24 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   // 2. DATE CALCULATOR STATE
   const [date1Str, setDate1Str] = useState<string>(new Date().toISOString().split('T')[0]);
   const [date2Str, setDate2Str] = useState<string>('2027-01-01');
-  const [addDays, setAddDays] = useState<number>(30);
+  const [addDays, setAddDays] = useState<number | ''>(30);
   const [addMode, setAddMode] = useState<'add' | 'subtract'>('add');
 
   // 3. WORK HOURS STATE
   const [startTime, setStartTime] = useState<string>('09:00');
   const [endTime, setEndTime] = useState<string>('17:30');
-  const [breakMinutes, setBreakMinutes] = useState<number>(30);
-  const [hourlyRate, setHourlyRate] = useState<number>(25);
+  const [breakMinutes, setBreakMinutes] = useState<number | ''>(30);
+  const [hourlyRate, setHourlyRate] = useState<number | ''>(25);
 
   // 4. TIP CALCULATOR STATE
-  const [billAmount, setBillAmount] = useState<number>(85.0);
-  const [tipPercent, setTipPercent] = useState<number>(18);
-  const [splitCount, setSplitCount] = useState<number>(2);
+  const [billAmount, setBillAmount] = useState<number | ''>(85.0);
+  const [tipPercent, setTipPercent] = useState<number | ''>(18);
+  const [splitCount, setSplitCount] = useState<number | ''>(2);
 
   // 5. UNIT CONVERTER STATE
   type UnitCategory = 'length' | 'weight' | 'temp' | 'area' | 'volume' | 'speed' | 'data';
   const [unitCategory, setUnitCategory] = useState<UnitCategory>('length');
-  const [unitValFrom, setUnitValFrom] = useState<number>(100);
+  const [unitValFrom, setUnitValFrom] = useState<number | ''>(100);
   const [fromUnit, setFromUnit] = useState<string>('m');
   const [toUnit, setToUnit] = useState<string>('ft');
 
@@ -97,7 +97,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
   // Add / Subtract Date
   const addedDate = parseLocalDate(date1Str);
-  const safeAddDays = Math.abs(addDays) || 0;
+  const safeAddDays = Math.abs(Number(addDays) || 0);
   addedDate.setDate(addedDate.getDate() + (addMode === 'add' ? safeAddDays : -safeAddDays));
   const formattedAddedDate = addedDate.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -114,20 +114,20 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   let durationMins = endH * 60 + endM - (startH * 60 + startM);
   if (durationMins < 0) durationMins += 24 * 60; // Crosses midnight
   const rawShiftMins = durationMins;
-  const safeBreak = Math.max(0, breakMinutes || 0);
+  const safeBreak = Math.max(0, Number(breakMinutes) || 0);
   const isBreakExceedingShift = safeBreak > rawShiftMins;
   durationMins = Math.max(0, durationMins - safeBreak);
   const workHours = Math.floor(durationMins / 60);
   const workRemainderMins = durationMins % 60;
   const decimalHours = durationMins / 60;
-  const totalGrossPay = decimalHours * Math.max(0, hourlyRate || 0);
+  const totalGrossPay = decimalHours * Math.max(0, Number(hourlyRate) || 0);
 
   // -------------------------------------------------------------------
   // 4. TIP CALCULATOR
   // -------------------------------------------------------------------
-  const safeBill = Math.max(0, billAmount || 0);
-  const safeTipPct = Math.max(0, tipPercent || 0);
-  const safeSplit = Math.max(1, Math.floor(splitCount) || 1);
+  const safeBill = Math.max(0, Number(billAmount) || 0);
+  const safeTipPct = Math.max(0, Number(tipPercent) || 0);
+  const safeSplit = Math.max(1, Math.floor(Number(splitCount) || 1));
   const tipAmount = (safeBill * safeTipPct) / 100;
   const totalBillWithTip = safeBill + tipAmount;
   const tipPerPerson = tipAmount / safeSplit;
@@ -218,7 +218,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   const safeFromUnit = currentCategoryUnits[fromUnit] ? fromUnit : Object.keys(currentCategoryUnits)[0];
   const safeToUnit = currentCategoryUnits[toUnit] ? toUnit : Object.keys(currentCategoryUnits)[1] || safeFromUnit;
 
-  const baseVal = currentCategoryUnits[safeFromUnit].toBase(unitValFrom);
+  const baseVal = currentCategoryUnits[safeFromUnit].toBase(Number(unitValFrom) || 0);
   const convertedVal = currentCategoryUnits[safeToUnit].fromBase(baseVal);
 
   return (
@@ -395,8 +395,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <label className="block text-xs font-bold text-slate-700 mb-1">Number of Days</label>
                 <input
                   type="number"
+                  placeholder="0"
                   value={addDays}
-                  onChange={(e) => setAddDays(Number(e.target.value))}
+                  onChange={(e) => setAddDays(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -451,8 +452,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <label className="block text-xs font-bold text-slate-700 mb-1">Unpaid Break / Lunch (Minutes)</label>
                 <input
                   type="number"
+                  placeholder="0"
                   value={breakMinutes}
-                  onChange={(e) => setBreakMinutes(Number(e.target.value))}
+                  onChange={(e) => setBreakMinutes(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -462,8 +464,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="number"
                   step="0.5"
+                  placeholder="0"
                   value={hourlyRate}
-                  onChange={(e) => setHourlyRate(Number(e.target.value))}
+                  onChange={(e) => setHourlyRate(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -518,8 +521,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="number"
                   step="0.01"
+                  placeholder="0"
                   value={billAmount}
-                  onChange={(e) => setBillAmount(Number(e.target.value))}
+                  onChange={(e) => setBillAmount(parseCalcInput(e.target.value))}
                   className="calc-input text-lg font-bold"
                 />
               </div>
@@ -547,8 +551,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                     type="number"
                     min={0}
                     max={100}
+                    placeholder="0"
                     value={tipPercent}
-                    onChange={(e) => setTipPercent(Math.max(0, Number(e.target.value)))}
+                    onChange={(e) => setTipPercent(parseCalcInput(e.target.value))}
                     className="calc-input !w-24 text-xs font-bold py-1"
                   />
                 </div>
@@ -559,8 +564,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="number"
                   min={1}
+                  placeholder="0"
                   value={splitCount}
-                  onChange={(e) => setSplitCount(Math.max(1, Number(e.target.value)))}
+                  onChange={(e) => setSplitCount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -580,7 +586,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                     <span className="font-mono font-bold text-white">${tipPerPerson.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
-                    <span>Total Gratuity ({tipPercent}%):</span>
+                    <span>Total Gratuity ({Number(tipPercent) || 0}%):</span>
                     <span className="font-mono font-bold text-white">${tipAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-slate-300 border-t border-slate-800 pt-2 font-semibold">
@@ -593,7 +599,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
-                Split evenly among {splitCount} {splitCount === 1 ? 'person' : 'people'}.
+                Split evenly among {Number(splitCount) || 1} {(Number(splitCount) || 1) === 1 ? 'person' : 'people'}.
               </div>
             </div>
           </div>
@@ -643,8 +649,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <label className="block text-xs font-bold text-slate-700 mb-1">From Value</label>
                 <input
                   type="number"
+                  placeholder="0"
                   value={unitValFrom}
-                  onChange={(e) => setUnitValFrom(Number(e.target.value))}
+                  onChange={(e) => setUnitValFrom(parseCalcInput(e.target.value))}
                   className="calc-input text-lg font-bold"
                 />
               </div>

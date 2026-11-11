@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DollarSign, ArrowLeft, TrendingUp, Calendar, PieChart, ShieldCheck } from 'lucide-react';
-import { CalculatorKey } from './types';
+import { CalculatorKey, parseCalcInput } from './types';
 
 interface FinancialCalcsProps {
   toolKey: CalculatorKey;
@@ -9,43 +9,43 @@ interface FinancialCalcsProps {
 
 export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack }) => {
   // 1. MORTGAGE STATE
-  const [homePrice, setHomePrice] = useState<number>(400000);
-  const [downPayment, setDownPayment] = useState<number>(80000);
-  const [mortgageTermYears, setMortgageTermYears] = useState<number>(30);
-  const [mortgageRate, setMortgageRate] = useState<number>(6.5);
-  const [propertyTaxAnnual, setPropertyTaxAnnual] = useState<number>(4000);
-  const [homeInsuranceAnnual, setHomeInsuranceAnnual] = useState<number>(1200);
+  const [homePrice, setHomePrice] = useState<number | ''>(400000);
+  const [downPayment, setDownPayment] = useState<number | ''>(80000);
+  const [mortgageTermYears, setMortgageTermYears] = useState<number | ''>(30);
+  const [mortgageRate, setMortgageRate] = useState<number | ''>(6.5);
+  const [propertyTaxAnnual, setPropertyTaxAnnual] = useState<number | ''>(4000);
+  const [homeInsuranceAnnual, setHomeInsuranceAnnual] = useState<number | ''>(1200);
 
   // 2. LOAN STATE
-  const [loanAmount, setLoanAmount] = useState<number>(25000);
-  const [loanTermMonths, setLoanTermMonths] = useState<number>(36);
-  const [loanRate, setLoanRate] = useState<number>(7.9);
+  const [loanAmount, setLoanAmount] = useState<number | ''>(25000);
+  const [loanTermMonths, setLoanTermMonths] = useState<number | ''>(36);
+  const [loanRate, setLoanRate] = useState<number | ''>(7.9);
 
   // 3. AUTO LOAN STATE
-  const [autoPrice, setAutoPrice] = useState<number>(32000);
-  const [autoDownPayment, setAutoDownPayment] = useState<number>(5000);
-  const [autoTradeIn, setAutoTradeIn] = useState<number>(2000);
-  const [autoRate, setAutoRate] = useState<number>(5.9);
-  const [autoTermMonths, setAutoTermMonths] = useState<number>(60);
-  const [autoSalesTaxRate, setAutoSalesTaxRate] = useState<number>(7.0);
+  const [autoPrice, setAutoPrice] = useState<number | ''>(32000);
+  const [autoDownPayment, setAutoDownPayment] = useState<number | ''>(5000);
+  const [autoTradeIn, setAutoTradeIn] = useState<number | ''>(2000);
+  const [autoRate, setAutoRate] = useState<number | ''>(5.9);
+  const [autoTermMonths, setAutoTermMonths] = useState<number | ''>(60);
+  const [autoSalesTaxRate, setAutoSalesTaxRate] = useState<number | ''>(7.0);
 
   // 4. COMPOUND INTEREST / INVESTMENT STATE
-  const [initialPrincipal, setInitialPrincipal] = useState<number>(10000);
-  const [monthlyContribution, setMonthlyContribution] = useState<number>(500);
-  const [investmentYears, setInvestmentYears] = useState<number>(20);
-  const [annualReturn, setAnnualReturn] = useState<number>(8.0);
+  const [initialPrincipal, setInitialPrincipal] = useState<number | ''>(10000);
+  const [monthlyContribution, setMonthlyContribution] = useState<number | ''>(500);
+  const [investmentYears, setInvestmentYears] = useState<number | ''>(20);
+  const [annualReturn, setAnnualReturn] = useState<number | ''>(8.0);
 
   // 5. RETIREMENT STATE
-  const [currentAge, setCurrentAge] = useState<number>(30);
-  const [retireAge, setRetireAge] = useState<number>(65);
-  const [currentSavings, setCurrentSavings] = useState<number>(50000);
-  const [annualSavings, setAnnualSavings] = useState<number>(12000);
-  const [retireReturn, setRetireReturn] = useState<number>(7.0);
+  const [currentAge, setCurrentAge] = useState<number | ''>(30);
+  const [retireAge, setRetireAge] = useState<number | ''>(65);
+  const [currentSavings, setCurrentSavings] = useState<number | ''>(50000);
+  const [annualSavings, setAnnualSavings] = useState<number | ''>(12000);
+  const [retireReturn, setRetireReturn] = useState<number | ''>(7.0);
 
   // 6. SALARY STATE
   const [salaryMode, setSalaryMode] = useState<'annual' | 'hourly'>('annual');
-  const [salaryAmount, setSalaryAmount] = useState<number>(75000);
-  const [hoursPerWeek, setHoursPerWeek] = useState<number>(40);
+  const [salaryAmount, setSalaryAmount] = useState<number | ''>(75000);
+  const [hoursPerWeek, setHoursPerWeek] = useState<number | ''>(40);
 
   // -------------------------------------------------------------
   // CALCULATIONS
@@ -212,7 +212,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={homePrice}
-                  onChange={(e) => setHomePrice(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setHomePrice(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -222,7 +223,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={downPayment}
-                  onChange={(e) => setDownPayment(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setDownPayment(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -232,7 +234,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <label className="block text-xs font-bold text-slate-700 mb-1">Loan Term (Years)</label>
                   <select
                     value={mortgageTermYears}
-                    onChange={(e) => setMortgageTermYears(Number(e.target.value))}
+                    onChange={(e) => setMortgageTermYears(parseCalcInput(e.target.value))}
                     className="calc-input"
                   >
                     <option value={30}>30 Years</option>
@@ -247,7 +249,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     step="0.05"
                     value={mortgageRate}
-                    onChange={(e) => setMortgageRate(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setMortgageRate(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -259,7 +262,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <input
                     type="number"
                     value={propertyTaxAnnual}
-                    onChange={(e) => setPropertyTaxAnnual(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setPropertyTaxAnnual(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -268,7 +272,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <input
                     type="number"
                     value={homeInsuranceAnnual}
-                    onChange={(e) => setHomeInsuranceAnnual(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setHomeInsuranceAnnual(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -336,7 +341,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={loanAmount}
-                  onChange={(e) => setLoanAmount(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setLoanAmount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -346,7 +352,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={loanTermMonths}
-                  onChange={(e) => setLoanTermMonths(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setLoanTermMonths(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -357,7 +364,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   step="0.1"
                   value={loanRate}
-                  onChange={(e) => setLoanRate(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setLoanRate(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -374,7 +382,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <div className="mt-6 space-y-3 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-300">
                     <span>Principal Financed:</span>
-                    <span className="font-mono font-bold text-white">{formatCurrency(loanAmount)}</span>
+                    <span className="font-mono font-bold text-white">{formatCurrency(Number(loanAmount) || 0)}</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span>Total Interest to Pay:</span>
@@ -388,7 +396,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
-                Total duration: {loanTermMonths} months ({(loanTermMonths / 12).toFixed(1)} years)
+                Total duration: {Number(loanTermMonths) || 0} months ({((Number(loanTermMonths) || 0) / 12).toFixed(1)} years)
               </div>
             </div>
           </div>
@@ -415,7 +423,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={autoPrice}
-                  onChange={(e) => setAutoPrice(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setAutoPrice(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -426,7 +435,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <input
                     type="number"
                     value={autoDownPayment}
-                    onChange={(e) => setAutoDownPayment(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setAutoDownPayment(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -435,7 +445,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <input
                     type="number"
                     value={autoTradeIn}
-                    onChange={(e) => setAutoTradeIn(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setAutoTradeIn(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -448,7 +459,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     step="0.1"
                     value={autoRate}
-                    onChange={(e) => setAutoRate(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setAutoRate(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -456,7 +468,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <label className="block text-xs font-bold text-slate-700 mb-1">Term (Months)</label>
                   <select
                     value={autoTermMonths}
-                    onChange={(e) => setAutoTermMonths(Number(e.target.value))}
+                    onChange={(e) => setAutoTermMonths(parseCalcInput(e.target.value))}
                     className="calc-input"
                   >
                     <option value={36}>36 Months (3 yrs)</option>
@@ -474,7 +486,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   step="0.1"
                   value={autoSalesTaxRate}
-                  onChange={(e) => setAutoSalesTaxRate(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setAutoSalesTaxRate(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -536,7 +549,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={initialPrincipal}
-                  onChange={(e) => setInitialPrincipal(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setInitialPrincipal(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -546,7 +560,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={monthlyContribution}
-                  onChange={(e) => setMonthlyContribution(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setMonthlyContribution(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -557,7 +572,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <input
                     type="number"
                     value={investmentYears}
-                    onChange={(e) => setInvestmentYears(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setInvestmentYears(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -567,7 +583,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     step="0.5"
                     value={annualReturn}
-                    onChange={(e) => setAnnualReturn(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setAnnualReturn(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -651,7 +668,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <input
                     type="number"
                     value={currentAge}
-                    onChange={(e) => setCurrentAge(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setCurrentAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -660,7 +678,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <input
                     type="number"
                     value={retireAge}
-                    onChange={(e) => setRetireAge(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setRetireAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -671,7 +690,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={currentSavings}
-                  onChange={(e) => setCurrentSavings(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setCurrentSavings(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -681,7 +701,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={annualSavings}
-                  onChange={(e) => setAnnualSavings(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setAnnualSavings(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -692,7 +713,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   step="0.5"
                   value={retireReturn}
-                  onChange={(e) => setRetireReturn(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setRetireReturn(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -755,7 +777,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     onClick={() => {
                       if (salaryMode !== 'annual') {
                         setSalaryMode('annual');
-                        setSalaryAmount(Math.round(salaryAmount * (hoursPerWeek || 40) * 52));
+                        setSalaryAmount(Math.round(Number(salaryAmount) * (Number(hoursPerWeek) || 40) * 52));
                       }
                     }}
                     className={`py-2 text-xs font-bold rounded-xl border transition-all ${
@@ -770,7 +792,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     onClick={() => {
                       if (salaryMode !== 'hourly') {
                         setSalaryMode('hourly');
-                        setSalaryAmount(Math.round((salaryAmount / ((hoursPerWeek || 40) * 52)) * 100) / 100);
+                        setSalaryAmount(Math.round((Number(salaryAmount) / ((Number(hoursPerWeek) || 40) * 52)) * 100) / 100);
                       }
                     }}
                     className={`py-2 text-xs font-bold rounded-xl border transition-all ${
@@ -791,7 +813,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={salaryAmount}
-                  onChange={(e) => setSalaryAmount(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setSalaryAmount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -801,7 +824,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <input
                   type="number"
                   value={hoursPerWeek}
-                  onChange={(e) => setHoursPerWeek(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setHoursPerWeek(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>

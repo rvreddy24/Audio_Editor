@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Scale, HeartPulse, Activity, ArrowLeft, Flame, Award, AlertTriangle, Info } from 'lucide-react';
-import { CalculatorKey } from './types';
+import { CalculatorKey, parseCalcInput } from './types';
 
 interface HealthCalcsProps {
   toolKey: CalculatorKey;
@@ -11,17 +11,23 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   // UNIT MODE: 'metric' (kg, cm) vs 'us' (lbs, feet/inches)
   const [unitMode, setUnitMode] = useState<'metric' | 'us'>('metric');
   const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [age, setAge] = useState<number>(28);
+  const [age, setAge] = useState<number | ''>(28);
 
   // Common measurements
-  const [weightKg, setWeightKg] = useState<number>(70);
-  const [heightCm, setHeightCm] = useState<number>(175);
-  const [weightLbs, setWeightLbs] = useState<number>(154);
-  const [heightFeet, setHeightFeet] = useState<number>(5);
-  const [heightInches, setHeightInches] = useState<number>(9);
+  const [weightKg, setWeightKg] = useState<number | ''>(70);
+  const [heightCm, setHeightCm] = useState<number | ''>(175);
+  const [weightLbs, setWeightLbs] = useState<number | ''>(154);
+  const [heightFeet, setHeightFeet] = useState<number | ''>(5);
+  const [heightInches, setHeightInches] = useState<number | ''>(9);
 
   // Synchronized unit helpers to ensure metric and US state never desync
-  const updateMetricHeight = (cm: number) => {
+  const updateMetricHeight = (cm: number | '') => {
+    if (cm === '') {
+      setHeightCm('');
+      setHeightFeet('');
+      setHeightInches('');
+      return;
+    }
     const safeCm = Math.max(0, cm);
     setHeightCm(safeCm);
     const totalIn = safeCm / 2.54;
@@ -29,21 +35,37 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
     setHeightInches(Math.round(totalIn % 12));
   };
 
-  const updateUsHeight = (ft: number, inc: number) => {
-    const safeFt = Math.max(0, ft);
-    const safeIn = Math.max(0, inc);
-    setHeightFeet(safeFt);
-    setHeightInches(safeIn);
+  const updateUsHeight = (ft: number | '', inc: number | '') => {
+    if (ft === '' && inc === '') {
+      setHeightFeet('');
+      setHeightInches('');
+      setHeightCm('');
+      return;
+    }
+    const safeFt = Math.max(0, Number(ft) || 0);
+    const safeIn = Math.max(0, Number(inc) || 0);
+    setHeightFeet(ft);
+    setHeightInches(inc);
     setHeightCm(Math.round((safeFt * 12 + safeIn) * 2.54));
   };
 
-  const updateMetricWeight = (kg: number) => {
+  const updateMetricWeight = (kg: number | '') => {
+    if (kg === '') {
+      setWeightKg('');
+      setWeightLbs('');
+      return;
+    }
     const safeKg = Math.max(0, kg);
     setWeightKg(safeKg);
     setWeightLbs(Math.round(safeKg * 2.20462262));
   };
 
-  const updateUsWeight = (lbs: number) => {
+  const updateUsWeight = (lbs: number | '') => {
+    if (lbs === '') {
+      setWeightLbs('');
+      setWeightKg('');
+      return;
+    }
     const safeLbs = Math.max(0, lbs);
     setWeightLbs(safeLbs);
     setWeightKg(Math.round(safeLbs * 0.45359237 * 10) / 10);
@@ -53,19 +75,20 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   const [activityLevel, setActivityLevel] = useState<number>(1.375); // Light exercise
 
   // Body Fat circumference measurements (cm)
-  const [waistCm, setWaistCm] = useState<number>(82);
-  const [neckCm, setNeckCm] = useState<number>(38);
-  const [hipCm, setHipCm] = useState<number>(95); // for female
+  const [waistCm, setWaistCm] = useState<number | ''>(82);
+  const [neckCm, setNeckCm] = useState<number | ''>(38);
+  const [hipCm, setHipCm] = useState<number | ''>(95); // for female
 
   // Pace Calculator
-  const [paceDistanceKm, setPaceDistanceKm] = useState<number>(10);
-  const [paceHours, setPaceHours] = useState<number>(0);
-  const [paceMinutes, setPaceMinutes] = useState<number>(50);
-  const [paceSeconds, setPaceSeconds] = useState<number>(0);
+  const [paceDistanceKm, setPaceDistanceKm] = useState<number | ''>(10);
+  const [paceHours, setPaceHours] = useState<number | ''>(0);
+  const [paceMinutes, setPaceMinutes] = useState<number | ''>(50);
+  const [paceSeconds, setPaceSeconds] = useState<number | ''>(0);
 
   // Effective metric values
-  const effectiveHeightCm = Math.max(0, heightCm);
-  const effectiveWeightKg = Math.max(0, weightKg);
+  const effectiveHeightCm = Math.max(0, Number(heightCm) || 0);
+  const effectiveWeightKg = Math.max(0, Number(weightKg) || 0);
+  const effectiveAge = Math.max(1, Number(age) || 0);
 
   // 1. BMI CALCULATION
   const heightMeters = effectiveHeightCm / 100;
@@ -99,17 +122,17 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   const maxNormalWeight = heightMeters > 0 ? 24.9 * heightMeters * heightMeters : 0;
 
   // 2. BMR (Mifflin-St Jeor & Harris-Benedict)
-  const validBioInputs = effectiveWeightKg > 0 && effectiveHeightCm > 0 && age > 0;
+  const validBioInputs = effectiveWeightKg > 0 && effectiveHeightCm > 0 && effectiveAge > 0;
   const bmr = validBioInputs
     ? gender === 'male'
-      ? 10 * effectiveWeightKg + 6.25 * effectiveHeightCm - 5 * age + 5
-      : 10 * effectiveWeightKg + 6.25 * effectiveHeightCm - 5 * age - 161
+      ? 10 * effectiveWeightKg + 6.25 * effectiveHeightCm - 5 * effectiveAge + 5
+      : 10 * effectiveWeightKg + 6.25 * effectiveHeightCm - 5 * effectiveAge - 161
     : 0;
 
   const bmrHarrisBenedict = validBioInputs
     ? gender === 'male'
-      ? 88.362 + 13.397 * effectiveWeightKg + 4.799 * effectiveHeightCm - 5.677 * age
-      : 447.593 + 9.247 * effectiveWeightKg + 3.098 * effectiveHeightCm - 4.33 * age
+      ? 88.362 + 13.397 * effectiveWeightKg + 4.799 * effectiveHeightCm - 5.677 * effectiveAge
+      : 447.593 + 9.247 * effectiveWeightKg + 3.098 * effectiveHeightCm - 4.33 * effectiveAge
     : 0;
 
   // 3. TDEE & CALORIES
@@ -117,22 +140,25 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   const minSafeIntake = gender === 'female' ? 1200 : 1500;
 
   // 4. BODY FAT % (US Navy Formula)
+  const validWaist = Math.max(0, Number(waistCm) || 0);
+  const validNeck = Math.max(0, Number(neckCm) || 0);
+  const validHip = Math.max(0, Number(hipCm) || 0);
   let bodyFatPct = 0;
   let bodyFatError: string | null = null;
   if (effectiveHeightCm <= 0) {
     bodyFatError = 'Please enter a valid height.';
   } else if (gender === 'male') {
-    if (waistCm <= neckCm) {
+    if (validWaist <= validNeck) {
       bodyFatError = 'Waist circumference must be greater than neck circumference.';
     } else {
-      const denom = 1.0324 - 0.19077 * Math.log10(waistCm - neckCm) + 0.15456 * Math.log10(effectiveHeightCm);
+      const denom = 1.0324 - 0.19077 * Math.log10(validWaist - validNeck) + 0.15456 * Math.log10(effectiveHeightCm);
       bodyFatPct = denom > 0 ? 495 / denom - 450 : 0;
     }
   } else {
-    if (waistCm + hipCm <= neckCm) {
+    if (validWaist + validHip <= validNeck) {
       bodyFatError = 'Waist + hip circumference must be greater than neck circumference.';
     } else {
-      const denom = 1.29579 - 0.35004 * Math.log10(waistCm + hipCm - neckCm) + 0.221 * Math.log10(effectiveHeightCm);
+      const denom = 1.29579 - 0.35004 * Math.log10(validWaist + validHip - validNeck) + 0.221 * Math.log10(effectiveHeightCm);
       bodyFatPct = denom > 0 ? 495 / denom - 450 : 0;
     }
   }
@@ -159,8 +185,12 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
     : 0;
 
   // 6. PACE CALCULATION
-  const totalSeconds = Math.max(0, paceHours) * 3600 + Math.max(0, paceMinutes) * 60 + Math.max(0, paceSeconds);
-  const paceSecPerKm = paceDistanceKm > 0 && totalSeconds > 0 ? totalSeconds / paceDistanceKm : 0;
+  const validPaceHours = Math.max(0, Number(paceHours) || 0);
+  const validPaceMinutes = Math.max(0, Number(paceMinutes) || 0);
+  const validPaceSeconds = Math.max(0, Number(paceSeconds) || 0);
+  const validPaceDistance = Math.max(0, Number(paceDistanceKm) || 0);
+  const totalSeconds = validPaceHours * 3600 + validPaceMinutes * 60 + validPaceSeconds;
+  const paceSecPerKm = validPaceDistance > 0 && totalSeconds > 0 ? totalSeconds / validPaceDistance : 0;
   const totalPaceSecKmRounded = Math.round(paceSecPerKm);
   const paceMinKm = Math.floor(totalPaceSecKmRounded / 60);
   const paceRemainderSecKm = totalPaceSecKmRounded % 60;
@@ -169,7 +199,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   const totalPaceSecMileRounded = Math.round(paceSecPerMile);
   const paceMinMile = Math.floor(totalPaceSecMileRounded / 60);
   const paceRemainderSecMile = totalPaceSecMileRounded % 60;
-  const speedKmh = paceDistanceKm > 0 && totalSeconds > 0 ? paceDistanceKm / (totalSeconds / 3600) : 0;
+  const numPaceDist = Number(paceDistanceKm) || 0;
+  const speedKmh = numPaceDist > 0 && totalSeconds > 0 ? numPaceDist / (totalSeconds / 3600) : 0;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -237,7 +268,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={age}
-                    onChange={(e) => setAge(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -250,7 +282,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     <input
                       type="number"
                       value={heightCm}
-                      onChange={(e) => updateMetricHeight(Number(e.target.value))}
+                      placeholder="0"
+                      onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -259,7 +292,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     <input
                       type="number"
                       value={weightKg}
-                      onChange={(e) => updateMetricWeight(Number(e.target.value))}
+                      placeholder="0"
+                      onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -272,7 +306,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                       <input
                         type="number"
                         value={heightFeet}
-                        onChange={(e) => updateUsHeight(Number(e.target.value), heightInches)}
+                        placeholder="0"
+                        onChange={(e) => updateUsHeight(parseCalcInput(e.target.value), heightInches)}
                         className="calc-input"
                       />
                     </div>
@@ -281,7 +316,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                       <input
                         type="number"
                         value={heightInches}
-                        onChange={(e) => updateUsHeight(heightFeet, Number(e.target.value))}
+                        placeholder="0"
+                        onChange={(e) => updateUsHeight(heightFeet, parseCalcInput(e.target.value))}
                         className="calc-input"
                       />
                     </div>
@@ -291,7 +327,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     <input
                       type="number"
                       value={weightLbs}
-                      onChange={(e) => updateUsWeight(Number(e.target.value))}
+                      placeholder="0"
+                      onChange={(e) => updateUsWeight(parseCalcInput(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -382,7 +419,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={age}
-                    onChange={(e) => setAge(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -394,7 +432,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={heightCm}
-                    onChange={(e) => updateMetricHeight(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -403,7 +442,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={weightKg}
-                    onChange={(e) => updateMetricWeight(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -502,7 +542,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={weightKg}
-                    onChange={(e) => updateMetricWeight(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -514,7 +555,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={heightCm}
-                    onChange={(e) => updateMetricHeight(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -523,7 +565,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={neckCm}
-                    onChange={(e) => setNeckCm(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setNeckCm(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -534,7 +577,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                 <input
                   type="number"
                   value={waistCm}
-                  onChange={(e) => setWaistCm(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setWaistCm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -545,7 +589,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={hipCm}
-                    onChange={(e) => setHipCm(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setHipCm(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -624,7 +669,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={age}
-                    onChange={(e) => setAge(Number(e.target.value))}
+                    placeholder="0"
+                    onChange={(e) => setAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -635,7 +681,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                 <input
                   type="number"
                   value={heightCm}
-                  onChange={(e) => setHeightCm(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setHeightCm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -645,7 +692,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                 <input
                   type="number"
                   value={weightKg}
-                  onChange={(e) => setWeightKg(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setWeightKg(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -719,7 +767,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                 <input
                   type="number"
                   value={heightCm}
-                  onChange={(e) => setHeightCm(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setHeightCm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -800,7 +849,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   type="number"
                   step="0.1"
                   value={paceDistanceKm}
-                  onChange={(e) => setPaceDistanceKm(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={(e) => setPaceDistanceKm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -812,21 +862,21 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     placeholder="HH"
                     value={paceHours}
-                    onChange={(e) => setPaceHours(Number(e.target.value))}
+                    onChange={(e) => setPaceHours(parseCalcInput(e.target.value))}
                     className="calc-input text-center"
                   />
                   <input
                     type="number"
                     placeholder="MM"
                     value={paceMinutes}
-                    onChange={(e) => setPaceMinutes(Number(e.target.value))}
+                    onChange={(e) => setPaceMinutes(parseCalcInput(e.target.value))}
                     className="calc-input text-center"
                   />
                   <input
                     type="number"
                     placeholder="SS"
                     value={paceSeconds}
-                    onChange={(e) => setPaceSeconds(Number(e.target.value))}
+                    onChange={(e) => setPaceSeconds(parseCalcInput(e.target.value))}
                     className="calc-input text-center"
                   />
                 </div>
@@ -858,7 +908,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
-                Calculated over {paceDistanceKm.toFixed(2)} km distance.
+                Calculated over {(Number(paceDistanceKm) || 0).toFixed(2)} km distance.
               </div>
             </div>
           </div>

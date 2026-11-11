@@ -221,3 +221,16 @@ export const ALL_CALCULATORS: CalculatorMeta[] = [
     iconName: 'Scale',
   },
 ];
+
+/**
+ * Safely parses and sanitizes user number inputs for calculators:
+ * 1. When cleared, returns '' (empty string) instead of 0, so the input becomes empty and displays its placeholder.
+ * 2. Strips unwanted leading zeros before digits (e.g. "0120" -> 120, "05" -> 5).
+ * 3. Preserves legitimate decimals like "0.5".
+ */
+export const parseCalcInput = (val: string): number | '' => {
+  if (val === '') return '';
+  const cleaned = val.replace(/^0+(?=\d)/, '');
+  const n = Number(cleaned);
+  return isNaN(n) ? '' : n;
+};

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Percent, Hash, ArrowLeft, RefreshCw, Copy, Check } from 'lucide-react';
-import { CalculatorKey } from './types';
+import { CalculatorKey, parseCalcInput } from './types';
 
 interface MathCalcsProps {
   toolKey: CalculatorKey;
@@ -10,61 +10,73 @@ interface MathCalcsProps {
 export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
   // 1. PERCENTAGE STATE
   // Mode 1: What is P% of X?
-  const [p1Pct, setP1Pct] = useState<number>(15);
-  const [p1Num, setP1Num] = useState<number>(200);
+  const [p1Pct, setP1Pct] = useState<number | ''>(15);
+  const [p1Num, setP1Num] = useState<number | ''>(200);
   // Mode 2: X is what percent of Y?
-  const [p2Num, setP2Num] = useState<number>(25);
-  const [p2Total, setP2Total] = useState<number>(100);
+  const [p2Num, setP2Num] = useState<number | ''>(25);
+  const [p2Total, setP2Total] = useState<number | ''>(100);
   // Mode 3: % Increase/Decrease from X to Y
-  const [p3From, setP3From] = useState<number>(80);
-  const [p3To, setP3To] = useState<number>(100);
+  const [p3From, setP3From] = useState<number | ''>(80);
+  const [p3To, setP3To] = useState<number | ''>(100);
 
   // 2. FRACTION STATE
-  const [f1Num, setF1Num] = useState<number>(2);
-  const [f1Den, setF1Den] = useState<number>(3);
+  const [f1Num, setF1Num] = useState<number | ''>(2);
+  const [f1Den, setF1Den] = useState<number | ''>(3);
   const [fractionOp, setFractionOp] = useState<'+' | '-' | '×' | '÷'>('+');
-  const [f2Num, setF2Num] = useState<number>(3);
-  const [f2Den, setF2Den] = useState<number>(4);
+  const [f2Num, setF2Num] = useState<number | ''>(3);
+  const [f2Den, setF2Den] = useState<number | ''>(4);
 
   // 3. STATISTICS STATE
   const [datasetText, setDatasetText] = useState<string>('12, 15, 18, 22, 25, 28, 30, 35, 42, 50');
 
   // 4. RANDOM NUMBER STATE
-  const [randMin, setRandMin] = useState<number>(1);
-  const [randMax, setRandMax] = useState<number>(100);
-  const [randCount, setRandCount] = useState<number>(5);
+  const [randMin, setRandMin] = useState<number | ''>(1);
+  const [randMax, setRandMax] = useState<number | ''>(100);
+  const [randCount, setRandCount] = useState<number | ''>(5);
   const [randUnique, setRandUnique] = useState<boolean>(true);
   const [randSorted, setRandSorted] = useState<boolean>(false);
   const [randResults, setRandResults] = useState<number[]>([14, 27, 42, 68, 91]);
   const [copied, setCopied] = useState<boolean>(false);
 
   // Percentage Calculations
-  const r1 = ((p1Pct || 0) / 100) * (p1Num || 0);
-  const r2Valid = p2Total !== 0;
-  const r2 = r2Valid ? ((p2Num || 0) / p2Total) * 100 : 0;
-  const r3Diff = p3To - p3From;
-  const r3Valid = p3From !== 0;
-  const r3Pct = r3Valid ? (r3Diff / Math.abs(p3From)) * 100 : 0;
+  const numP1Pct = Number(p1Pct) || 0;
+  const numP1Num = Number(p1Num) || 0;
+  const numP2Num = Number(p2Num) || 0;
+  const numP2Total = Number(p2Total) || 0;
+  const numP3From = Number(p3From) || 0;
+  const numP3To = Number(p3To) || 0;
+
+  const r1 = (numP1Pct / 100) * numP1Num;
+  const r2Valid = numP2Total !== 0;
+  const r2 = r2Valid ? (numP2Num / numP2Total) * 100 : 0;
+  const r3Diff = numP3To - numP3From;
+  const r3Valid = numP3From !== 0;
+  const r3Pct = r3Valid ? (r3Diff / Math.abs(numP3From)) * 100 : 0;
 
   // Fraction Calculations
+  const numF1Num = Number(f1Num) || 0;
+  const numF1Den = Number(f1Den) || 0;
+  const numF2Num = Number(f2Num) || 0;
+  const numF2Den = Number(f2Den) || 0;
+
   const gcd = (a: number, b: number): number => (b === 0 ? Math.abs(a) : gcd(b, a % b));
   let resNum = 0;
   let resDen = 1;
-  const isDivByZero = f1Den === 0 || f2Den === 0 || (fractionOp === '÷' && f2Num === 0);
+  const isDivByZero = numF1Den === 0 || numF2Den === 0 || (fractionOp === '÷' && numF2Num === 0);
 
   if (!isDivByZero) {
     if (fractionOp === '+') {
-      resNum = f1Num * f2Den + f2Num * f1Den;
-      resDen = f1Den * f2Den;
+      resNum = numF1Num * numF2Den + numF2Num * numF1Den;
+      resDen = numF1Den * numF2Den;
     } else if (fractionOp === '-') {
-      resNum = f1Num * f2Den - f2Num * f1Den;
-      resDen = f1Den * f2Den;
+      resNum = numF1Num * numF2Den - numF2Num * numF1Den;
+      resDen = numF1Den * numF2Den;
     } else if (fractionOp === '×') {
-      resNum = f1Num * f2Num;
-      resDen = f1Den * f2Den;
+      resNum = numF1Num * numF2Num;
+      resDen = numF1Den * numF2Den;
     } else if (fractionOp === '÷') {
-      resNum = f1Num * f2Den;
-      resDen = f1Den * f2Num;
+      resNum = numF1Num * numF2Den;
+      resDen = numF1Den * numF2Num;
     }
   }
 
@@ -110,10 +122,12 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
 
   // Random generation
   const handleGenerateRandom = () => {
-    const effectiveMin = Math.min(randMin, randMax);
-    const effectiveMax = Math.max(randMin, randMax);
+    const minVal = Number(randMin) || 0;
+    const maxVal = Number(randMax) || 0;
+    const effectiveMin = Math.min(minVal, maxVal);
+    const effectiveMax = Math.max(minVal, maxVal);
     const poolSize = effectiveMax - effectiveMin + 1;
-    const safeCount = Math.max(1, Math.min(randCount || 1, 100));
+    const safeCount = Math.max(1, Math.min(Number(randCount) || 1, 100));
     const countToGen = randUnique ? Math.min(safeCount, poolSize) : safeCount;
     const generated: number[] = [];
     const used = new Set<number>();
@@ -186,15 +200,17 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               <span className="text-sm font-semibold text-slate-700">What is</span>
               <input
                 type="number"
+                placeholder="0"
                 value={p1Pct}
-                onChange={(e) => setP1Pct(Number(e.target.value))}
+                onChange={(e) => setP1Pct(parseCalcInput(e.target.value))}
                 className="w-24 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">% of</span>
               <input
                 type="number"
+                placeholder="0"
                 value={p1Num}
-                onChange={(e) => setP1Num(Number(e.target.value))}
+                onChange={(e) => setP1Num(parseCalcInput(e.target.value))}
                 className="w-32 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">=</span>
@@ -212,15 +228,17 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
             <div className="flex flex-wrap items-center gap-3">
               <input
                 type="number"
+                placeholder="0"
                 value={p2Num}
-                onChange={(e) => setP2Num(Number(e.target.value))}
+                onChange={(e) => setP2Num(parseCalcInput(e.target.value))}
                 className="w-28 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">is what percent of</span>
               <input
                 type="number"
+                placeholder="0"
                 value={p2Total}
-                onChange={(e) => setP2Total(Number(e.target.value))}
+                onChange={(e) => setP2Total(parseCalcInput(e.target.value))}
                 className="w-32 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">=</span>
@@ -239,15 +257,17 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               <span className="text-sm font-semibold text-slate-700">From</span>
               <input
                 type="number"
+                placeholder="0"
                 value={p3From}
-                onChange={(e) => setP3From(Number(e.target.value))}
+                onChange={(e) => setP3From(parseCalcInput(e.target.value))}
                 className="w-28 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">to</span>
               <input
                 type="number"
+                placeholder="0"
                 value={p3To}
-                onChange={(e) => setP3To(Number(e.target.value))}
+                onChange={(e) => setP3To(parseCalcInput(e.target.value))}
                 className="w-28 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">=</span>
@@ -291,15 +311,17 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               <div className="flex flex-col items-center w-20">
                 <input
                   type="number"
+                  placeholder="0"
                   value={f1Num}
-                  onChange={(e) => setF1Num(Number(e.target.value))}
+                  onChange={(e) => setF1Num(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
                 <div className="w-full h-0.5 bg-slate-900 my-1.5" />
                 <input
                   type="number"
+                  placeholder="0"
                   value={f1Den}
-                  onChange={(e) => setF1Den(Number(e.target.value) || 1)}
+                  onChange={(e) => setF1Den(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
               </div>
@@ -320,15 +342,17 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               <div className="flex flex-col items-center w-20">
                 <input
                   type="number"
+                  placeholder="0"
                   value={f2Num}
-                  onChange={(e) => setF2Num(Number(e.target.value))}
+                  onChange={(e) => setF2Num(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
                 <div className="w-full h-0.5 bg-slate-900 my-1.5" />
                 <input
                   type="number"
+                  placeholder="0"
                   value={f2Den}
-                  onChange={(e) => setF2Den(Number(e.target.value) || 1)}
+                  onChange={(e) => setF2Den(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
               </div>
@@ -473,8 +497,9 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Lower Bound (Min)</label>
                   <input
                     type="number"
+                    placeholder="0"
                     value={randMin}
-                    onChange={(e) => setRandMin(Number(e.target.value))}
+                    onChange={(e) => setRandMin(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -482,8 +507,9 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Upper Bound (Max)</label>
                   <input
                     type="number"
+                    placeholder="0"
                     value={randMax}
-                    onChange={(e) => setRandMax(Number(e.target.value))}
+                    onChange={(e) => setRandMax(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -495,8 +521,9 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   type="number"
                   min={1}
                   max={50}
+                  placeholder="0"
                   value={randCount}
-                  onChange={(e) => setRandCount(Number(e.target.value))}
+                  onChange={(e) => setRandCount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
               </div>
@@ -562,7 +589,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4 border-t border-slate-800 pt-3 flex justify-between">
-                <span>Range: [{Math.min(randMin, randMax)}, {Math.max(randMin, randMax)}]</span>
+                <span>Range: [{Math.min(Number(randMin) || 0, Number(randMax) || 0)}, {Math.max(Number(randMin) || 0, Number(randMax) || 0)}]</span>
                 <span>Count: {randResults.length}</span>
               </div>
             </div>
