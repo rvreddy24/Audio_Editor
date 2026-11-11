@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scale, HeartPulse, Activity, ArrowLeft, Flame, Award } from 'lucide-react';
+import { Scale, HeartPulse, Activity, ArrowLeft, Flame, Award, AlertTriangle, Info } from 'lucide-react';
 import { CalculatorKey } from './types';
 
 interface HealthCalcsProps {
@@ -20,6 +20,35 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   const [heightFeet, setHeightFeet] = useState<number>(5);
   const [heightInches, setHeightInches] = useState<number>(9);
 
+  // Synchronized unit helpers to ensure metric and US state never desync
+  const updateMetricHeight = (cm: number) => {
+    const safeCm = Math.max(0, cm);
+    setHeightCm(safeCm);
+    const totalIn = safeCm / 2.54;
+    setHeightFeet(Math.floor(totalIn / 12));
+    setHeightInches(Math.round(totalIn % 12));
+  };
+
+  const updateUsHeight = (ft: number, inc: number) => {
+    const safeFt = Math.max(0, ft);
+    const safeIn = Math.max(0, inc);
+    setHeightFeet(safeFt);
+    setHeightInches(safeIn);
+    setHeightCm(Math.round((safeFt * 12 + safeIn) * 2.54));
+  };
+
+  const updateMetricWeight = (kg: number) => {
+    const safeKg = Math.max(0, kg);
+    setWeightKg(safeKg);
+    setWeightLbs(Math.round(safeKg * 2.20462262));
+  };
+
+  const updateUsWeight = (lbs: number) => {
+    const safeLbs = Math.max(0, lbs);
+    setWeightLbs(safeLbs);
+    setWeightKg(Math.round(safeLbs * 0.45359237 * 10) / 10);
+  };
+
   // Calorie & TDEE activity factor
   const [activityLevel, setActivityLevel] = useState<number>(1.375); // Light exercise
 
@@ -35,83 +64,112 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   const [paceSeconds, setPaceSeconds] = useState<number>(0);
 
   // Effective metric values
-  const effectiveHeightCm = unitMode === 'metric' ? heightCm : (heightFeet * 12 + heightInches) * 2.54;
-  const effectiveWeightKg = unitMode === 'metric' ? weightKg : weightLbs * 0.45359237;
+  const effectiveHeightCm = Math.max(0, heightCm);
+  const effectiveWeightKg = Math.max(0, weightKg);
 
   // 1. BMI CALCULATION
   const heightMeters = effectiveHeightCm / 100;
-  const bmi = heightMeters > 0 ? effectiveWeightKg / (heightMeters * heightMeters) : 0;
+  const isValidBmiInputs = heightMeters > 0.4 && effectiveWeightKg > 5;
+  const bmi = isValidBmiInputs ? effectiveWeightKg / (heightMeters * heightMeters) : 0;
   let bmiCategory = 'Normal weight';
   let bmiColor = 'text-emerald-400';
   let bmiBg = 'bg-emerald-500/20';
-  if (bmi < 18.5) {
+  if (!isValidBmiInputs) {
+    bmiCategory = 'Enter measurements';
+    bmiColor = 'text-slate-400';
+    bmiBg = 'bg-slate-500/20';
+  } else if (bmi < 18.5) {
     bmiCategory = 'Underweight';
     bmiColor = 'text-blue-400';
     bmiBg = 'bg-blue-500/20';
-  } else if (bmi >= 25 && bmi < 29.9) {
+  } else if (bmi < 25.0) {
+    bmiCategory = 'Normal weight';
+    bmiColor = 'text-emerald-400';
+    bmiBg = 'bg-emerald-500/20';
+  } else if (bmi < 30.0) {
     bmiCategory = 'Overweight';
     bmiColor = 'text-yellow-400';
     bmiBg = 'bg-yellow-500/20';
-  } else if (bmi >= 30) {
+  } else {
     bmiCategory = 'Obese';
     bmiColor = 'text-red-400';
     bmiBg = 'bg-red-500/20';
   }
-  const minNormalWeight = 18.5 * heightMeters * heightMeters;
-  const maxNormalWeight = 24.9 * heightMeters * heightMeters;
+  const minNormalWeight = heightMeters > 0 ? 18.5 * heightMeters * heightMeters : 0;
+  const maxNormalWeight = heightMeters > 0 ? 24.9 * heightMeters * heightMeters : 0;
 
-  // 2. BMR (Mifflin-St Jeor)
-  // Men: BMR = 10W + 6.25H - 5A + 5
-  // Women: BMR = 10W + 6.25H - 5A - 161
-  const bmr =
-    gender === 'male'
+  // 2. BMR (Mifflin-St Jeor & Harris-Benedict)
+  const validBioInputs = effectiveWeightKg > 0 && effectiveHeightCm > 0 && age > 0;
+  const bmr = validBioInputs
+    ? gender === 'male'
       ? 10 * effectiveWeightKg + 6.25 * effectiveHeightCm - 5 * age + 5
-      : 10 * effectiveWeightKg + 6.25 * effectiveHeightCm - 5 * age - 161;
+      : 10 * effectiveWeightKg + 6.25 * effectiveHeightCm - 5 * age - 161
+    : 0;
+
+  const bmrHarrisBenedict = validBioInputs
+    ? gender === 'male'
+      ? 88.362 + 13.397 * effectiveWeightKg + 4.799 * effectiveHeightCm - 5.677 * age
+      : 447.593 + 9.247 * effectiveWeightKg + 3.098 * effectiveHeightCm - 4.33 * age
+    : 0;
 
   // 3. TDEE & CALORIES
   const tdee = Math.round(bmr * activityLevel);
+  const minSafeIntake = gender === 'female' ? 1200 : 1500;
 
   // 4. BODY FAT % (US Navy Formula)
-  // Men: 495 / (1.0324 - 0.19077*log10(waist-neck) + 0.15456*log10(height)) - 450
-  // Women: 495 / (1.29579 - 0.35004*log10(waist+hip-neck) + 0.22100*log10(height)) - 450
   let bodyFatPct = 0;
-  if (gender === 'male' && waistCm > neckCm) {
-    bodyFatPct =
-      495 /
-        (1.0324 -
-          0.19077 * Math.log10(waistCm - neckCm) +
-          0.15456 * Math.log10(effectiveHeightCm)) -
-      450;
-  } else if (gender === 'female' && waistCm + hipCm > neckCm) {
-    bodyFatPct =
-      495 /
-        (1.29579 -
-          0.35004 * Math.log10(waistCm + hipCm - neckCm) +
-          0.221 * Math.log10(effectiveHeightCm)) -
-      450;
+  let bodyFatError: string | null = null;
+  if (effectiveHeightCm <= 0) {
+    bodyFatError = 'Please enter a valid height.';
+  } else if (gender === 'male') {
+    if (waistCm <= neckCm) {
+      bodyFatError = 'Waist circumference must be greater than neck circumference.';
+    } else {
+      const denom = 1.0324 - 0.19077 * Math.log10(waistCm - neckCm) + 0.15456 * Math.log10(effectiveHeightCm);
+      bodyFatPct = denom > 0 ? 495 / denom - 450 : 0;
+    }
+  } else {
+    if (waistCm + hipCm <= neckCm) {
+      bodyFatError = 'Waist + hip circumference must be greater than neck circumference.';
+    } else {
+      const denom = 1.29579 - 0.35004 * Math.log10(waistCm + hipCm - neckCm) + 0.221 * Math.log10(effectiveHeightCm);
+      bodyFatPct = denom > 0 ? 495 / denom - 450 : 0;
+    }
   }
-  bodyFatPct = Math.max(2, Math.min(60, bodyFatPct));
+  if (!bodyFatError) {
+    bodyFatPct = Math.max(2, Math.min(65, bodyFatPct));
+  }
   const fatMassKg = (effectiveWeightKg * bodyFatPct) / 100;
-  const leanMassKg = effectiveWeightKg - fatMassKg;
+  const leanMassKg = Math.max(0, effectiveWeightKg - fatMassKg);
 
-  // 5. IDEAL BODY WEIGHT (Devine formula)
-  // Men: 50.0 kg + 2.3 kg per inch over 5 feet
-  // Women: 45.5 kg + 2.3 kg per inch over 5 feet
+  // 5. IDEAL BODY WEIGHT (Devine, Robinson, Miller, Hamwi)
   const totalInches = effectiveHeightCm / 2.54;
-  const inchesOver5Ft = Math.max(0, totalInches - 60);
-  const idealDevine = gender === 'male' ? 50 + 2.3 * inchesOver5Ft : 45.5 + 2.3 * inchesOver5Ft;
-  const idealRobinson = gender === 'male' ? 52 + 1.9 * inchesOver5Ft : 49 + 1.7 * inchesOver5Ft;
-  const idealMiller = gender === 'male' ? 56.2 + 1.41 * inchesOver5Ft : 53.1 + 1.36 * inchesOver5Ft;
+  const inchesOver5Ft = totalInches - 60;
+  const idealDevine = validBioInputs
+    ? Math.max(25, gender === 'male' ? 50 + 2.3 * inchesOver5Ft : 45.5 + 2.3 * inchesOver5Ft)
+    : 0;
+  const idealRobinson = validBioInputs
+    ? Math.max(25, gender === 'male' ? 52 + 1.9 * inchesOver5Ft : 49 + 1.7 * inchesOver5Ft)
+    : 0;
+  const idealMiller = validBioInputs
+    ? Math.max(25, gender === 'male' ? 56.2 + 1.41 * inchesOver5Ft : 53.1 + 1.36 * inchesOver5Ft)
+    : 0;
+  const idealHamwi = validBioInputs
+    ? Math.max(25, gender === 'male' ? 48.0 + 2.7 * inchesOver5Ft : 45.5 + 2.2 * inchesOver5Ft)
+    : 0;
 
   // 6. PACE CALCULATION
-  const totalSeconds = paceHours * 3600 + paceMinutes * 60 + paceSeconds;
-  const paceSecPerKm = paceDistanceKm > 0 ? totalSeconds / paceDistanceKm : 0;
-  const paceMinKm = Math.floor(paceSecPerKm / 60);
-  const paceRemainderSecKm = Math.round(paceSecPerKm % 60);
-  const paceSecPerMile = paceSecPerKm * 1.60934;
-  const paceMinMile = Math.floor(paceSecPerMile / 60);
-  const paceRemainderSecMile = Math.round(paceSecPerMile % 60);
-  const speedKmh = paceDistanceKm > 0 && totalSeconds > 0 ? (paceDistanceKm / (totalSeconds / 3600)) : 0;
+  const totalSeconds = Math.max(0, paceHours) * 3600 + Math.max(0, paceMinutes) * 60 + Math.max(0, paceSeconds);
+  const paceSecPerKm = paceDistanceKm > 0 && totalSeconds > 0 ? totalSeconds / paceDistanceKm : 0;
+  const totalPaceSecKmRounded = Math.round(paceSecPerKm);
+  const paceMinKm = Math.floor(totalPaceSecKmRounded / 60);
+  const paceRemainderSecKm = totalPaceSecKmRounded % 60;
+
+  const paceSecPerMile = paceSecPerKm * 1.609344;
+  const totalPaceSecMileRounded = Math.round(paceSecPerMile);
+  const paceMinMile = Math.floor(totalPaceSecMileRounded / 60);
+  const paceRemainderSecMile = totalPaceSecMileRounded % 60;
+  const speedKmh = paceDistanceKm > 0 && totalSeconds > 0 ? paceDistanceKm / (totalSeconds / 3600) : 0;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -192,7 +250,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     <input
                       type="number"
                       value={heightCm}
-                      onChange={(e) => setHeightCm(Number(e.target.value))}
+                      onChange={(e) => updateMetricHeight(Number(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -201,7 +259,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     <input
                       type="number"
                       value={weightKg}
-                      onChange={(e) => setWeightKg(Number(e.target.value))}
+                      onChange={(e) => updateMetricWeight(Number(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -214,7 +272,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                       <input
                         type="number"
                         value={heightFeet}
-                        onChange={(e) => setHeightFeet(Number(e.target.value))}
+                        onChange={(e) => updateUsHeight(Number(e.target.value), heightInches)}
                         className="calc-input"
                       />
                     </div>
@@ -223,7 +281,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                       <input
                         type="number"
                         value={heightInches}
-                        onChange={(e) => setHeightInches(Number(e.target.value))}
+                        onChange={(e) => updateUsHeight(heightFeet, Number(e.target.value))}
                         className="calc-input"
                       />
                     </div>
@@ -233,7 +291,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     <input
                       type="number"
                       value={weightLbs}
-                      onChange={(e) => setWeightLbs(Number(e.target.value))}
+                      onChange={(e) => updateUsWeight(Number(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -336,7 +394,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={heightCm}
-                    onChange={(e) => setHeightCm(Number(e.target.value))}
+                    onChange={(e) => updateMetricHeight(Number(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -345,7 +403,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={weightKg}
-                    onChange={(e) => setWeightKg(Number(e.target.value))}
+                    onChange={(e) => updateMetricWeight(Number(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -378,21 +436,30 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                 <div className="mt-6 space-y-2.5 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between items-center bg-slate-800/60 p-2 rounded-xl">
                     <span>Mild Weight Loss (-0.25 kg/wk):</span>
-                    <span className="font-mono font-bold text-emerald-400">{Math.round(tdee - 250)} kcal</span>
+                    <span className="font-mono font-bold text-emerald-400">{Math.max(800, Math.round(tdee - 250))} kcal</span>
                   </div>
                   <div className="flex justify-between items-center bg-slate-800/60 p-2 rounded-xl">
                     <span>Standard Weight Loss (-0.5 kg/wk):</span>
-                    <span className="font-mono font-bold text-yellow-400">{Math.round(tdee - 500)} kcal</span>
+                    <span className="font-mono font-bold text-yellow-400">{Math.max(800, Math.round(tdee - 500))} kcal</span>
                   </div>
                   <div className="flex justify-between items-center bg-slate-800/60 p-2 rounded-xl">
                     <span>Fast Weight Loss (-1.0 kg/wk):</span>
-                    <span className="font-mono font-bold text-red-400">{Math.round(tdee - 1000)} kcal</span>
+                    <span className="font-mono font-bold text-red-400">{Math.max(800, Math.round(tdee - 1000))} kcal</span>
                   </div>
                   <div className="flex justify-between items-center bg-slate-800/60 p-2 rounded-xl">
                     <span>Muscle Surplus (+0.25 kg/wk):</span>
                     <span className="font-mono font-bold text-purple-400">{Math.round(tdee + 300)} kcal</span>
                   </div>
                 </div>
+
+                {Math.round(tdee - 1000) < minSafeIntake && (
+                  <div className="mt-4 p-3 bg-red-950/80 border border-red-800 rounded-xl flex items-start gap-2 text-[11px] text-red-300">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <span>
+                      Notice: Calorie targets below {minSafeIntake} kcal/day for {gender}s should only be undertaken under direct clinical guidance.
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
@@ -435,7 +502,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={weightKg}
-                    onChange={(e) => setWeightKg(Number(e.target.value))}
+                    onChange={(e) => updateMetricWeight(Number(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -447,7 +514,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <input
                     type="number"
                     value={heightCm}
-                    onChange={(e) => setHeightCm(Number(e.target.value))}
+                    onChange={(e) => updateMetricHeight(Number(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -488,24 +555,33 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
             <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-400">Estimated Body Fat</span>
-                <div className="text-3xl sm:text-4xl font-black text-violet-400 font-mono mt-1">
-                  {bodyFatPct.toFixed(1)}%
-                </div>
+                {bodyFatError ? (
+                  <div className="mt-3 p-3 bg-red-950/80 border border-red-800 rounded-xl flex items-start gap-2 text-xs text-red-300">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <span>{bodyFatError}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl sm:text-4xl font-black text-violet-400 font-mono mt-1">
+                      {bodyFatPct.toFixed(1)}%
+                    </div>
 
-                <div className="mt-6 space-y-3 text-xs border-t border-slate-800 pt-4">
-                  <div className="flex justify-between text-slate-300">
-                    <span>Total Fat Mass:</span>
-                    <span className="font-mono font-bold text-yellow-400">{fatMassKg.toFixed(1)} kg</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>Lean Body Mass:</span>
-                    <span className="font-mono font-bold text-emerald-400">{leanMassKg.toFixed(1)} kg</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden mt-3 flex">
-                    <div className="bg-yellow-400 h-full" style={{ width: `${bodyFatPct}%` }} />
-                    <div className="bg-emerald-500 h-full flex-1" />
-                  </div>
-                </div>
+                    <div className="mt-6 space-y-3 text-xs border-t border-slate-800 pt-4">
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Fat Mass:</span>
+                        <span className="font-mono font-bold text-yellow-400">{fatMassKg.toFixed(1)} kg</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Lean Body Mass:</span>
+                        <span className="font-mono font-bold text-emerald-400">{leanMassKg.toFixed(1)} kg</span>
+                      </div>
+                      <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden mt-3 flex">
+                        <div className="bg-yellow-400 h-full" style={{ width: `${bodyFatPct}%` }} />
+                        <div className="bg-emerald-500 h-full flex-1" />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
@@ -665,6 +741,10 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <div className="flex justify-between text-slate-300">
                     <span>Miller Formula (1983):</span>
                     <span className="font-mono font-bold text-white">{idealMiller.toFixed(1)} kg</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Hamwi Formula (1964):</span>
+                    <span className="font-mono font-bold text-white">{idealHamwi.toFixed(1)} kg</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span>Healthy WHO BMI Range:</span>

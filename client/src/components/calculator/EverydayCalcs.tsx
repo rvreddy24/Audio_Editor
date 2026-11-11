@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, DollarSign, Scale, ArrowLeft, ArrowRightLeft } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Scale, ArrowLeft, ArrowRightLeft, AlertTriangle } from 'lucide-react';
 import { CalculatorKey } from './types';
 
 interface EverydayCalcsProps {
@@ -8,6 +8,12 @@ interface EverydayCalcsProps {
 }
 
 export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack }) => {
+  // Helper to construct local date without UTC ISO parse shifts
+  const parseLocalDate = (dStr: string) => {
+    const [y, m, d] = dStr.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  };
+
   // 1. AGE CALCULATOR STATE
   const [birthDateStr, setBirthDateStr] = useState<string>('1998-05-15');
   const [targetDateStr, setTargetDateStr] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -39,8 +45,12 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   // -------------------------------------------------------------------
   // 1. AGE CALCULATION
   // -------------------------------------------------------------------
-  const bDate = new Date(birthDateStr);
-  const tDate = new Date(targetDateStr);
+  const bDate = parseLocalDate(birthDateStr);
+  const tDate = parseLocalDate(targetDateStr);
+  const isFutureBirth = tDate.getTime() < bDate.getTime();
+  const isBirthdayToday =
+    bDate.getMonth() === tDate.getMonth() && bDate.getDate() === tDate.getDate() && !isFutureBirth;
+
   let ageYears = tDate.getFullYear() - bDate.getFullYear();
   let ageMonths = tDate.getMonth() - bDate.getMonth();
   let ageDays = tDate.getDate() - bDate.getDate();
@@ -54,29 +64,41 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
     ageYears -= 1;
     ageMonths += 12;
   }
+  if (isFutureBirth) {
+    ageYears = 0;
+    ageMonths = 0;
+    ageDays = 0;
+  }
   const totalDiffMs = Math.max(0, tDate.getTime() - bDate.getTime());
-  const totalDays = Math.floor(totalDiffMs / (1000 * 60 * 60 * 24));
+  const totalDays = Math.round(totalDiffMs / (1000 * 60 * 60 * 24));
   const totalWeeks = Math.floor(totalDays / 7);
   const totalHours = totalDays * 24;
 
-  // Next birthday countdown
+  // Next birthday countdown with Feb 29 handling
   let nextBday = new Date(tDate.getFullYear(), bDate.getMonth(), bDate.getDate());
+  if (bDate.getMonth() === 1 && bDate.getDate() === 29) {
+    const isLeapYear = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+    if (!isLeapYear(tDate.getFullYear())) {
+      nextBday = new Date(tDate.getFullYear(), 2, 1); // March 1st
+    }
+  }
   if (nextBday < tDate) {
     nextBday = new Date(tDate.getFullYear() + 1, bDate.getMonth(), bDate.getDate());
   }
-  const daysToNextBday = Math.ceil((nextBday.getTime() - tDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysToNextBday = Math.max(0, Math.round((nextBday.getTime() - tDate.getTime()) / (1000 * 60 * 60 * 24)));
 
   // -------------------------------------------------------------------
   // 2. DATE DIFFERENCE & ADDITION
   // -------------------------------------------------------------------
-  const d1 = new Date(date1Str);
-  const d2 = new Date(date2Str);
+  const d1 = parseLocalDate(date1Str);
+  const d2 = parseLocalDate(date2Str);
   const diffDays = Math.round(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
   const diffWeeks = (diffDays / 7).toFixed(1);
 
   // Add / Subtract Date
-  const addedDate = new Date(date1Str);
-  addedDate.setDate(addedDate.getDate() + (addMode === 'add' ? addDays : -addDays));
+  const addedDate = parseLocalDate(date1Str);
+  const safeAddDays = Math.abs(addDays) || 0;
+  addedDate.setDate(addedDate.getDate() + (addMode === 'add' ? safeAddDays : -safeAddDays));
   const formattedAddedDate = addedDate.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -91,19 +113,25 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   const [endH, endM] = endTime.split(':').map(Number);
   let durationMins = endH * 60 + endM - (startH * 60 + startM);
   if (durationMins < 0) durationMins += 24 * 60; // Crosses midnight
-  durationMins = Math.max(0, durationMins - breakMinutes);
+  const rawShiftMins = durationMins;
+  const safeBreak = Math.max(0, breakMinutes || 0);
+  const isBreakExceedingShift = safeBreak > rawShiftMins;
+  durationMins = Math.max(0, durationMins - safeBreak);
   const workHours = Math.floor(durationMins / 60);
   const workRemainderMins = durationMins % 60;
   const decimalHours = durationMins / 60;
-  const totalGrossPay = decimalHours * hourlyRate;
+  const totalGrossPay = decimalHours * Math.max(0, hourlyRate || 0);
 
   // -------------------------------------------------------------------
   // 4. TIP CALCULATOR
   // -------------------------------------------------------------------
-  const tipAmount = (billAmount * tipPercent) / 100;
-  const totalBillWithTip = billAmount + tipAmount;
-  const tipPerPerson = tipAmount / Math.max(1, splitCount);
-  const totalPerPerson = totalBillWithTip / Math.max(1, splitCount);
+  const safeBill = Math.max(0, billAmount || 0);
+  const safeTipPct = Math.max(0, tipPercent || 0);
+  const safeSplit = Math.max(1, Math.floor(splitCount) || 1);
+  const tipAmount = (safeBill * safeTipPct) / 100;
+  const totalBillWithTip = safeBill + tipAmount;
+  const tipPerPerson = tipAmount / safeSplit;
+  const totalPerPerson = totalBillWithTip / safeSplit;
 
   // -------------------------------------------------------------------
   // 5. UNIT CONVERTER
@@ -244,28 +272,42 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
             <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-400">Exact Chronological Age</span>
-                <div className="text-3xl sm:text-4xl font-black text-orange-400 font-mono mt-1">
-                  {ageYears} Years, {ageMonths} Months, {ageDays} Days
-                </div>
+                {isFutureBirth ? (
+                  <div className="mt-2 p-3 bg-red-950/80 border border-red-800 rounded-xl flex items-start gap-2 text-xs text-red-300">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <span>Birth date is in the future relative to the target date.</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl sm:text-4xl font-black text-orange-400 font-mono mt-1">
+                      {ageYears} Years, {ageMonths} Months, {ageDays} Days
+                    </div>
+                    {isBirthdayToday && (
+                      <div className="mt-2 text-xs font-bold text-amber-300">
+                        🎉 Happy Birthday today!
+                      </div>
+                    )}
 
-                <div className="mt-6 space-y-2.5 text-xs border-t border-slate-800 pt-4">
-                  <div className="flex justify-between text-slate-300">
-                    <span>Countdown to Next Birthday:</span>
-                    <span className="font-mono font-bold text-emerald-400">{daysToNextBday} days</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>Total Weeks Lived:</span>
-                    <span className="font-mono font-bold text-white">{totalWeeks.toLocaleString()} weeks</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>Total Days Lived:</span>
-                    <span className="font-mono font-bold text-white">{totalDays.toLocaleString()} days</span>
-                  </div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>Total Approximate Hours:</span>
-                    <span className="font-mono font-bold text-white">{totalHours.toLocaleString()} hours</span>
-                  </div>
-                </div>
+                    <div className="mt-6 space-y-2.5 text-xs border-t border-slate-800 pt-4">
+                      <div className="flex justify-between text-slate-300">
+                        <span>Countdown to Next Birthday:</span>
+                        <span className="font-mono font-bold text-emerald-400">{daysToNextBday} days</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Weeks Lived:</span>
+                        <span className="font-mono font-bold text-white">{totalWeeks.toLocaleString()} weeks</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Days Lived:</span>
+                        <span className="font-mono font-bold text-white">{totalDays.toLocaleString()} days</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Approximate Hours:</span>
+                        <span className="font-mono font-bold text-white">{totalHours.toLocaleString()} hours</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
@@ -484,7 +526,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Tip Percentage</label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-2 mb-2">
                   {[10, 15, 18, 20, 25].map((pct) => (
                     <button
                       key={pct}
@@ -498,6 +540,17 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                       {pct}%
                     </button>
                   ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">Custom tip %:</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={tipPercent}
+                    onChange={(e) => setTipPercent(Math.max(0, Number(e.target.value)))}
+                    className="calc-input !w-24 text-xs font-bold py-1"
+                  />
                 </div>
               </div>
 

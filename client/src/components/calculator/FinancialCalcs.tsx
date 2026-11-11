@@ -52,83 +52,133 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
   // -------------------------------------------------------------
 
   // Mortgage Calculation
-  const loanPrincipal = Math.max(0, homePrice - downPayment);
-  const monthlyRate = mortgageRate / 100 / 12;
-  const numPayments = mortgageTermYears * 12;
+  const validHomePrice = Math.max(0, homePrice || 0);
+  const validDownPayment = Math.max(0, downPayment || 0);
+  const loanPrincipal = Math.max(0, validHomePrice - validDownPayment);
+  const validMortgageRate = Math.max(0, mortgageRate || 0);
+  const monthlyRate = validMortgageRate / 100 / 12;
+  const numPayments = Math.max(1, (mortgageTermYears || 30) * 12);
   const monthlyPI =
-    monthlyRate > 0
+    loanPrincipal <= 0
+      ? 0
+      : monthlyRate > 0
       ? (loanPrincipal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments))) /
         (Math.pow(1 + monthlyRate, numPayments) - 1)
       : loanPrincipal / numPayments;
-  const monthlyTax = propertyTaxAnnual / 12;
-  const monthlyInsurance = homeInsuranceAnnual / 12;
+  const monthlyTax = Math.max(0, propertyTaxAnnual || 0) / 12;
+  const monthlyInsurance = Math.max(0, homeInsuranceAnnual || 0) / 12;
   const totalMonthlyMortgage = monthlyPI + monthlyTax + monthlyInsurance;
-  const totalInterestMortgage = monthlyPI * numPayments - loanPrincipal;
-  const totalCostMortgage = monthlyPI * numPayments + downPayment;
+  const totalInterestMortgage = Math.max(0, monthlyPI * numPayments - loanPrincipal);
+  const totalCostMortgage = monthlyPI * numPayments + Math.min(validDownPayment, validHomePrice);
 
   // Loan Calculation
-  const loanMonthlyRate = loanRate / 100 / 12;
+  const validLoanAmount = Math.max(0, loanAmount || 0);
+  const validLoanTerm = Math.max(1, loanTermMonths || 1);
+  const validLoanRate = Math.max(0, loanRate || 0);
+  const loanMonthlyRate = validLoanRate / 100 / 12;
   const monthlyLoanPayment =
-    loanMonthlyRate > 0
-      ? (loanAmount * (loanMonthlyRate * Math.pow(1 + loanMonthlyRate, loanTermMonths))) /
-        (Math.pow(1 + loanMonthlyRate, loanTermMonths) - 1)
-      : loanAmount / loanTermMonths;
-  const totalLoanInterest = monthlyLoanPayment * loanTermMonths - loanAmount;
-  const totalLoanCost = monthlyLoanPayment * loanTermMonths;
+    validLoanAmount <= 0
+      ? 0
+      : loanMonthlyRate > 0
+      ? (validLoanAmount * (loanMonthlyRate * Math.pow(1 + loanMonthlyRate, validLoanTerm))) /
+        (Math.pow(1 + loanMonthlyRate, validLoanTerm) - 1)
+      : validLoanAmount / validLoanTerm;
+  const totalLoanInterest = Math.max(0, monthlyLoanPayment * validLoanTerm - validLoanAmount);
+  const totalLoanCost = monthlyLoanPayment * validLoanTerm;
 
   // Auto Loan Calculation
-  const taxableAmount = Math.max(0, autoPrice - autoTradeIn);
-  const salesTax = (taxableAmount * autoSalesTaxRate) / 100;
-  const totalAutoFinanced = Math.max(0, autoPrice + salesTax - autoDownPayment - autoTradeIn);
-  const autoMonthlyRate = autoRate / 100 / 12;
+  const validAutoPrice = Math.max(0, autoPrice || 0);
+  const validTradeIn = Math.max(0, autoTradeIn || 0);
+  const validAutoDown = Math.max(0, autoDownPayment || 0);
+  const validTaxRate = Math.max(0, autoSalesTaxRate || 0);
+  const validAutoRate = Math.max(0, autoRate || 0);
+  const validAutoTerm = Math.max(1, autoTermMonths || 1);
+
+  const taxableAmount = Math.max(0, validAutoPrice - validTradeIn);
+  const salesTax = (taxableAmount * validTaxRate) / 100;
+  const totalDue = validAutoPrice + salesTax;
+  const effectiveTradeIn = Math.min(validTradeIn, totalDue);
+  const remainingAfterTradeIn = totalDue - effectiveTradeIn;
+  const effectiveDownPayment = Math.min(validAutoDown, remainingAfterTradeIn);
+  const totalAutoFinanced = Math.max(0, remainingAfterTradeIn - effectiveDownPayment);
+
+  const autoMonthlyRate = validAutoRate / 100 / 12;
   const monthlyAutoPayment =
-    autoMonthlyRate > 0
-      ? (totalAutoFinanced * (autoMonthlyRate * Math.pow(1 + autoMonthlyRate, autoTermMonths))) /
-        (Math.pow(1 + autoMonthlyRate, autoTermMonths) - 1)
-      : totalAutoFinanced / autoTermMonths;
-  const totalAutoInterest = monthlyAutoPayment * autoTermMonths - totalAutoFinanced;
-  const totalAutoCost = autoDownPayment + autoTradeIn + monthlyAutoPayment * autoTermMonths;
+    totalAutoFinanced <= 0
+      ? 0
+      : autoMonthlyRate > 0
+      ? (totalAutoFinanced * (autoMonthlyRate * Math.pow(1 + autoMonthlyRate, validAutoTerm))) /
+        (Math.pow(1 + autoMonthlyRate, validAutoTerm) - 1)
+      : totalAutoFinanced / validAutoTerm;
+  const totalAutoInterest = Math.max(0, monthlyAutoPayment * validAutoTerm - totalAutoFinanced);
+  const totalAutoCost = effectiveDownPayment + effectiveTradeIn + totalAutoFinanced + totalAutoInterest;
 
   // Compound Interest Calculation
-  let totalInvestmentValue = initialPrincipal;
-  let totalDeposits = initialPrincipal;
-  const monthlyInvRate = annualReturn / 100 / 12;
-  for (let m = 1; m <= investmentYears * 12; m++) {
-    totalInvestmentValue = (totalInvestmentValue + monthlyContribution) * (1 + monthlyInvRate);
-    totalDeposits += monthlyContribution;
+  const validPrincipal = Math.max(0, initialPrincipal || 0);
+  const validContribution = Math.max(0, monthlyContribution || 0);
+  const validYears = Math.max(0, investmentYears || 0);
+  const numInvMonths = Math.round(validYears * 12);
+  const monthlyInvRate = Math.max(0, annualReturn || 0) / 100 / 12;
+  const totalDeposits = validPrincipal + validContribution * numInvMonths;
+  let totalInvestmentValue = validPrincipal;
+  if (numInvMonths > 0) {
+    if (monthlyInvRate === 0) {
+      totalInvestmentValue = totalDeposits;
+    } else {
+      totalInvestmentValue =
+        validPrincipal * Math.pow(1 + monthlyInvRate, numInvMonths) +
+        validContribution *
+          ((Math.pow(1 + monthlyInvRate, numInvMonths) - 1) / monthlyInvRate) *
+          (1 + monthlyInvRate);
+    }
   }
   const totalInvestmentInterest = Math.max(0, totalInvestmentValue - totalDeposits);
 
   // Retirement Calculation
-  const yearsToRetire = Math.max(1, retireAge - currentAge);
-  let retirementNestEgg = currentSavings;
-  let totalRetirementContributed = currentSavings;
-  const retAnnualRate = retireReturn / 100;
-  for (let y = 1; y <= yearsToRetire; y++) {
-    retirementNestEgg = (retirementNestEgg + annualSavings) * (1 + retAnnualRate);
-    totalRetirementContributed += annualSavings;
+  const validCurrentAge = Math.max(0, currentAge || 0);
+  const validRetireAge = Math.max(0, retireAge || 0);
+  const yearsToRetire = Math.max(0, validRetireAge - validCurrentAge);
+  const validCurrentSavings = Math.max(0, currentSavings || 0);
+  const validAnnualSavings = Math.max(0, annualSavings || 0);
+  const retAnnualRate = Math.max(0, retireReturn || 0) / 100;
+  const totalRetirementContributed = validCurrentSavings + validAnnualSavings * yearsToRetire;
+  let retirementNestEgg = validCurrentSavings;
+  if (yearsToRetire > 0) {
+    if (retAnnualRate === 0) {
+      retirementNestEgg = totalRetirementContributed;
+    } else {
+      retirementNestEgg =
+        validCurrentSavings * Math.pow(1 + retAnnualRate, yearsToRetire) +
+        validAnnualSavings *
+          ((Math.pow(1 + retAnnualRate, yearsToRetire) - 1) / retAnnualRate) *
+          (1 + retAnnualRate);
+    }
   }
   // 4% safe withdrawal rule
   const safeMonthlyRetireIncome = (retirementNestEgg * 0.04) / 12;
 
   // Salary Conversion
-  let annualVal = salaryAmount;
+  const validHours = Math.max(1, hoursPerWeek || 0);
+  const validSalary = Math.max(0, salaryAmount || 0);
+  let annualVal = validSalary;
   let hourlyVal = 0;
   if (salaryMode === 'annual') {
-    hourlyVal = salaryAmount / (hoursPerWeek * 52);
+    hourlyVal = validSalary / (validHours * 52);
   } else {
-    hourlyVal = salaryAmount;
-    annualVal = salaryAmount * hoursPerWeek * 52;
+    hourlyVal = validSalary;
+    annualVal = validSalary * validHours * 52;
   }
   const monthlySalary = annualVal / 12;
   const biWeeklySalary = annualVal / 26;
   const weeklySalary = annualVal / 52;
-  const dailySalary = annualVal / 260; // 5 days/wk
+  const dailySalary = hourlyVal * 8;
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(
+  const formatCurrency = (n: number) => {
+    if (!Number.isFinite(n) || isNaN(n)) return '$0';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(
       Math.round(n)
     );
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -543,13 +593,31 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden mt-3 flex">
                     <div
                       className="bg-purple-500 h-full"
-                      style={{ width: `${Math.min(100, (totalDeposits / totalInvestmentValue) * 100)}%` }}
+                      style={{
+                        width: `${
+                          totalInvestmentValue > 0
+                            ? Math.min(100, (totalDeposits / totalInvestmentValue) * 100)
+                            : 100
+                        }%`,
+                      }}
                     />
                     <div className="bg-emerald-400 h-full flex-1" />
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-400">
-                    <span>■ Principal ({Math.round((totalDeposits / totalInvestmentValue) * 100)}%)</span>
-                    <span>■ Interest Earned ({Math.round((totalInvestmentInterest / totalInvestmentValue) * 100)}%)</span>
+                    <span>
+                      ■ Principal (
+                      {totalInvestmentValue > 0
+                        ? Math.round((totalDeposits / totalInvestmentValue) * 100)
+                        : 100}
+                      %)
+                    </span>
+                    <span>
+                      ■ Interest Earned (
+                      {totalInvestmentValue > 0
+                        ? Math.round((totalInvestmentInterest / totalInvestmentValue) * 100)
+                        : 0}
+                      %)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -684,7 +752,12 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 <label className="block text-xs font-bold text-slate-700 mb-1">Pay Input Mode</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => setSalaryMode('annual')}
+                    onClick={() => {
+                      if (salaryMode !== 'annual') {
+                        setSalaryMode('annual');
+                        setSalaryAmount(Math.round(salaryAmount * (hoursPerWeek || 40) * 52));
+                      }
+                    }}
                     className={`py-2 text-xs font-bold rounded-xl border transition-all ${
                       salaryMode === 'annual'
                         ? 'bg-rose-50 text-rose-700 border-rose-300'
@@ -694,7 +767,12 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     Annual Salary ($)
                   </button>
                   <button
-                    onClick={() => setSalaryMode('hourly')}
+                    onClick={() => {
+                      if (salaryMode !== 'hourly') {
+                        setSalaryMode('hourly');
+                        setSalaryAmount(Math.round((salaryAmount / ((hoursPerWeek || 40) * 52)) * 100) / 100);
+                      }
+                    }}
                     className={`py-2 text-xs font-bold rounded-xl border transition-all ${
                       salaryMode === 'hourly'
                         ? 'bg-rose-50 text-rose-700 border-rose-300'

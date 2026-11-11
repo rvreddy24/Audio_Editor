@@ -14,9 +14,18 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [shouldResetDisplay, setShouldResetDisplay] = useState<boolean>(false);
 
+  // Sanitize math expression for evaluation
+  const sanitizeExpr = (expr: string) => {
+    return expr
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/\^/g, '**')
+      .replace(/(^|[+\-*/\s(])(-\d+(?:\.\d+)?)\s*\*\*/g, '$1($2)**');
+  };
+
   // Handle number click
   const handleDigit = (digit: string) => {
-    if (shouldResetDisplay || display === '0' || display === 'Error') {
+    if (shouldResetDisplay || display === '0' || display === '-0' || display === 'Error') {
       setDisplay(digit);
       setShouldResetDisplay(false);
     } else {
@@ -25,7 +34,7 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
   };
 
   const handleDecimal = () => {
-    if (shouldResetDisplay) {
+    if (shouldResetDisplay || display === 'Error') {
       setDisplay('0.');
       setShouldResetDisplay(false);
       return;
@@ -42,14 +51,35 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
   };
 
   const handleDelete = () => {
-    if (display.length > 1 && display !== 'Error') {
-      setDisplay(display.slice(0, -1));
+    if (display !== 'Error' && display.length > 1) {
+      const sliced = display.slice(0, -1);
+      setDisplay(sliced === '-' ? '0' : sliced);
     } else {
       setDisplay('0');
     }
   };
 
   const handleOperator = (op: string) => {
+    if (display === 'Error') return;
+
+    // If an operation is already pending and user entered a new number, evaluate first
+    if (equation && !shouldResetDisplay) {
+      try {
+        const fullExpr = equation + display;
+        const sanitized = sanitizeExpr(fullExpr);
+        const res = Function(`'use strict'; return (${sanitized})`)();
+        if (Number.isFinite(res)) {
+          const formatted = String(Math.round(res * 1e12) / 1e12);
+          setDisplay(formatted);
+          setEquation(`${formatted} ${op} `);
+          setShouldResetDisplay(true);
+          return;
+        }
+      } catch {
+        // Fall through on syntax error
+      }
+    }
+
     setEquation(`${display} ${op} `);
     setShouldResetDisplay(true);
   };
@@ -58,11 +88,7 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
     if (!equation) return;
     try {
       const fullExpression = equation + display;
-      // Sanitize expression for JS eval
-      const sanitized = fullExpression
-        .replace(/×/g, '*')
-        .replace(/÷/g, '/')
-        .replace(/\^/g, '**');
+      const sanitized = sanitizeExpr(fullExpression);
 
       // Safely evaluate simple math expressions
       const result = Function(`'use strict'; return (${sanitized})`)();
@@ -96,7 +122,11 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
         res = Math.cos(isRad ? val : toRad(val));
         break;
       case 'tan':
-        res = Math.tan(isRad ? val : toRad(val));
+        if (!isRad && Math.abs(val % 180) === 90) {
+          res = NaN;
+        } else {
+          res = Math.tan(isRad ? val : toRad(val));
+        }
         break;
       case 'asin':
         res = isRad ? Math.asin(val) : toDeg(Math.asin(val));
@@ -123,16 +153,22 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
         res = 1 / val;
         break;
       case 'fact':
-        if (val < 0 || !Number.isInteger(val)) {
+        if (val < 0 || !Number.isInteger(val) || val > 170) {
           setDisplay('Error');
+          setShouldResetDisplay(true);
           return;
         }
         res = 1;
-        for (let i = 2; i <= Math.min(val, 170); i++) res *= i;
+        for (let i = 2; i <= val; i++) res *= i;
         break;
       case 'plusminus':
-        res = -val;
-        break;
+        if (display === 'Error') return;
+        if (display.startsWith('-')) {
+          setDisplay(display.slice(1) || '0');
+        } else if (display !== '0') {
+          setDisplay('-' + display);
+        }
+        return;
       case 'pi':
         res = Math.PI;
         break;

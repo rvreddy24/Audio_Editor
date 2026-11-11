@@ -34,38 +34,56 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
   const [randMax, setRandMax] = useState<number>(100);
   const [randCount, setRandCount] = useState<number>(5);
   const [randUnique, setRandUnique] = useState<boolean>(true);
+  const [randSorted, setRandSorted] = useState<boolean>(false);
   const [randResults, setRandResults] = useState<number[]>([14, 27, 42, 68, 91]);
+  const [copied, setCopied] = useState<boolean>(false);
 
   // Percentage Calculations
-  const r1 = (p1Pct / 100) * p1Num;
-  const r2 = p2Total !== 0 ? (p2Num / p2Total) * 100 : 0;
+  const r1 = ((p1Pct || 0) / 100) * (p1Num || 0);
+  const r2Valid = p2Total !== 0;
+  const r2 = r2Valid ? ((p2Num || 0) / p2Total) * 100 : 0;
   const r3Diff = p3To - p3From;
-  const r3Pct = p3From !== 0 ? (r3Diff / Math.abs(p3From)) * 100 : 0;
+  const r3Valid = p3From !== 0;
+  const r3Pct = r3Valid ? (r3Diff / Math.abs(p3From)) * 100 : 0;
 
   // Fraction Calculations
   const gcd = (a: number, b: number): number => (b === 0 ? Math.abs(a) : gcd(b, a % b));
   let resNum = 0;
   let resDen = 1;
-  if (fractionOp === '+') {
-    resNum = f1Num * f2Den + f2Num * f1Den;
-    resDen = f1Den * f2Den;
-  } else if (fractionOp === '-') {
-    resNum = f1Num * f2Den - f2Num * f1Den;
-    resDen = f1Den * f2Den;
-  } else if (fractionOp === '×') {
-    resNum = f1Num * f2Num;
-    resDen = f1Den * f2Den;
-  } else if (fractionOp === '÷') {
-    resNum = f1Num * f2Den;
-    resDen = f1Den * f2Num;
+  const isDivByZero = f1Den === 0 || f2Den === 0 || (fractionOp === '÷' && f2Num === 0);
+
+  if (!isDivByZero) {
+    if (fractionOp === '+') {
+      resNum = f1Num * f2Den + f2Num * f1Den;
+      resDen = f1Den * f2Den;
+    } else if (fractionOp === '-') {
+      resNum = f1Num * f2Den - f2Num * f1Den;
+      resDen = f1Den * f2Den;
+    } else if (fractionOp === '×') {
+      resNum = f1Num * f2Num;
+      resDen = f1Den * f2Den;
+    } else if (fractionOp === '÷') {
+      resNum = f1Num * f2Den;
+      resDen = f1Den * f2Num;
+    }
   }
-  const divisor = resDen !== 0 ? gcd(resNum, resDen) : 1;
-  const simplifiedNum = resNum / (divisor || 1);
-  const simplifiedDen = resDen / (divisor || 1);
-  const decimalVal = resDen !== 0 ? resNum / resDen : 0;
+
+  if (resDen < 0) {
+    resNum = -resNum;
+    resDen = -resDen;
+  }
+
+  const divisor = !isDivByZero && resDen !== 0 ? gcd(resNum, resDen) : 1;
+  const simplifiedNum = !isDivByZero ? resNum / (divisor || 1) : 0;
+  const simplifiedDen = !isDivByZero ? resDen / (divisor || 1) : 0;
+  const decimalVal = !isDivByZero && resDen !== 0 ? resNum / resDen : 0;
+
   // Mixed fraction
-  const wholePart = Math.floor(Math.abs(simplifiedNum) / Math.abs(simplifiedDen));
-  const remainderNum = Math.abs(simplifiedNum) % Math.abs(simplifiedDen);
+  const isNegative = simplifiedNum < 0;
+  const absNum = Math.abs(simplifiedNum);
+  const absDen = Math.abs(simplifiedDen);
+  const wholePart = absDen !== 0 ? Math.floor(absNum / absDen) : 0;
+  const remainderNum = absDen !== 0 ? absNum % absDen : 0;
 
   // Statistics Calculations
   const numbers = datasetText
@@ -85,20 +103,40 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
   // Variance & Standard Deviation
   const variancePop = count > 0 ? numbers.reduce((acc, x) => acc + Math.pow(x - mean, 2), 0) / count : 0;
   const sdPop = Math.sqrt(variancePop);
-  const varianceSample = count > 1 ? numbers.reduce((acc, x) => acc + Math.pow(x - mean, 2), 0) / (count - 1) : 0;
-  const sdSample = Math.sqrt(varianceSample);
+  const varianceSample = count > 1 ? numbers.reduce((acc, x) => acc + Math.pow(x - mean, 2), 0) / (count - 1) : null;
+  const sdSample = varianceSample !== null ? Math.sqrt(varianceSample) : null;
   const minVal = count > 0 ? Math.min(...numbers) : 0;
   const maxVal = count > 0 ? Math.max(...numbers) : 0;
 
   // Random generation
   const handleGenerateRandom = () => {
-    const poolSize = randMax - randMin + 1;
-    const countToGen = randUnique ? Math.min(randCount, Math.max(1, poolSize)) : randCount;
+    const effectiveMin = Math.min(randMin, randMax);
+    const effectiveMax = Math.max(randMin, randMax);
+    const poolSize = effectiveMax - effectiveMin + 1;
+    const safeCount = Math.max(1, Math.min(randCount || 1, 100));
+    const countToGen = randUnique ? Math.min(safeCount, poolSize) : safeCount;
     const generated: number[] = [];
     const used = new Set<number>();
 
+    const getCryptoInt = (min: number, max: number): number => {
+      const range = max - min + 1;
+      if (range <= 1) return min;
+      if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+        const arr = new Uint32Array(1);
+        const maxUint = 0xffffffff;
+        const limit = maxUint - (maxUint % range);
+        let r: number;
+        do {
+          window.crypto.getRandomValues(arr);
+          r = arr[0];
+        } while (r >= limit);
+        return min + (r % range);
+      }
+      return Math.floor(Math.random() * range) + min;
+    };
+
     while (generated.length < countToGen) {
-      const val = Math.floor(Math.random() * (randMax - randMin + 1)) + randMin;
+      const val = getCryptoInt(effectiveMin, effectiveMax);
       if (randUnique) {
         if (!used.has(val)) {
           used.add(val);
@@ -107,6 +145,9 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
       } else {
         generated.push(val);
       }
+    }
+    if (randSorted) {
+      generated.sort((a, b) => a - b);
     }
     setRandResults(generated);
   };
@@ -212,10 +253,18 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               <span className="text-sm font-semibold text-slate-700">=</span>
               <div
                 className={`px-4 py-2 font-mono font-bold text-base rounded-xl ${
-                  r3Pct >= 0 ? 'bg-emerald-950 text-emerald-400' : 'bg-red-950 text-red-400'
+                  !r3Valid
+                    ? 'bg-slate-800 text-slate-400'
+                    : r3Pct >= 0
+                    ? 'bg-emerald-950 text-emerald-400'
+                    : 'bg-red-950 text-red-400'
                 }`}
               >
-                {r3Pct >= 0 ? `+${r3Pct.toFixed(2)}% Increase` : `${r3Pct.toFixed(2)}% Decrease`}
+                {!r3Valid
+                  ? 'Undefined (Base is 0)'
+                  : r3Pct >= 0
+                  ? `+${r3Pct.toFixed(2)}% Increase`
+                  : `${Math.abs(r3Pct).toFixed(2)}% Decrease`}
               </div>
             </div>
           </div>
@@ -289,27 +338,38 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
             <div className="bg-slate-900 rounded-2xl p-6 text-white text-center flex flex-col justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-400">Simplified Fraction</span>
-                <div className="flex items-center justify-center gap-3 my-4">
-                  {wholePart > 0 && remainderNum > 0 && (
-                    <span className="text-3xl font-black text-slate-300 font-mono">{wholePart}</span>
-                  )}
-                  <div className="flex flex-col items-center">
-                    <span className="text-2xl font-black text-purple-400 font-mono">
-                      {wholePart > 0 && remainderNum > 0 ? remainderNum : simplifiedNum}
-                    </span>
-                    <div className="w-12 h-0.5 bg-slate-600 my-1" />
-                    <span className="text-2xl font-black text-purple-400 font-mono">{simplifiedDen}</span>
+                {isDivByZero ? (
+                  <div className="py-6 text-red-400 font-bold text-base">
+                    Undefined (Division by zero)
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-center gap-3 my-4">
+                      {isNegative && <span className="text-3xl font-black text-purple-400 font-mono">−</span>}
+                      {wholePart > 0 && (
+                        <span className="text-3xl font-black text-slate-300 font-mono">{wholePart}</span>
+                      )}
+                      {!(wholePart > 0 && remainderNum === 0) && (
+                        <div className="flex flex-col items-center">
+                          <span className="text-2xl font-black text-purple-400 font-mono">
+                            {wholePart > 0 ? remainderNum : absNum}
+                          </span>
+                          <div className="w-12 h-0.5 bg-slate-600 my-1" />
+                          <span className="text-2xl font-black text-purple-400 font-mono">{absDen}</span>
+                        </div>
+                      )}
+                    </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-800 text-xs flex justify-between text-slate-300">
-                  <span>Decimal Representation:</span>
-                  <span className="font-mono font-bold text-white text-sm">{decimalVal.toFixed(4)}</span>
-                </div>
+                    <div className="mt-4 pt-4 border-t border-slate-800 text-xs flex justify-between text-slate-300">
+                      <span>Decimal Representation:</span>
+                      <span className="font-mono font-bold text-white text-sm">{decimalVal.toFixed(4)}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
-                Greatest Common Divisor (GCD): {divisor}
+                Greatest Common Divisor (GCD): {!isDivByZero ? divisor : 'N/A'}
               </div>
             </div>
           </div>
@@ -349,23 +409,29 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between pb-2 border-b border-slate-800">
                   <span className="text-slate-400">Sample Std Dev (s):</span>
-                  <span className="font-mono font-bold text-blue-400 text-sm">{sdSample.toFixed(4)}</span>
+                  <span className="font-mono font-bold text-blue-400 text-sm">
+                    {sdSample !== null ? sdSample.toFixed(4) : count < 2 ? 'Undefined (N < 2)' : 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between pb-2 border-b border-slate-800">
                   <span className="text-slate-400">Population Std Dev (σ):</span>
-                  <span className="font-mono font-bold text-emerald-400 text-sm">{sdPop.toFixed(4)}</span>
+                  <span className="font-mono font-bold text-emerald-400 text-sm">
+                    {count > 0 ? sdPop.toFixed(4) : 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Arithmetic Mean (Average):</span>
-                  <span className="font-mono font-bold text-white">{mean.toFixed(2)}</span>
+                  <span className="font-mono font-bold text-white">{count > 0 ? mean.toFixed(2) : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Median:</span>
-                  <span className="font-mono font-bold text-white">{median.toFixed(2)}</span>
+                  <span className="font-mono font-bold text-white">{count > 0 ? median.toFixed(2) : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Sample Variance (s²):</span>
-                  <span className="font-mono font-bold text-white">{varianceSample.toFixed(4)}</span>
+                  <span className="font-mono font-bold text-white">
+                    {varianceSample !== null ? varianceSample.toFixed(4) : count < 2 ? 'Undefined (N < 2)' : 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Range (Max − Min):</span>
@@ -435,15 +501,26 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 />
               </div>
 
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={randUnique}
-                  onChange={(e) => setRandUnique(e.target.checked)}
-                  className="w-4 h-4 rounded text-emerald-600"
-                />
-                <span>Generate Unique Numbers (No Duplicates)</span>
-              </label>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={randUnique}
+                    onChange={(e) => setRandUnique(e.target.checked)}
+                    className="w-4 h-4 rounded text-emerald-600"
+                  />
+                  <span>Generate Unique Numbers (No Duplicates)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={randSorted}
+                    onChange={(e) => setRandSorted(e.target.checked)}
+                    className="w-4 h-4 rounded text-emerald-600"
+                  />
+                  <span>Sort Results Ascending</span>
+                </label>
+              </div>
 
               <button
                 onClick={handleGenerateRandom}
@@ -456,7 +533,22 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
 
             <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-400">Generated Results</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-400">Generated Results</span>
+                  {randResults.length > 0 && (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(randResults.join(', '));
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copied ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2.5 my-4">
                   {randResults.map((num, idx) => (
                     <div
@@ -470,7 +562,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4 border-t border-slate-800 pt-3 flex justify-between">
-                <span>Range: [{randMin}, {randMax}]</span>
+                <span>Range: [{Math.min(randMin, randMax)}, {Math.max(randMin, randMax)}]</span>
                 <span>Count: {randResults.length}</span>
               </div>
             </div>

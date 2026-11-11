@@ -100,10 +100,13 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ activeCalc, onSele
   // Filtered calculators
   const filteredCalcs = ALL_CALCULATORS.filter((c) => {
     const matchesCategory = selectedCategory === 'all' || c.category === selectedCategory;
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      searchQuery === '' ||
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.shortDesc.toLowerCase().includes(searchQuery.toLowerCase());
+      q === '' ||
+      c.name.toLowerCase().includes(q) ||
+      c.shortDesc.toLowerCase().includes(q) ||
+      c.category.toLowerCase().includes(q) ||
+      (c.badge && c.badge.toLowerCase().includes(q));
     return matchesCategory && matchesSearch;
   });
 
