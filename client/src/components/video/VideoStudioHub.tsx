@@ -103,6 +103,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
   } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const bgVideoRef = useRef<HTMLVideoElement>(null);
 
   // Load video file
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,11 +164,17 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
     const t = videoRef.current.currentTime;
     setCurrentTime(t);
 
+    if (bgVideoRef.current && Math.abs(bgVideoRef.current.currentTime - t) > 0.2) {
+      bgVideoRef.current.currentTime = t;
+    }
+
     if (isLoopingRange && trimEnd > trimStart) {
       if (t >= trimEnd || t < trimStart) {
         videoRef.current.currentTime = trimStart;
+        if (bgVideoRef.current) bgVideoRef.current.currentTime = trimStart;
         if (!isPlaying) {
           videoRef.current.play();
+          bgVideoRef.current?.play().catch(() => {});
           setIsPlaying(true);
         }
       }
@@ -178,12 +185,15 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
     if (!videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
+      bgVideoRef.current?.pause();
       setIsPlaying(false);
     } else {
       if (currentTime >= trimEnd && trimEnd > trimStart) {
         videoRef.current.currentTime = trimStart;
+        if (bgVideoRef.current) bgVideoRef.current.currentTime = trimStart;
       }
       videoRef.current.play();
+      bgVideoRef.current?.play().catch(() => {});
       setIsPlaying(true);
     }
   };
@@ -192,6 +202,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
     if (!videoRef.current) return;
     const clamped = Math.max(0, Math.min(duration, time));
     videoRef.current.currentTime = clamped;
+    if (bgVideoRef.current) bgVideoRef.current.currentTime = clamped;
     setCurrentTime(clamped);
   };
 
@@ -203,6 +214,9 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.playbackRate = speed;
+    }
+    if (bgVideoRef.current) {
+      bgVideoRef.current.playbackRate = speed;
     }
   }, [speed]);
 
@@ -264,6 +278,41 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
     if (aspectRatio === '4:5') return '4 / 5';
     if (aspectRatio === '21:9') return '21 / 9';
     return undefined;
+  };
+
+  const getContainerStyle = (): React.CSSProperties => {
+    let ratioStr = getContainerAspectRatio();
+    let numRatio = 16 / 9;
+
+    if (aspectRatio === '9:16') {
+      ratioStr = '9 / 16';
+      numRatio = 9 / 16;
+    } else if (aspectRatio === '4:5') {
+      ratioStr = '4 / 5';
+      numRatio = 4 / 5;
+    } else if (aspectRatio === '1:1') {
+      ratioStr = '1 / 1';
+      numRatio = 1;
+    } else if (aspectRatio === '16:9') {
+      ratioStr = '16 / 9';
+      numRatio = 16 / 9;
+    } else if (aspectRatio === '21:9') {
+      ratioStr = '21 / 9';
+      numRatio = 21 / 9;
+    } else if (videoInfo && videoInfo.width && videoInfo.height) {
+      ratioStr = `${videoInfo.width} / ${videoInfo.height}`;
+      numRatio = videoInfo.width / videoInfo.height;
+    }
+
+    const maxWidthFromHeight = `calc(460px * ${numRatio})`;
+
+    return {
+      aspectRatio: ratioStr,
+      maxHeight: '460px',
+      maxWidth: '100%',
+      width: `min(100%, ${maxWidthFromHeight})`,
+      height: 'auto',
+    };
   };
 
   // Execute processing via backend FFmpeg
@@ -478,69 +527,65 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
           <div className="lg:col-span-7 space-y-4">
             {/* Video Viewport Container with Live Framing */}
             <div className="bg-slate-950 rounded-3xl p-3 sm:p-4 shadow-md border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden">
-              <div
-                className="w-full max-h-[460px] flex items-center justify-center relative overflow-hidden rounded-2xl transition-all duration-300 bg-slate-900"
-                style={{
-                  aspectRatio: getContainerAspectRatio(),
-                }}
-              >
-                {/* Background blurred duplicate layer for 'fit-blur' mode */}
-                {aspectRatio !== 'original' && aspectMode === 'fit-blur' && (
+              <div className="w-full h-[460px] max-h-[460px] flex items-center justify-center relative overflow-hidden rounded-2xl transition-all duration-300 bg-slate-900">
+                <div
+                  className="h-full max-h-full max-w-full flex items-center justify-center relative overflow-hidden rounded-xl transition-all duration-300"
+                  style={getContainerStyle()}
+                >
+                  {/* Background blurred duplicate layer for 'fit-blur' mode */}
+                  {aspectRatio !== 'original' && aspectMode === 'fit-blur' && (
+                    <video
+                      ref={bgVideoRef}
+                      src={videoInfo.objectUrl}
+                      className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-60 scale-125 pointer-events-none select-none"
+                      muted
+                      playsInline
+                    />
+                  )}
+
+                  {/* Main Foreground Video */}
                   <video
+                    ref={videoRef}
                     src={videoInfo.objectUrl}
-                    className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-60 scale-125 pointer-events-none select-none"
-                    muted
-                    playsInline
-                    ref={(el) => {
-                      if (el && videoRef.current) {
-                        el.currentTime = videoRef.current.currentTime;
-                      }
-                    }}
-                  />
-                )}
-
-                {/* Main Foreground Video */}
-                <video
-                  ref={videoRef}
-                  src={videoInfo.objectUrl}
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={() => setIsPlaying(false)}
-                  className={`w-full h-full rounded-xl select-none transition-all duration-200 relative z-10 ${
-                    aspectRatio !== 'original' && aspectMode === 'crop'
-                      ? 'object-cover'
-                      : 'object-contain'
-                  }`}
-                  style={{
-                    objectPosition:
+                    onTimeUpdate={handleTimeUpdate}
+                    onEnded={() => setIsPlaying(false)}
+                    className={`w-full h-full rounded-xl select-none transition-all duration-200 relative z-10 ${
                       aspectRatio !== 'original' && aspectMode === 'crop'
-                        ? `${panX}% ${panY}%`
-                        : 'center',
-                    filter: getCssFilter(),
-                    transform: getCssTransform(),
-                  }}
-                  playsInline
-                />
-
-                {/* Text Watermark Live Preview Overlay */}
-                {watermarkText.trim() && (
-                  <div
-                    className={`absolute pointer-events-none p-3 z-20 ${
-                      watermarkPosition === 'top-left'
-                        ? 'top-2 left-2'
-                        : watermarkPosition === 'top-right'
-                        ? 'top-2 right-2'
-                        : watermarkPosition === 'bottom-left'
-                        ? 'bottom-2 left-2'
-                        : watermarkPosition === 'center'
-                        ? 'inset-0 flex items-center justify-center'
-                        : 'bottom-2 right-2'
+                        ? 'object-cover'
+                        : 'object-contain'
                     }`}
-                  >
-                    <span className="bg-black/60 backdrop-blur-xs text-white text-xs font-bold px-2.5 py-1 rounded-md border border-white/20 shadow-sm">
-                      {watermarkText.trim()}
-                    </span>
-                  </div>
-                )}
+                    style={{
+                      objectPosition:
+                        aspectRatio !== 'original' && aspectMode === 'crop'
+                          ? `${panX}% ${panY}%`
+                          : 'center',
+                      filter: getCssFilter(),
+                      transform: getCssTransform(),
+                    }}
+                    playsInline
+                  />
+
+                  {/* Text Watermark Live Preview Overlay */}
+                  {watermarkText.trim() && (
+                    <div
+                      className={`absolute pointer-events-none p-3 z-20 ${
+                        watermarkPosition === 'top-left'
+                          ? 'top-2 left-2'
+                          : watermarkPosition === 'top-right'
+                          ? 'top-2 right-2'
+                          : watermarkPosition === 'bottom-left'
+                          ? 'bottom-2 left-2'
+                          : watermarkPosition === 'center'
+                          ? 'inset-0 flex items-center justify-center'
+                          : 'bottom-2 right-2'
+                      }`}
+                    >
+                      <span className="bg-black/60 backdrop-blur-xs text-white text-xs font-bold px-2.5 py-1 rounded-md border border-white/20 shadow-sm">
+                        {watermarkText.trim()}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Viewport Playhead Readout Bar */}
@@ -887,49 +932,99 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
 
                     {/* 3. Horizontal Pan Slider (When in Crop to Fill mode) */}
                     {aspectMode === 'crop' && (
-                      <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                          <span>Horizontal Framing (Pan Left / Right)</span>
-                          <span className="font-mono text-rose-600 text-[11px]">
-                            {panX === 50 ? 'Centered (50%)' : panX < 50 ? `Left (${panX}%)` : `Right (${panX}%)`}
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          step="1"
-                          value={panX}
-                          onChange={(e) => setPanX(parseInt(e.target.value, 10))}
-                          className="w-full accent-rose-600 cursor-pointer"
-                        />
+                      <div className="space-y-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                        {/* Horizontal Pan X */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                            <span>Horizontal Framing (Pan Left / Right)</span>
+                            <span className="font-mono text-rose-600 text-[11px]">
+                              {panX === 50 ? 'Centered (50%)' : panX < 50 ? `Left (${panX}%)` : `Right (${panX}%)`}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value={panX}
+                            onChange={(e) => setPanX(parseInt(e.target.value, 10))}
+                            className="w-full accent-rose-600 cursor-pointer"
+                          />
 
-                        {/* Quick pan presets */}
-                        <div className="grid grid-cols-3 gap-1.5 pt-1">
-                          <button
-                            onClick={() => setPanX(0)}
-                            className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
-                              panX === 0 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                            }`}
-                          >
-                            ◀ Left (0%)
-                          </button>
-                          <button
-                            onClick={() => setPanX(50)}
-                            className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
-                              panX === 50 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                            }`}
-                          >
-                            ● Center (50%)
-                          </button>
-                          <button
-                            onClick={() => setPanX(100)}
-                            className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
-                              panX === 100 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                            }`}
-                          >
-                            ▶ Right (100%)
-                          </button>
+                          {/* Quick pan presets */}
+                          <div className="grid grid-cols-3 gap-1.5 pt-1">
+                            <button
+                              onClick={() => setPanX(0)}
+                              className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                                panX === 0 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              ◀ Left (0%)
+                            </button>
+                            <button
+                              onClick={() => setPanX(50)}
+                              className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                                panX === 50 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              ● Center (50%)
+                            </button>
+                            <button
+                              onClick={() => setPanX(100)}
+                              className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                                panX === 100 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              ▶ Right (100%)
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Vertical Pan Y */}
+                        <div className="space-y-2 pt-3 border-t border-slate-200/60">
+                          <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                            <span>Vertical Framing (Pan Top / Bottom)</span>
+                            <span className="font-mono text-rose-600 text-[11px]">
+                              {panY === 50 ? 'Centered (50%)' : panY < 50 ? `Top (${panY}%)` : `Bottom (${panY}%)`}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value={panY}
+                            onChange={(e) => setPanY(parseInt(e.target.value, 10))}
+                            className="w-full accent-rose-600 cursor-pointer"
+                          />
+
+                          {/* Quick vertical presets */}
+                          <div className="grid grid-cols-3 gap-1.5 pt-1">
+                            <button
+                              onClick={() => setPanY(0)}
+                              className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                                panY === 0 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              ▲ Top (0%)
+                            </button>
+                            <button
+                              onClick={() => setPanY(50)}
+                              className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                                panY === 50 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              ● Center (50%)
+                            </button>
+                            <button
+                              onClick={() => setPanY(100)}
+                              className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                                panY === 100 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              ▼ Bottom (100%)
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}

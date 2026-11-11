@@ -534,12 +534,13 @@ app.post('/api/merge', upload.array('files', 20), async (req, res) => {
       ffmpegArgs.push('-filter_complex', `acrossfade=d=${crossfadeDuration}:c1=tri:c2=tri`);
       ffmpegArgs.push(...codecArgs, outputPath);
     } else {
-      // Sequential concat using concat filter
+      // Sequential concat using concat filter with resampled audio to prevent layout/rate mismatch
       for (const f of filesToMerge) {
         ffmpegArgs.push('-i', f);
       }
-      const streamInputs = filesToMerge.map((_, i) => `[${i}:a]`).join('');
-      ffmpegArgs.push('-filter_complex', `${streamInputs}concat=n=${filesToMerge.length}:v=0:a=1[out]`, '-map', '[out]');
+      const streamFilters = filesToMerge.map((_, i) => `[${i}:a]aresample=44100,aformat=channel_layouts=stereo[a${i}]`).join(';');
+      const streamInputs = filesToMerge.map((_, i) => `[a${i}]`).join('');
+      ffmpegArgs.push('-filter_complex', `${streamFilters};${streamInputs}concat=n=${filesToMerge.length}:v=0:a=1[out]`, '-map', '[out]');
       ffmpegArgs.push(...codecArgs, outputPath);
     }
 
@@ -840,10 +841,26 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
     const vfParts = [];
     const afParts = [];
 
-    // Speed
+    // 1. ROTATE & FLIP FIRST (Normalize orientation before aspect crop)
+    const rot = parseInt(rotate, 10) || 0;
+    if (rot === 90) vfParts.push('transpose=1');
+    else if (rot === 180) vfParts.push('transpose=1,transpose=1');
+    else if (rot === 270) vfParts.push('transpose=2');
+
+    if (flip === 'horizontal') vfParts.push('hflip');
+    else if (flip === 'vertical') vfParts.push('vflip');
+    else if (flip === 'both') vfParts.push('hflip,vflip');
+
+    const isSwapped = rot === 90 || rot === 270;
+    const rawW = fileInfo.probe?.video?.width || 1280;
+    const rawH = fileInfo.probe?.video?.height || 720;
+    const srcW = isSwapped ? rawH : rawW;
+    const srcH = isSwapped ? rawW : rawH;
+
+    // 2. Speed
     const spd = parseFloat(speed) || 1.0;
     if (spd !== 1.0) {
-      vfParts.push(`setpts=(1/${spd})*PTS`);
+      vfParts.push(`setpts=(1/${spd})*(PTS-STARTPTS)`);
       if (spd >= 0.5 && spd <= 2.0) {
         afParts.push(`atempo=${spd}`);
       } else if (spd > 2.0) {
@@ -853,10 +870,23 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
       }
     }
 
-    // Aspect Ratio & Framing
+    // 3. Aspect Ratio & Framing
     const targetRatio = getAspectRatioMultiplier(aspectRatio);
-    const srcW = fileInfo.probe?.video?.width || 1280;
-    const srcH = fileInfo.probe?.video?.height || 720;
+    let tw, th;
+    if (targetRatio) {
+      if (targetRatio < 1.0) { // Vertical e.g. 9:16, 4:5
+        th = Math.max(srcH, 1280);
+        tw = Math.round(th * targetRatio);
+      } else if (targetRatio === 1.0) { // 1:1 Square
+        th = Math.max(srcW, srcH, 720);
+        tw = th;
+      } else { // Horizontal e.g. 16:9, 21:9
+        tw = Math.max(srcW, 1280);
+        th = Math.round(tw / targetRatio);
+      }
+      if (tw % 2 !== 0) tw -= 1;
+      if (th % 2 !== 0) th -= 1;
+    }
 
     if (cropWidth && cropHeight) {
       const cw = parseInt(cropWidth, 10);
@@ -866,34 +896,8 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
       vfParts.push(`crop=${cw}:${ch}:${cx}:${cy}`);
     } else if (targetRatio) {
       if (aspectMode === 'fit-blur') {
-        let tw, th;
-        if (targetRatio < 1.0) { // Vertical e.g. 9:16
-          th = Math.max(srcH, 1280);
-          tw = Math.round(th * targetRatio);
-        } else if (targetRatio === 1.0) { // 1:1 Square
-          th = Math.max(srcW, srcH);
-          tw = th;
-        } else { // Horizontal e.g. 16:9, 21:9
-          tw = Math.max(srcW, 1280);
-          th = Math.round(tw / targetRatio);
-        }
-        if (tw % 2 !== 0) tw -= 1;
-        if (th % 2 !== 0) th -= 1;
         vfParts.push(`split[fg][bg];[bg]scale=${tw}:${th}:force_original_aspect_ratio=increase,crop=${tw}:${th},boxblur=20:5[bgout];[fg]scale=${tw}:${th}:force_original_aspect_ratio=decrease[fgout];[bgout][fgout]overlay=(W-w)/2:(H-h)/2`);
       } else if (aspectMode === 'fit-pad') {
-        let tw, th;
-        if (targetRatio < 1.0) {
-          th = Math.max(srcH, 1280);
-          tw = Math.round(th * targetRatio);
-        } else if (targetRatio === 1.0) {
-          th = Math.max(srcW, srcH);
-          tw = th;
-        } else {
-          tw = Math.max(srcW, 1280);
-          th = Math.round(tw / targetRatio);
-        }
-        if (tw % 2 !== 0) tw -= 1;
-        if (th % 2 !== 0) th -= 1;
         vfParts.push(`scale=${tw}:${th}:force_original_aspect_ratio=decrease,pad=${tw}:${th}:(ow-iw)/2:(oh-ih)/2:color=black`);
       } else {
         // Crop & Fill mode with Pan X & Pan Y
@@ -909,6 +913,7 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
           if (cW % 2 !== 0) cW -= 1;
           const maxX = Math.max(0, srcW - cW);
           cX = Math.round(maxX * (pX / 100));
+          if (cX % 2 !== 0) cX -= 1;
           cY = 0;
         } else {
           // Current video is taller than target -> crop height, pan vertical
@@ -918,21 +923,11 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
           const maxY = Math.max(0, srcH - cH);
           cX = 0;
           cY = Math.round(maxY * (pY / 100));
+          if (cY % 2 !== 0) cY -= 1;
         }
-        vfParts.push(`crop=${cW}:${cH}:${cX}:${cY}`);
+        vfParts.push(`crop=${cW}:${cH}:${cX}:${cY},scale=${tw}:${th}`);
       }
     }
-
-    // Rotate
-    const rot = parseInt(rotate, 10) || 0;
-    if (rot === 90) vfParts.push('transpose=1');
-    else if (rot === 180) vfParts.push('transpose=1,transpose=1');
-    else if (rot === 270) vfParts.push('transpose=2');
-
-    // Flip
-    if (flip === 'horizontal') vfParts.push('hflip');
-    else if (flip === 'vertical') vfParts.push('vflip');
-    else if (flip === 'both') vfParts.push('hflip,vflip');
 
     // Color Adjustments & Filters
     const b = parseFloat(brightness) || 0;
@@ -952,10 +947,14 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
       vfParts.push('negate');
     }
 
-    // Watermark text
+    // Watermark text (with full character escaping for colons, commas, percent, quotes)
     if (watermarkText && watermarkText.trim()) {
       const font = getSystemFontFile();
-      const cleanText = watermarkText.trim().replace(/['"\\]/g, '');
+      const cleanText = watermarkText.trim()
+        .replace(/['"\\]/g, '')
+        .replace(/:/g, '\\:')
+        .replace(/,/g, '\\,')
+        .replace(/%/g, '\\%');
       let pos = 'x=w-tw-25:y=h-th-25';
       if (watermarkPosition === 'bottom-left') pos = 'x=25:y=h-th-25';
       else if (watermarkPosition === 'top-right') pos = 'x=w-tw-25:y=25';
@@ -969,11 +968,17 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
       vfParts.push(drawtext);
     }
 
-    // Resolution Scaling
-    if (resolution === '1080p') vfParts.push('scale=-2:1080');
-    else if (resolution === '720p') vfParts.push('scale=-2:720');
-    else if (resolution === '480p') vfParts.push('scale=-2:480');
-    else if (resolution === '360p') vfParts.push('scale=-2:360');
+    // Resolution Scaling (distinguishing portrait vs landscape)
+    const isPortrait = (targetRatio && targetRatio < 1.0) || (!targetRatio && srcH > srcW);
+    if (resolution === '1080p') {
+      vfParts.push(isPortrait ? 'scale=1080:-2' : 'scale=-2:1080');
+    } else if (resolution === '720p') {
+      vfParts.push(isPortrait ? 'scale=720:-2' : 'scale=-2:720');
+    } else if (resolution === '480p') {
+      vfParts.push(isPortrait ? 'scale=480:-2' : 'scale=-2:480');
+    } else if (resolution === '360p') {
+      vfParts.push(isPortrait ? 'scale=360:-2' : 'scale=-2:360');
+    }
 
     // Ensure even width/height
     vfParts.push('scale=trunc(iw/2)*2:trunc(ih/2)*2');
@@ -1015,14 +1020,20 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
     } else if (hasBgAudio && audioMode === 'replace') {
       ffmpegArgs.push('-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest');
     } else if (hasBgAudio && audioMode === 'mix') {
-      const bgVol = parseFloat(bgAudioVolume) || 0.5;
-      const vVol = !isNaN(vol) ? vol : 1.0;
-      ffmpegArgs.push(
-        '-filter_complex',
-        `[0:a]volume=${vVol}[a0];[1:a]volume=${bgVol}[a1];[a0][a1]amix=inputs=2:duration=first:dropout_transition=2[aout]`,
-        '-map', '0:v', '-map', '[aout]',
-        '-c:a', 'aac', '-b:a', '192k'
-      );
+      if (!fileInfo.probe.hasAudio) {
+        ffmpegArgs.push('-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest');
+      } else {
+        const bgVol = parseFloat(bgAudioVolume) || 0.5;
+        const vVol = !isNaN(vol) ? vol : 1.0;
+        const atempoFilters = afParts.filter(f => f.startsWith('atempo') || f.startsWith('areverse')).join(',');
+        const a0Chain = atempoFilters ? `[0:a]${atempoFilters},volume=${vVol}[a0]` : `[0:a]volume=${vVol}[a0]`;
+        ffmpegArgs.push(
+          '-filter_complex',
+          `${a0Chain};[1:a]volume=${bgVol}[a1];[a0][a1]amix=inputs=2:duration=first:dropout_transition=2[aout]`,
+          '-map', '0:v', '-map', '[aout]',
+          '-c:a', 'aac', '-b:a', '192k'
+        );
+      }
     } else if (afParts.length > 0) {
       ffmpegArgs.push('-af', afParts.join(','));
       ffmpegArgs.push('-c:a', 'aac', '-b:a', '192k');
