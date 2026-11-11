@@ -702,6 +702,17 @@ function getSystemFontFile() {
   return null;
 }
 
+function getAspectRatioMultiplier(preset) {
+  switch (preset) {
+    case '16:9': return 16 / 9;
+    case '9:16': return 9 / 16;
+    case '1:1': return 1.0;
+    case '4:5': return 4 / 5;
+    case '21:9': return 21 / 9;
+    default: return null;
+  }
+}
+
 app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'audio', maxCount: 1 }]), async (req, res) => {
   try {
     let fileInfo;
@@ -733,6 +744,9 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
       trimStart,
       trimEnd,
       aspectRatio,
+      aspectMode = 'crop',
+      panX = 50,
+      panY = 50,
       cropX,
       cropY,
       cropWidth,
@@ -839,20 +853,73 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
       }
     }
 
-    // Crop / Aspect Ratio
+    // Aspect Ratio & Framing
+    const targetRatio = getAspectRatioMultiplier(aspectRatio);
+    const srcW = fileInfo.probe?.video?.width || 1280;
+    const srcH = fileInfo.probe?.video?.height || 720;
+
     if (cropWidth && cropHeight) {
-      vfParts.push(`crop=${parseInt(cropWidth)}:${parseInt(cropHeight)}:${parseInt(cropX) || 0}:${parseInt(cropY) || 0}`);
-    } else if (aspectRatio && aspectRatio !== 'original' && aspectRatio !== 'free') {
-      if (aspectRatio === '16:9') {
-        vfParts.push(`crop='if(gt(a,16/9),ih*16/9,iw)':'if(gt(a,16/9),ih,iw*9/16)'`);
-      } else if (aspectRatio === '9:16') {
-        vfParts.push(`crop='if(gt(a,9/16),ih*9/16,iw)':'if(gt(a,9/16),ih,iw*16/9)'`);
-      } else if (aspectRatio === '1:1') {
-        vfParts.push(`crop='min(iw,ih)':'min(iw,ih)'`);
-      } else if (aspectRatio === '4:5') {
-        vfParts.push(`crop='if(gt(a,4/5),ih*4/5,iw)':'if(gt(a,4/5),ih,iw*5/4)'`);
-      } else if (aspectRatio === '21:9') {
-        vfParts.push(`crop='if(gt(a,21/9),ih*21/9,iw)':'if(gt(a,21/9),ih,iw*9/21)'`);
+      const cw = parseInt(cropWidth, 10);
+      const ch = parseInt(cropHeight, 10);
+      const cx = parseInt(cropX, 10) || 0;
+      const cy = parseInt(cropY, 10) || 0;
+      vfParts.push(`crop=${cw}:${ch}:${cx}:${cy}`);
+    } else if (targetRatio) {
+      if (aspectMode === 'fit-blur') {
+        let tw, th;
+        if (targetRatio < 1.0) { // Vertical e.g. 9:16
+          th = Math.max(srcH, 1280);
+          tw = Math.round(th * targetRatio);
+        } else if (targetRatio === 1.0) { // 1:1 Square
+          th = Math.max(srcW, srcH);
+          tw = th;
+        } else { // Horizontal e.g. 16:9, 21:9
+          tw = Math.max(srcW, 1280);
+          th = Math.round(tw / targetRatio);
+        }
+        if (tw % 2 !== 0) tw -= 1;
+        if (th % 2 !== 0) th -= 1;
+        vfParts.push(`split[fg][bg];[bg]scale=${tw}:${th}:force_original_aspect_ratio=increase,crop=${tw}:${th},boxblur=20:5[bgout];[fg]scale=${tw}:${th}:force_original_aspect_ratio=decrease[fgout];[bgout][fgout]overlay=(W-w)/2:(H-h)/2`);
+      } else if (aspectMode === 'fit-pad') {
+        let tw, th;
+        if (targetRatio < 1.0) {
+          th = Math.max(srcH, 1280);
+          tw = Math.round(th * targetRatio);
+        } else if (targetRatio === 1.0) {
+          th = Math.max(srcW, srcH);
+          tw = th;
+        } else {
+          tw = Math.max(srcW, 1280);
+          th = Math.round(tw / targetRatio);
+        }
+        if (tw % 2 !== 0) tw -= 1;
+        if (th % 2 !== 0) th -= 1;
+        vfParts.push(`scale=${tw}:${th}:force_original_aspect_ratio=decrease,pad=${tw}:${th}:(ow-iw)/2:(oh-ih)/2:color=black`);
+      } else {
+        // Crop & Fill mode with Pan X & Pan Y
+        let cW, cH, cX, cY;
+        const curRatio = srcW / srcH;
+        const pX = Math.max(0, Math.min(100, parseFloat(panX) || 50));
+        const pY = Math.max(0, Math.min(100, parseFloat(panY) || 50));
+
+        if (curRatio > targetRatio) {
+          // Current video is wider than target -> crop width, pan horizontal
+          cH = srcH - (srcH % 2);
+          cW = Math.round(cH * targetRatio);
+          if (cW % 2 !== 0) cW -= 1;
+          const maxX = Math.max(0, srcW - cW);
+          cX = Math.round(maxX * (pX / 100));
+          cY = 0;
+        } else {
+          // Current video is taller than target -> crop height, pan vertical
+          cW = srcW - (srcW % 2);
+          cH = Math.round(cW / targetRatio);
+          if (cH % 2 !== 0) cH -= 1;
+          const maxY = Math.max(0, srcH - cH);
+          cX = 0;
+          cY = Math.round(maxY * (pY / 100));
+        }
+        vfParts.push(`crop=${cW}:${cH}:${cX}:${cY}`);
       }
     }
 
@@ -970,7 +1037,7 @@ app.post('/api/video/process', upload.fields([{ name: 'file', maxCount: 1 }, { n
     if (cleanFormat === 'webm') {
       ffmpegArgs.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0');
     } else {
-      ffmpegArgs.push('-c:v', 'libx264', '-crf', crf, '-preset', 'medium', '-pix_fmt', 'yuv420p');
+      ffmpegArgs.push('-c:v', 'libx264', '-crf', crf, '-preset', 'veryfast', '-pix_fmt', 'yuv420p');
     }
 
     ffmpegArgs.push(outputPath);

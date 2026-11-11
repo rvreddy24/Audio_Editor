@@ -1,5 +1,7 @@
 export type AspectRatioPreset = 'original' | '16:9' | '9:16' | '1:1' | '4:5' | '21:9';
 
+export type AspectMode = 'crop' | 'fit-blur' | 'fit-pad';
+
 export type VideoFilterType = 'none' | 'grayscale' | 'sepia' | 'vintage' | 'invert';
 
 export type OutputFormat = 'mp4' | 'webm' | 'gif' | 'mov' | 'mkv' | 'mp3' | 'wav';
@@ -29,6 +31,9 @@ export interface VideoEditOptions {
 
   // Aspect ratio / Crop
   aspectRatio: AspectRatioPreset;
+  aspectMode: AspectMode;
+  panX: number; // 0 to 100
+  panY: number; // 0 to 100
   cropX?: number;
   cropY?: number;
   cropWidth?: number;

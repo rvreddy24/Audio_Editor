@@ -38,6 +38,7 @@ import {
   SPEED_PRESETS,
   FILTER_PRESETS,
   AspectRatioPreset,
+  AspectMode,
   VideoFilterType,
   OutputFormat,
   ResolutionPreset,
@@ -65,6 +66,9 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
   const [aspectRatio, setAspectRatio] = useState<AspectRatioPreset>('original');
+  const [aspectMode, setAspectMode] = useState<AspectMode>('crop');
+  const [panX, setPanX] = useState<number>(50); // 0 (Left) to 100 (Right)
+  const [panY, setPanY] = useState<number>(50); // 0 (Top) to 100 (Bottom)
   const [rotate, setRotate] = useState<0 | 90 | 180 | 270>(0);
   const [flip, setFlip] = useState<'none' | 'horizontal' | 'vertical' | 'both'>('none');
   const [speed, setSpeed] = useState<number>(1.0);
@@ -146,6 +150,9 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
       setSaturation(1);
       setReverse(false);
       setAspectRatio('original');
+      setAspectMode('crop');
+      setPanX(50);
+      setPanY(50);
       setResultModal(null);
     };
   };
@@ -275,6 +282,9 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
       formData.append('trimStart', trimStart.toString());
       formData.append('trimEnd', trimEnd.toString());
       formData.append('aspectRatio', aspectRatio);
+      formData.append('aspectMode', aspectMode);
+      formData.append('panX', panX.toString());
+      formData.append('panY', panY.toString());
       formData.append('rotate', rotate.toString());
       formData.append('flip', flip);
       formData.append('speed', speed.toString());
@@ -469,18 +479,42 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
             {/* Video Viewport Container with Live Framing */}
             <div className="bg-slate-950 rounded-3xl p-3 sm:p-4 shadow-md border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden">
               <div
-                className="w-full max-h-[460px] flex items-center justify-center relative overflow-hidden rounded-2xl transition-all duration-300"
+                className="w-full max-h-[460px] flex items-center justify-center relative overflow-hidden rounded-2xl transition-all duration-300 bg-slate-900"
                 style={{
                   aspectRatio: getContainerAspectRatio(),
                 }}
               >
+                {/* Background blurred duplicate layer for 'fit-blur' mode */}
+                {aspectRatio !== 'original' && aspectMode === 'fit-blur' && (
+                  <video
+                    src={videoInfo.objectUrl}
+                    className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-60 scale-125 pointer-events-none select-none"
+                    muted
+                    playsInline
+                    ref={(el) => {
+                      if (el && videoRef.current) {
+                        el.currentTime = videoRef.current.currentTime;
+                      }
+                    }}
+                  />
+                )}
+
+                {/* Main Foreground Video */}
                 <video
                   ref={videoRef}
                   src={videoInfo.objectUrl}
                   onTimeUpdate={handleTimeUpdate}
                   onEnded={() => setIsPlaying(false)}
-                  className="w-full h-full object-contain rounded-xl select-none transition-all duration-200"
+                  className={`w-full h-full rounded-xl select-none transition-all duration-200 relative z-10 ${
+                    aspectRatio !== 'original' && aspectMode === 'crop'
+                      ? 'object-cover'
+                      : 'object-contain'
+                  }`}
                   style={{
+                    objectPosition:
+                      aspectRatio !== 'original' && aspectMode === 'crop'
+                        ? `${panX}% ${panY}%`
+                        : 'center',
                     filter: getCssFilter(),
                     transform: getCssTransform(),
                   }}
@@ -490,7 +524,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                 {/* Text Watermark Live Preview Overlay */}
                 {watermarkText.trim() && (
                   <div
-                    className={`absolute pointer-events-none p-3 z-10 ${
+                    className={`absolute pointer-events-none p-3 z-20 ${
                       watermarkPosition === 'top-left'
                         ? 'top-2 left-2'
                         : watermarkPosition === 'top-right'
@@ -762,32 +796,145 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
             {/* TAB CONTENT 2: CROP & ASPECT RATIO */}
             {activeTab === 'crop' && (
               <div className="space-y-4">
-                <div className="pb-2 border-b border-slate-100">
+                <div className="pb-2 border-b border-slate-100 flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                     <Crop className="w-4 h-4 text-rose-600" />
                     <span>Aspect Ratio & Framing</span>
                   </h3>
+                  {aspectRatio !== 'original' && (
+                    <button
+                      onClick={() => {
+                        setAspectRatio('original');
+                        setAspectMode('crop');
+                        setPanX(50);
+                        setPanY(50);
+                      }}
+                      className="text-[11px] text-rose-600 font-bold hover:underline"
+                    >
+                      Reset to Original
+                    </button>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  {ASPECT_RATIOS.map((ar) => (
-                    <button
-                      key={ar.key}
-                      onClick={() => setAspectRatio(ar.key)}
-                      className={`p-3 rounded-2xl text-left border transition-all ${
-                        aspectRatio === ar.key
-                          ? 'border-rose-600 bg-rose-50/50 ring-2 ring-rose-500/20'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-slate-800">{ar.label}</span>
-                        {aspectRatio === ar.key && <Check className="w-3.5 h-3.5 text-rose-600" />}
-                      </div>
-                      <span className="text-[10px] text-slate-500 block leading-tight">{ar.desc}</span>
-                    </button>
-                  ))}
+                {/* 1. Target Ratio Presets */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1.5">
+                    1. Select Target Aspect Ratio
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ASPECT_RATIOS.map((ar) => (
+                      <button
+                        key={ar.key}
+                        onClick={() => setAspectRatio(ar.key)}
+                        className={`p-2.5 rounded-2xl text-left border transition-all ${
+                          aspectRatio === ar.key
+                            ? 'border-rose-600 bg-rose-50/50 ring-2 ring-rose-500/20'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-bold text-slate-800">{ar.label}</span>
+                          {aspectRatio === ar.key && <Check className="w-3.5 h-3.5 text-rose-600" />}
+                        </div>
+                        <span className="text-[10px] text-slate-500 block leading-tight">{ar.desc}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* 2. Fit Mode Selector (When not original) */}
+                {aspectRatio !== 'original' && (
+                  <div className="space-y-3 pt-2 border-t border-slate-100">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1.5">
+                        2. Framing & Fit Style
+                      </label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          {
+                            key: 'crop',
+                            label: 'Crop to Fill',
+                            desc: 'Full screen, cuts sides',
+                          },
+                          {
+                            key: 'fit-blur',
+                            label: 'Blurred BG',
+                            desc: 'TikTok / Reels style',
+                          },
+                          {
+                            key: 'fit-pad',
+                            label: 'Black Padding',
+                            desc: 'Letterbox margins',
+                          },
+                        ].map((m) => (
+                          <button
+                            key={m.key}
+                            onClick={() => setAspectMode(m.key as any)}
+                            className={`p-2 rounded-xl text-left border transition-all ${
+                              aspectMode === m.key
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="text-[11px] font-bold block">{m.label}</span>
+                            <span className={`text-[9px] block leading-tight ${aspectMode === m.key ? 'text-rose-100' : 'text-slate-400'}`}>
+                              {m.desc}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 3. Horizontal Pan Slider (When in Crop to Fill mode) */}
+                    {aspectMode === 'crop' && (
+                      <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                          <span>Horizontal Framing (Pan Left / Right)</span>
+                          <span className="font-mono text-rose-600 text-[11px]">
+                            {panX === 50 ? 'Centered (50%)' : panX < 50 ? `Left (${panX}%)` : `Right (${panX}%)`}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={panX}
+                          onChange={(e) => setPanX(parseInt(e.target.value, 10))}
+                          className="w-full accent-rose-600 cursor-pointer"
+                        />
+
+                        {/* Quick pan presets */}
+                        <div className="grid grid-cols-3 gap-1.5 pt-1">
+                          <button
+                            onClick={() => setPanX(0)}
+                            className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                              panX === 0 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            ◀ Left (0%)
+                          </button>
+                          <button
+                            onClick={() => setPanX(50)}
+                            className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                              panX === 50 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            ● Center (50%)
+                          </button>
+                          <button
+                            onClick={() => setPanX(100)}
+                            className={`py-1 rounded-lg text-[10px] font-bold border transition-colors ${
+                              panX === 100 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            ▶ Right (100%)
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

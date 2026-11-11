@@ -145,6 +145,66 @@ async function runE2E() {
   const pRev = await probeFile(revOut);
   console.log(`  ✓ Reversed Video & Audio: ${pRev.duration.toFixed(1)}s`);
 
+  // 11. Testing User Sample Video: E:\New Gen\0c6bdc168f784c9b964a4459e6904661.mp4
+  const userVid = 'E:/New Gen/0c6bdc168f784c9b964a4459e6904661.mp4';
+  if (fs.existsSync(userVid)) {
+    console.log('\n========================================================');
+    console.log('VERIFYING REAL USER VIDEO FILE:');
+    console.log(userVid);
+    console.log('========================================================');
+    const uProbe = await probeFile(userVid);
+    console.log(`  ✓ Loaded user video: ${uProbe.video.width}x${uProbe.video.height}, duration ${uProbe.duration.toFixed(1)}s`);
+
+    // 11a. 9:16 Crop to Fill with Pan Left, Center, Right
+    console.log('  Testing 9:16 Crop to Fill (Left / Center / Right Pan)...');
+    const u916Center = path.join(TEST_DIR, 'user_916_center.mp4');
+    await runCmd(['-y', '-ss', '10', '-t', '2', '-i', userVid, '-vf', 'crop=404:720:438:0', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', u916Center]);
+    const p916c = await probeFile(u916Center);
+    console.log(`  ✓ 9:16 Center: ${p916c.video.width}x${p916c.video.height}`);
+
+    const u916Left = path.join(TEST_DIR, 'user_916_left.mp4');
+    await runCmd(['-y', '-ss', '10', '-t', '2', '-i', userVid, '-vf', 'crop=404:720:0:0', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', u916Left]);
+    const p916l = await probeFile(u916Left);
+    console.log(`  ✓ 9:16 Pan Left: ${p916l.video.width}x${p916l.video.height}`);
+
+    const u916Right = path.join(TEST_DIR, 'user_916_right.mp4');
+    await runCmd(['-y', '-ss', '10', '-t', '2', '-i', userVid, '-vf', 'crop=404:720:876:0', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', u916Right]);
+    const p916r = await probeFile(u916Right);
+    console.log(`  ✓ 9:16 Pan Right: ${p916r.video.width}x${p916r.video.height}`);
+
+    // 11b. 9:16 Fit with Blurred Background
+    console.log('  Testing 9:16 Fit with Blurred Background (TikTok / Reels style)...');
+    const u916Blur = path.join(TEST_DIR, 'user_916_blur.mp4');
+    await runCmd([
+      '-y', '-ss', '10', '-t', '2', '-i', userVid,
+      '-vf', 'split[fg][bg];[bg]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,boxblur=20:5[bgout];[fg]scale=720:1280:force_original_aspect_ratio=decrease[fgout];[bgout][fgout]overlay=(W-w)/2:(H-h)/2',
+      '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', u916Blur
+    ]);
+    const p916b = await probeFile(u916Blur);
+    console.log(`  ✓ 9:16 Blurred Background: ${p916b.video.width}x${p916b.video.height}`);
+
+    // 11c. 1:1 Square Crop
+    console.log('  Testing 1:1 Square Crop...');
+    const u11 = path.join(TEST_DIR, 'user_11.mp4');
+    await runCmd(['-y', '-ss', '10', '-t', '2', '-i', userVid, '-vf', 'crop=720:720:280:0', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', u11]);
+    const p11s = await probeFile(u11);
+    console.log(`  ✓ 1:1 Square: ${p11s.video.width}x${p11s.video.height}`);
+
+    // 11d. 4:5 Portrait Crop
+    console.log('  Testing 4:5 Portrait Crop...');
+    const u45 = path.join(TEST_DIR, 'user_45.mp4');
+    await runCmd(['-y', '-ss', '10', '-t', '2', '-i', userVid, '-vf', 'crop=576:720:352:0', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', u45]);
+    const p45 = await probeFile(u45);
+    console.log(`  ✓ 4:5 Portrait: ${p45.video.width}x${p45.video.height}`);
+
+    // 11e. 21:9 Ultrawide Crop
+    console.log('  Testing 21:9 Ultrawide Crop...');
+    const u219 = path.join(TEST_DIR, 'user_219.mp4');
+    await runCmd(['-y', '-ss', '10', '-t', '2', '-i', userVid, '-vf', 'crop=1280:548:0:86', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'copy', u219]);
+    const p219 = await probeFile(u219);
+    console.log(`  ✓ 21:9 Ultrawide: ${p219.video.width}x${p219.video.height}`);
+  }
+
   // Cleanup test workspace
   try {
     fs.rmSync(TEST_DIR, { recursive: true, force: true });
