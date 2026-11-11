@@ -71,6 +71,35 @@ export const DimensionResizer: React.FC<DimensionResizerProps> = ({
     }
   };
 
+  const convertBetweenUnits = (
+    val: number,
+    fromUnit: 'px' | 'cm' | 'mm' | 'inch',
+    toUnit: 'px' | 'cm' | 'mm' | 'inch',
+    curDpi = 300
+  ): number => {
+    if (fromUnit === toUnit) return val;
+    let px = val;
+    if (fromUnit === 'inch') px = val * curDpi;
+    else if (fromUnit === 'cm') px = (val / 2.54) * curDpi;
+    else if (fromUnit === 'mm') px = (val / 25.4) * curDpi;
+
+    let res = px;
+    if (toUnit === 'inch') res = px / curDpi;
+    else if (toUnit === 'cm') res = (px / curDpi) * 2.54;
+    else if (toUnit === 'mm') res = (px / curDpi) * 25.4;
+
+    return toUnit === 'px' ? Math.round(res) : Math.round(res * 100) / 100;
+  };
+
+  const handleUnitChange = (newUnit: 'px' | 'cm' | 'mm' | 'inch') => {
+    if (newUnit === unit) return;
+    const newW = convertBetweenUnits(width, unit, newUnit, dpi);
+    const newH = convertBetweenUnits(height, unit, newUnit, dpi);
+    setWidth(newW);
+    setHeight(newH);
+    setUnit(newUnit);
+  };
+
   const handleWidthChange = (val: number) => {
     setWidth(val);
     if (lockAspect && aspectRatio > 0) {
@@ -165,7 +194,7 @@ export const DimensionResizer: React.FC<DimensionResizerProps> = ({
                 {(['px', 'cm', 'mm', 'inch'] as const).map((u) => (
                   <button
                     key={u}
-                    onClick={() => setUnit(u)}
+                    onClick={() => handleUnitChange(u)}
                     className={`py-1.5 rounded-xl text-xs font-bold uppercase transition-all ${
                       unit === u
                         ? 'bg-indigo-600 text-white shadow-xs'
@@ -227,11 +256,11 @@ export const DimensionResizer: React.FC<DimensionResizerProps> = ({
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2 flex items-center justify-between">
                 <span>Resolution / DPI</span>
                 <span className="text-[11px] text-indigo-600 lowercase font-semibold">
-                  injects JFIF header
+                  embeds DPI headers
                 </span>
               </label>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[72, 150, 200, 300].map((d) => (
+              <div className="grid grid-cols-5 gap-1.5">
+                {[72, 150, 200, 300, 600].map((d) => (
                   <button
                     key={d}
                     onClick={() => setDpi(d)}
@@ -241,7 +270,7 @@ export const DimensionResizer: React.FC<DimensionResizerProps> = ({
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                     }`}
                   >
-                    {d} DPI
+                    {d}
                   </button>
                 ))}
               </div>

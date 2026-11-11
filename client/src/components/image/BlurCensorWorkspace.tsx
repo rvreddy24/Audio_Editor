@@ -52,12 +52,17 @@ export const BlurCensorWorkspace: React.FC<BlurCensorWorkspaceProps> = ({ onBack
     }
   };
 
+  // Initialize canvas dimensions only when image changes to prevent reflow stutter during drawing
+  useEffect(() => {
+    if (!imgElement || !canvasRef.current) return;
+    canvasRef.current.width = imgElement.naturalWidth;
+    canvasRef.current.height = imgElement.naturalHeight;
+  }, [imgElement]);
+
   // Re-draw canvas whenever imgElement, boxes, or currentBox change
   useEffect(() => {
     if (!imgElement || !canvasRef.current) return;
     const canvas = canvasRef.current;
-    canvas.width = imgElement.naturalWidth;
-    canvas.height = imgElement.naturalHeight;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
 
@@ -100,12 +105,13 @@ export const BlurCensorWorkspace: React.FC<BlurCensorWorkspaceProps> = ({ onBack
         ctx.imageSmoothingEnabled = true;
       }
     } else if (box.type === 'blur') {
-      // Gaussian Blur simulation on region
+      // Adaptive Gaussian Blur simulation scaled to box size for real censorship
       ctx.save();
       ctx.beginPath();
       ctx.rect(box.x, box.y, box.w, box.h);
       ctx.clip();
-      ctx.filter = 'blur(16px)';
+      const blurPx = Math.max(20, Math.round(Math.min(box.w, box.h) * 0.35));
+      ctx.filter = `blur(${blurPx}px)`;
       ctx.drawImage(canvas, 0, 0);
       ctx.restore();
     }

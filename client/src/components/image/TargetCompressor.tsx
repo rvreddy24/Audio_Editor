@@ -229,8 +229,15 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
               <button
                 disabled={!result || isProcessing}
                 onClick={() => {
-                  if (result) {
-                    const ext = format === 'image/webp' ? 'webp' : 'jpg';
+                  if (result && selectedFile) {
+                    let ext = 'jpg';
+                    if (mode === 'increase') {
+                      if (selectedFile.type === 'image/png' || selectedFile.name.toLowerCase().endsWith('.png')) ext = 'png';
+                      else if (selectedFile.type === 'image/webp' || selectedFile.name.toLowerCase().endsWith('.webp')) ext = 'webp';
+                      else ext = 'jpg';
+                    } else {
+                      ext = format === 'image/webp' ? 'webp' : 'jpg';
+                    }
                     const base = selectedFile.name.replace(/\.[^/.]+$/, '');
                     downloadImageBlob(result.blob, `${base}_${targetKb}kb.${ext}`);
                   }

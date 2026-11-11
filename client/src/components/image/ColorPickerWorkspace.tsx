@@ -76,13 +76,30 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
     return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
   };
 
+  const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map((x) => x + x).join('');
+    const num = parseInt(c, 16);
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255,
+    };
+  };
+
   const getColorAtPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return null;
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = canvasRef.current.width / rect.width;
     const scaleY = canvasRef.current.height / rect.height;
-    const x = Math.floor((e.clientX - rect.left) * scaleX);
-    const y = Math.floor((e.clientY - rect.top) * scaleY);
+    const x = Math.min(
+      canvasRef.current.width - 1,
+      Math.max(0, Math.floor((e.clientX - rect.left) * scaleX))
+    );
+    const y = Math.min(
+      canvasRef.current.height - 1,
+      Math.max(0, Math.floor((e.clientY - rect.top) * scaleY))
+    );
 
     const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true });
     if (!ctx) return null;
@@ -212,13 +229,16 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
                   {history.map((hex) => (
                     <button
                       key={hex}
-                      onClick={() =>
+                      onClick={() => {
+                        const rgbObj = hexToRgb(hex);
+                        const rgbStr = `rgb(${rgbObj.r}, ${rgbObj.g}, ${rgbObj.b})`;
+                        const hslStr = rgbToHsl(rgbObj.r, rgbObj.g, rgbObj.b);
                         setPickedColor({
                           hex,
-                          rgb: hex,
-                          hsl: hex,
-                        })
-                      }
+                          rgb: rgbStr,
+                          hsl: hslStr,
+                        });
+                      }}
                       title={`Select ${hex}`}
                       className="w-8 h-8 rounded-lg border border-slate-300 shadow-2xs hover:scale-110 transition-transform"
                       style={{ backgroundColor: hex }}

@@ -22,6 +22,7 @@ export const ImageJoinerWorkspace: React.FC<ImageJoinerWorkspaceProps> = ({ onBa
   const [files, setFiles] = useState<File[]>([]);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>('vertical');
   const [gap, setGap] = useState<number>(15);
+  const [bgColor, setBgColor] = useState<string>('#FFFFFF');
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<{
@@ -46,7 +47,7 @@ export const ImageJoinerWorkspace: React.FC<ImageJoinerWorkspaceProps> = ({ onBa
     setIsProcessing(true);
     try {
       const imgElements = await Promise.all(files.map(loadImage));
-      const res = await joinImages(imgElements, direction, gap);
+      const res = await joinImages(imgElements, direction, gap, bgColor);
       setResult(res);
     } catch (err: any) {
       alert(`Merge error: ${err.message || 'Failed to join images'}`);
@@ -191,6 +192,35 @@ export const ImageJoinerWorkspace: React.FC<ImageJoinerWorkspaceProps> = ({ onBa
                 }}
                 className="w-full accent-teal-600"
               />
+            </div>
+
+            {/* Canvas Background Color */}
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
+                Background Fill
+              </label>
+              <div className="flex items-center gap-2">
+                {[
+                  { label: 'White', color: '#FFFFFF' },
+                  { label: 'Black', color: '#000000' },
+                  { label: 'Grey', color: '#F3F4F6' },
+                ].map((bg) => (
+                  <button
+                    key={bg.color}
+                    onClick={() => {
+                      setBgColor(bg.color);
+                      setResult(null);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                      bgColor === bg.color
+                        ? 'border-teal-600 bg-teal-50 text-teal-800'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {bg.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Actions */}

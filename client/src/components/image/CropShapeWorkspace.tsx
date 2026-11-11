@@ -62,10 +62,10 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
       const img = await loadImage(file);
       setImgElement(img);
       setCropBox({
-        x: Math.round(img.naturalWidth * 0.1),
-        y: Math.round(img.naturalHeight * 0.1),
-        w: Math.round(img.naturalWidth * 0.8),
-        h: Math.round(img.naturalHeight * 0.8),
+        x: Math.round(img.naturalWidth * 0.025),
+        y: Math.round(img.naturalHeight * 0.025),
+        w: Math.round(img.naturalWidth * 0.95),
+        h: Math.round(img.naturalHeight * 0.95),
       });
       setResult(null);
     }
@@ -123,17 +123,22 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
     const ih = imgElement.naturalHeight;
 
     if (ratioStr === 'free') {
-      setCropBox({ x: Math.round(iw * 0.05), y: Math.round(ih * 0.05), w: Math.round(iw * 0.9), h: Math.round(ih * 0.9) });
+      setCropBox({
+        x: Math.round(iw * 0.025),
+        y: Math.round(ih * 0.025),
+        w: Math.round(iw * 0.95),
+        h: Math.round(ih * 0.95),
+      });
       return;
     }
 
     const [rW, rH] = ratioStr.split(':').map(Number);
     const targetRatio = rW / rH;
 
-    let nw = iw * 0.8;
+    let nw = iw * 0.95;
     let nh = nw / targetRatio;
-    if (nh > ih * 0.8) {
-      nh = ih * 0.8;
+    if (nh > ih * 0.95) {
+      nh = ih * 0.95;
       nw = nh * targetRatio;
     }
 
@@ -238,14 +243,16 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
                   Aspect Ratio Presets
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-1.5">
                   {[
-                    { id: 'free', label: 'Freehand' },
-                    { id: '1:1', label: '1:1 Square' },
-                    { id: '4:5', label: '4:5 Portrait' },
-                    { id: '16:9', label: '16:9 Banner' },
-                    { id: '4:3', label: '4:3 Classic' },
-                    { id: '9:16', label: '9:16 Story' },
+                    { id: 'free', label: 'Free' },
+                    { id: '1:1', label: '1:1' },
+                    { id: '4:5', label: '4:5' },
+                    { id: '16:9', label: '16:9' },
+                    { id: '4:3', label: '4:3' },
+                    { id: '9:16', label: '9:16' },
+                    { id: '3:2', label: '3:2' },
+                    { id: '2:3', label: '2:3' },
                   ].map((r) => (
                     <button
                       key={r.id}
@@ -340,7 +347,7 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
               <button
                 disabled={!result || isProcessing}
                 onClick={() => {
-                  if (result) {
+                  if (result && selectedFile) {
                     const ext = mode === 'crop' ? 'jpg' : 'png';
                     const base = selectedFile.name.replace(/\.[^/.]+$/, '');
                     downloadImageBlob(result.blob, `${base}_${mode}.${ext}`);

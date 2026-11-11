@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps, ImageEnhance
 
 TEST_FILES = [
     r"E:\ChatGPT Image Apr 30, 2026, 08_00_38 AM.PNG",
-    r"E:\ChatGPT Image Jul 31, 2026, 10_38_01 AM.png",
+    r"D:\profile photo.jpeg",
 ]
 
 def banner(title):

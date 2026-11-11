@@ -141,8 +141,148 @@ export async function compressToTargetKb(
   };
 }
 
+// PNG CRC32 table & calculator
+const pngCrcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) {
+      if (c & 1) c = 0xedb88320 ^ (c >>> 1);
+      else c = c >>> 1;
+    }
+    table[n] = c;
+  }
+  return table;
+})();
+
+function calcPngCrc32(bytes: Uint8Array): number {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) {
+    c = (c >>> 8) ^ pngCrcTable[(c ^ bytes[i]) & 0xff];
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
 /**
- * 2. INCREASE IMAGE SIZE IN KB (Safe padding for rigid minimum portal limits)
+ * Safely pads JPEG file with standard COM (0xFF 0xFE) segments before EOI (0xFF 0xD9).
+ * Fully compliant with Pillow, libjpeg, and strict portal validators.
+ */
+function padJpegWithComments(originalBytes: ArrayBuffer, targetBytes: number): Uint8Array {
+  const orig = new Uint8Array(originalBytes);
+  let eoiIdx = orig.length - 2;
+  while (eoiIdx > 0 && !(orig[eoiIdx] === 0xff && orig[eoiIdx + 1] === 0xd9)) {
+    eoiIdx--;
+  }
+  if (eoiIdx <= 0) {
+    const padded = new Uint8Array(targetBytes);
+    padded.set(orig, 0);
+    return padded;
+  }
+
+  const needed = targetBytes - orig.length;
+  if (needed <= 4) return orig;
+
+  const chunks: Uint8Array[] = [];
+  let remaining = needed;
+  while (remaining > 0) {
+    const segLen = Math.min(65535, remaining);
+    if (segLen < 4) {
+      const com = new Uint8Array([0xff, 0xfe, 0x00, 0x02]);
+      chunks.push(com);
+      break;
+    }
+    const com = new Uint8Array(segLen);
+    com[0] = 0xff;
+    com[1] = 0xfe;
+    com[2] = (segLen >> 8) & 0xff;
+    com[3] = segLen & 0xff;
+    com.fill(0x20, 4);
+    chunks.push(com);
+    remaining -= segLen;
+  }
+
+  const totalComLen = chunks.reduce((acc, c) => acc + c.length, 0);
+  const out = new Uint8Array(orig.length + totalComLen);
+  out.set(orig.subarray(0, eoiIdx), 0);
+  let offset = eoiIdx;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
+  }
+  out.set(orig.subarray(eoiIdx), offset);
+  return out;
+}
+
+/**
+ * Safely pads PNG file with a standard tEXt chunk before IEND.
+ * Fully valid according to W3C PNG specification.
+ */
+function padPngWithTextChunk(originalBytes: ArrayBuffer, targetBytes: number): Uint8Array {
+  const orig = new Uint8Array(originalBytes);
+  // Look for IEND chunk (last 12 bytes or search from end)
+  let iendPos = orig.length - 12;
+  while (
+    iendPos > 0 &&
+    !(
+      orig[iendPos + 4] === 0x49 &&
+      orig[iendPos + 5] === 0x45 &&
+      orig[iendPos + 6] === 0x4e &&
+      orig[iendPos + 7] === 0x44
+    )
+  ) {
+    iendPos--;
+  }
+
+  if (iendPos <= 0) {
+    const padded = new Uint8Array(targetBytes);
+    padded.set(orig, 0);
+    return padded;
+  }
+
+  const needed = targetBytes - orig.length;
+  if (needed <= 12) return orig;
+
+  const dataLen = needed - 12;
+  const chunk = new Uint8Array(needed);
+  // Length (4 bytes big-endian)
+  chunk[0] = (dataLen >> 24) & 0xff;
+  chunk[1] = (dataLen >> 16) & 0xff;
+  chunk[2] = (dataLen >> 8) & 0xff;
+  chunk[3] = dataLen & 0xff;
+  // Type: 'tEXt'
+  chunk[4] = 0x74;
+  chunk[5] = 0x45;
+  chunk[6] = 0x58;
+  chunk[7] = 0x74;
+
+  // Keyword 'Comment\0'
+  const keyword = [0x43, 0x6f, 0x6d, 0x6d, 0x65, 0x6e, 0x74, 0x00];
+  const payloadOffset = 8;
+  for (let i = 0; i < Math.min(keyword.length, dataLen); i++) {
+    chunk[payloadOffset + i] = keyword[i];
+  }
+  for (let i = keyword.length; i < dataLen; i++) {
+    chunk[payloadOffset + i] = 0x20; // space fill
+  }
+
+  // Calculate CRC over Type (4 bytes) + Data (dataLen bytes)
+  const crcTarget = chunk.subarray(4, 4 + 4 + dataLen);
+  const crc = calcPngCrc32(crcTarget);
+  const crcOffset = 8 + dataLen;
+  chunk[crcOffset] = (crc >> 24) & 0xff;
+  chunk[crcOffset + 1] = (crc >> 16) & 0xff;
+  chunk[crcOffset + 2] = (crc >> 8) & 0xff;
+  chunk[crcOffset + 3] = crc & 0xff;
+
+  const out = new Uint8Array(orig.length + needed);
+  out.set(orig.subarray(0, iendPos), 0);
+  out.set(chunk, iendPos);
+  out.set(orig.subarray(iendPos), iendPos + needed);
+  return out;
+}
+
+/**
+ * 2. INCREASE IMAGE SIZE IN KB (Safe non-destructive metadata padding for rigid minimum portal limits)
  */
 export async function increaseImageSizeKb(
   file: File,
@@ -151,8 +291,10 @@ export async function increaseImageSizeKb(
   const targetBytes = targetKb * 1024;
   const originalBytes = await file.arrayBuffer();
 
+  const mime = file.type || (file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg');
+
   if (originalBytes.byteLength >= targetBytes) {
-    const b = new Blob([originalBytes], { type: file.type || 'image/jpeg' });
+    const b = new Blob([originalBytes], { type: mime });
     return {
       blob: b,
       dataUrl: await blobToDataUrl(b),
@@ -160,14 +302,14 @@ export async function increaseImageSizeKb(
     };
   }
 
-  // Pad safe trailing bytes that image decoders safely ignore
-  const diff = targetBytes - originalBytes.byteLength;
-  const padded = new Uint8Array(targetBytes);
-  padded.set(new Uint8Array(originalBytes), 0);
-  // Fill remaining bytes with safe zeros/spaces
-  padded.fill(0x00, originalBytes.byteLength, targetBytes);
+  let finalBuffer: Uint8Array;
+  if (mime === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+    finalBuffer = padPngWithTextChunk(originalBytes, targetBytes);
+  } else {
+    finalBuffer = padJpegWithComments(originalBytes, targetBytes);
+  }
 
-  const finalBlob = new Blob([padded], { type: file.type || 'image/jpeg' });
+  const finalBlob = new Blob([finalBuffer as BlobPart], { type: mime });
   const dataUrl = await blobToDataUrl(finalBlob);
   return {
     blob: finalBlob,
@@ -201,8 +343,9 @@ export async function resizeImageDimensions(
   options: DimensionResizeOptions
 ): Promise<{ blob: Blob; dataUrl: string; widthPx: number; heightPx: number; sizeKb: number }> {
   const dpi = options.dpi || 300;
-  const targetW = Math.max(10, convertUnitsToPixels(options.width, options.unit, dpi));
-  const targetH = Math.max(10, convertUnitsToPixels(options.height, options.unit, dpi));
+  // Clamp dimensions safely between 10px and 8000px to prevent tab crash on extreme inputs
+  const targetW = Math.min(8000, Math.max(10, convertUnitsToPixels(options.width, options.unit, dpi)));
+  const targetH = Math.min(8000, Math.max(10, convertUnitsToPixels(options.height, options.unit, dpi)));
   const format = options.format || 'image/jpeg';
   const quality = options.quality !== undefined ? options.quality : 0.92;
 
@@ -227,6 +370,8 @@ export async function resizeImageDimensions(
   // Inject DPI header if requested
   if (format === 'image/jpeg' && dpi) {
     rawBlob = await injectJpegDpi(rawBlob, dpi);
+  } else if (format === 'image/png' && dpi) {
+    rawBlob = await injectPngDpi(rawBlob, dpi);
   }
 
   const dataUrl = await blobToDataUrl(rawBlob);
@@ -438,6 +583,7 @@ export interface SignatureOptions {
   contrastBoost?: number; // 0 to 100
   cleanPaperBg?: boolean;
   targetKb?: number; // typically 10 to 20
+  minKb?: number; // minimum portal limit (typically 10KB for UPSC/SSC)
 }
 
 export async function processSignature(
@@ -506,6 +652,22 @@ export async function processSignature(
 
   // Compress to target KB (<= 20KB for portals)
   const result = await compressToTargetKb(canvas, targetKb, 'image/jpeg');
+
+  // If a minKb constraint is specified or defaults for recruitment portals (>= 10KB),
+  // safely pad with standard JPEG COM markers so the file meets portal minimum constraints.
+  const minKb = options.minKb !== undefined ? options.minKb : (targetKb <= 25 ? 10 : 0);
+  if (minKb > 0 && result.blob.size < minKb * 1024) {
+    const origBuffer = await result.blob.arrayBuffer();
+    const safeTargetBytes = Math.round(minKb * 1024 * 1.15); // e.g. ~11.5 KB
+    const padded = padJpegWithComments(origBuffer, safeTargetBytes);
+    const safeBlob = new Blob([padded as BlobPart], { type: 'image/jpeg' });
+    return {
+      blob: safeBlob,
+      dataUrl: await blobToDataUrl(safeBlob),
+      actualKb: Math.round((safeBlob.size / 1024) * 10) / 10,
+    };
+  }
+
   return {
     blob: result.blob,
     dataUrl: result.dataUrl,
@@ -690,6 +852,69 @@ export async function injectJpegDpi(blob: Blob, dpi: number): Promise<Blob> {
   output.set(bytes.subarray(2), 2 + jfifBlock.length);
 
   return new Blob([output], { type: 'image/jpeg' });
+}
+
+/**
+ * 9b. DPI INJECTION FOR PNG (pHYs Chunk)
+ * Embeds physical pixel dimensions (DPI converted to pixels per meter).
+ */
+export async function injectPngDpi(blob: Blob, dpi: number): Promise<Blob> {
+  const arrayBuffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+
+  // Check PNG Signature (89 50 4E 47 0D 0A 1A 0A)
+  if (
+    bytes[0] !== 0x89 ||
+    bytes[1] !== 0x50 ||
+    bytes[2] !== 0x4e ||
+    bytes[3] !== 0x47
+  ) {
+    return blob;
+  }
+
+  // End of IHDR chunk is byte 33 (8 magic + 4 len + 4 type + 13 data + 4 crc)
+  const ihdrEnd = 33;
+  if (bytes.length < ihdrEnd) return blob;
+
+  // Pixels per meter (1 inch = 0.0254 meters)
+  const ppm = Math.round(dpi / 0.0254);
+  const physChunk = new Uint8Array(21);
+  // Length: 9 (4 bytes)
+  physChunk[0] = 0;
+  physChunk[1] = 0;
+  physChunk[2] = 0;
+  physChunk[3] = 9;
+  // Type: 'pHYs'
+  physChunk[4] = 0x70;
+  physChunk[5] = 0x48;
+  physChunk[6] = 0x59;
+  physChunk[7] = 0x73;
+  // X pixels per meter (4 bytes)
+  physChunk[8] = (ppm >> 24) & 0xff;
+  physChunk[9] = (ppm >> 16) & 0xff;
+  physChunk[10] = (ppm >> 8) & 0xff;
+  physChunk[11] = ppm & 0xff;
+  // Y pixels per meter (4 bytes)
+  physChunk[12] = (ppm >> 24) & 0xff;
+  physChunk[13] = (ppm >> 16) & 0xff;
+  physChunk[14] = (ppm >> 8) & 0xff;
+  physChunk[15] = ppm & 0xff;
+  // Unit: 1 = meter
+  physChunk[16] = 1;
+
+  // CRC32 over Type (4 bytes) + Data (9 bytes)
+  const crc = calcPngCrc32(physChunk.subarray(4, 17));
+  physChunk[17] = (crc >> 24) & 0xff;
+  physChunk[18] = (crc >> 16) & 0xff;
+  physChunk[19] = (crc >> 8) & 0xff;
+  physChunk[20] = crc & 0xff;
+
+  const out = new Uint8Array(bytes.length + physChunk.length);
+  out.set(bytes.subarray(0, ihdrEnd), 0);
+  out.set(physChunk, ihdrEnd);
+  out.set(bytes.subarray(ihdrEnd), ihdrEnd + physChunk.length);
+
+  return new Blob([out], { type: 'image/png' });
 }
 
 // Helper Utilities
@@ -882,9 +1107,14 @@ export async function rotateAndFlipImage(
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas context failed');
 
+  // Fill white canvas background to prevent black corner artifacts in JPEG output
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, newW, newH);
+
   ctx.translate(newW / 2, newH / 2);
-  ctx.rotate(rad);
+  // Apply visual screen-space flip before rotation
   ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+  ctx.rotate(rad);
   ctx.drawImage(img, -w / 2, -h / 2);
 
   const blob = await canvasToBlob(canvas, 'image/jpeg', 0.95);
@@ -921,10 +1151,9 @@ export async function applyPhotoEffects(
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) throw new Error('Canvas context failed');
 
-  if (borderWidth > 0 || padding > 0) {
-    ctx.fillStyle = options.border?.color || '#FFFFFF';
-    ctx.fillRect(0, 0, w, h);
-  }
+  // Always initialize background to white (or border color) to prevent black artifacts on transparent images
+  ctx.fillStyle = (borderWidth > 0 || padding > 0) ? (options.border?.color || '#FFFFFF') : '#FFFFFF';
+  ctx.fillRect(0, 0, w, h);
 
   const innerX = borderWidth + padding;
   const innerY = borderWidth + padding;
@@ -1010,52 +1239,55 @@ export async function addWatermarkToImage(
   ctx.textBaseline = 'middle';
 
   const position = options.position || 'center';
-  const text = options.text || 'rajvarshith.com';
+  const text = (options.text !== undefined ? options.text : 'rajvarshith.com').trim();
 
-  if (position === 'tile') {
-    const angle = ((options.rotation || -30) * Math.PI) / 180;
-    const stepX = fontSize * text.length * 1.2;
-    const stepY = fontSize * 4;
+  if (text.length > 0) {
+    if (position === 'tile') {
+      const angle = ((options.rotation || -30) * Math.PI) / 180;
+      // Guard stepX and stepY to prevent infinite loop or browser freeze
+      const stepX = Math.max(80, fontSize * text.length * 1.2);
+      const stepY = Math.max(50, fontSize * 4);
 
-    for (let y = -h; y < h * 2; y += stepY) {
-      for (let x = -w; x < w * 2; x += stepX) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(angle);
-        ctx.fillText(text, 0, 0);
-        ctx.restore();
+      for (let y = -h; y < h * 2; y += stepY) {
+        for (let x = -w; x < w * 2; x += stepX) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          ctx.fillText(text, 0, 0);
+          ctx.restore();
+        }
       }
-    }
-  } else {
-    let tx = w / 2;
-    let ty = h / 2;
-    const pad = Math.max(20, Math.round(w * 0.04));
+    } else {
+      let tx = w / 2;
+      let ty = h / 2;
+      const pad = Math.max(20, Math.round(w * 0.04));
 
-    if (position === 'top-left') {
-      ctx.textAlign = 'left';
-      tx = pad;
-      ty = pad + fontSize;
-    } else if (position === 'top-right') {
-      ctx.textAlign = 'right';
-      tx = w - pad;
-      ty = pad + fontSize;
-    } else if (position === 'bottom-left') {
-      ctx.textAlign = 'left';
-      tx = pad;
-      ty = h - pad;
-    } else if (position === 'bottom-right') {
-      ctx.textAlign = 'right';
-      tx = w - pad;
-      ty = h - pad;
-    }
+      if (position === 'top-left') {
+        ctx.textAlign = 'left';
+        tx = pad;
+        ty = pad + fontSize;
+      } else if (position === 'top-right') {
+        ctx.textAlign = 'right';
+        tx = w - pad;
+        ty = pad + fontSize;
+      } else if (position === 'bottom-left') {
+        ctx.textAlign = 'left';
+        tx = pad;
+        ty = h - pad;
+      } else if (position === 'bottom-right') {
+        ctx.textAlign = 'right';
+        tx = w - pad;
+        ty = h - pad;
+      }
 
-    ctx.save();
-    ctx.translate(tx, ty);
-    if (options.rotation) {
-      ctx.rotate((options.rotation * Math.PI) / 180);
+      ctx.save();
+      ctx.translate(tx, ty);
+      if (options.rotation) {
+        ctx.rotate((options.rotation * Math.PI) / 180);
+      }
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
     }
-    ctx.fillText(text, 0, 0);
-    ctx.restore();
   }
 
   const blob = await canvasToBlob(canvas, 'image/jpeg', 0.94);
@@ -1071,12 +1303,20 @@ export async function splitImageGrid(
   cols: number,
   rows: number
 ): Promise<Array<{ col: number; row: number; blob: Blob; dataUrl: string }>> {
-  const pieceW = Math.floor(img.naturalWidth / cols);
-  const pieceH = Math.floor(img.naturalHeight / rows);
+  const nw = img.naturalWidth;
+  const nh = img.naturalHeight;
   const results: Array<{ col: number; row: number; blob: Blob; dataUrl: string }> = [];
 
   for (let r = 0; r < rows; r++) {
+    const y1 = Math.round((r * nh) / rows);
+    const y2 = Math.round(((r + 1) * nh) / rows);
+    const pieceH = Math.max(1, y2 - y1);
+
     for (let c = 0; c < cols; c++) {
+      const x1 = Math.round((c * nw) / cols);
+      const x2 = Math.round(((c + 1) * nw) / cols);
+      const pieceW = Math.max(1, x2 - x1);
+
       const canvas = document.createElement('canvas');
       canvas.width = pieceW;
       canvas.height = pieceH;
@@ -1085,8 +1325,8 @@ export async function splitImageGrid(
 
       ctx.drawImage(
         img,
-        c * pieceW,
-        r * pieceH,
+        x1,
+        y1,
         pieceW,
         pieceH,
         0,
@@ -1141,8 +1381,27 @@ export async function mergePhotoAndSignature(
   ctx.lineWidth = 2;
   ctx.strokeRect(1, 1, cardW - 2, totalH - 2);
 
-  // 1. Draw Photo on top
-  ctx.drawImage(photoImg, 10, 10, cardW - 20, photoH - 20);
+  // 1. Draw Photo on top with aspect ratio cover (no squashing/stretching of face)
+  const boxX = 10;
+  const boxY = 10;
+  const boxW = cardW - 20;
+  const boxH = photoH - 20;
+  const pw = photoImg.naturalWidth;
+  const ph = photoImg.naturalHeight;
+  const pAspect = pw / ph;
+  const boxAspect = boxW / boxH;
+
+  let cropSx = 0, cropSy = 0, cropSW = pw, cropSH = ph;
+  if (pAspect > boxAspect) {
+    // Wider than frame: crop horizontal edges
+    cropSW = ph * boxAspect;
+    cropSx = (pw - cropSW) / 2;
+  } else {
+    // Taller than frame: crop vertical edges slightly
+    cropSH = pw / boxAspect;
+    cropSy = (ph - cropSH) / 2;
+  }
+  ctx.drawImage(photoImg, cropSx, cropSy, cropSW, cropSH, boxX, boxY, boxW, boxH);
 
   // Divider
   let curY = photoH;
@@ -1187,9 +1446,9 @@ export async function mergePhotoAndSignature(
   } else {
     sh = sw / sRatio;
   }
-  const sx = (cardW - sw) / 2;
-  const sy = curY + (totalH - curY - sh) / 2;
-  ctx.drawImage(signImg, sx, sy, sw, sh);
+  const sigX = (cardW - sw) / 2;
+  const sigY = curY + (totalH - curY - sh) / 2;
+  ctx.drawImage(signImg, sigX, sigY, sw, sh);
 
   const targetKb = options.targetKb || 50;
   const comp = await compressToTargetKb(canvas, targetKb, 'image/jpeg');

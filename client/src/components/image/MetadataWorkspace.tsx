@@ -79,11 +79,25 @@ export const MetadataWorkspace: React.FC<MetadataWorkspaceProps> = ({ onBack }) 
       canvas.width = imgElement.naturalWidth;
       canvas.height = imgElement.naturalHeight;
       const ctx = canvas.getContext('2d')!;
+
+      const isPng =
+        selectedFile.type === 'image/png' ||
+        selectedFile.name.toLowerCase().endsWith('.png');
+      const isWebp =
+        selectedFile.type === 'image/webp' ||
+        selectedFile.name.toLowerCase().endsWith('.webp');
+      const mime = isPng ? 'image/png' : isWebp ? 'image/webp' : 'image/jpeg';
+      const ext = isPng ? 'png' : isWebp ? 'webp' : 'jpg';
+
+      if (mime === 'image/jpeg') {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
       ctx.drawImage(imgElement, 0, 0);
 
-      const cleanBlob = await canvasToBlob(canvas, 'image/jpeg', 0.95);
+      const cleanBlob = await canvasToBlob(canvas, mime, 0.95);
       const base = selectedFile.name.replace(/\.[^/.]+$/, '');
-      downloadImageBlob(cleanBlob, `${base}_no_exif.jpg`);
+      downloadImageBlob(cleanBlob, `${base}_no_exif.${ext}`);
       setIsStrippedDone(true);
     } catch (err: any) {
       alert(`Error cleaning metadata: ${err.message || 'Please try again'}`);

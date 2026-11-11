@@ -594,7 +594,11 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
 
               {/* Interactive Drag Reposition Canvas / Preview */}
               <div
-                className={`relative w-64 h-80 rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm flex items-center justify-center bg-slate-100 select-none transition-shadow ${
+                style={{
+                  width: '256px',
+                  height: `${Math.min(340, Math.max(256, Math.round(256 / (PASSPORT_SPECS[country].widthMm / PASSPORT_SPECS[country].heightMm))))}px`,
+                }}
+                className={`relative rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm flex items-center justify-center bg-slate-100 select-none transition-shadow ${
                   isDragging ? 'cursor-grabbing ring-2 ring-blue-500' : 'cursor-grab hover:border-blue-400'
                 }`}
                 onMouseDown={handleMouseDown}
