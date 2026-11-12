@@ -55,6 +55,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
   const [contiguous, setContiguous] = useState<boolean>(true);
   const [defringe, setDefringe] = useState<boolean>(true);
   const [targetColor, setTargetColor] = useState<{ r: number; g: number; b: number } | null>(null);
+  const [seedPoint, setSeedPoint] = useState<{ x: number; y: number } | null>(null);
   const [bgChoice, setBgChoice] = useState<string>('transparent');
   const [customBgColor, setCustomBgColor] = useState<string>('#FFFFFF');
 
@@ -79,6 +80,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
       const img = await loadImage(file);
       setImgElement(img);
       setTargetColor(null);
+      setSeedPoint(null);
       setBrushMask(new Uint8Array(img.naturalWidth * img.naturalHeight));
       setMaskHistory([]);
       setZoom(1);
@@ -96,6 +98,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
     try {
       const options: BgRemovalOptions = {
         targetColor: targetColor || undefined,
+        seedPoint: seedPoint || undefined,
         tolerance,
         feather,
         contiguous,
@@ -121,7 +124,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
     } finally {
       setIsProcessing(false);
     }
-  }, [imgElement, targetColor, tolerance, feather, contiguous, defringe, brushMask, bgChoice, customBgColor, showOriginal]);
+  }, [imgElement, targetColor, seedPoint, tolerance, feather, contiguous, defringe, brushMask, bgChoice, customBgColor, showOriginal]);
 
   useEffect(() => {
     renderCutout();
@@ -147,6 +150,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
         sCtx.drawImage(imgElement, 0, 0);
         const p = sCtx.getImageData(x, y, 1, 1).data;
         setTargetColor({ r: p[0], g: p[1], b: p[2] });
+        setSeedPoint({ x, y });
         setToolMode('auto'); // switch back after sampling
       }
     }

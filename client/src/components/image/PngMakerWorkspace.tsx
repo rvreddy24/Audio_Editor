@@ -44,6 +44,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
   // Settings
   const [mode, setMode] = useState<PngMode>('white');
   const [customColor, setCustomColor] = useState<{ r: number; g: number; b: number }>({ r: 255, g: 255, b: 255 });
+  const [seedPoint, setSeedPoint] = useState<{ x: number; y: number } | null>(null);
   const [tolerance, setTolerance] = useState<number>(25);
   const [feather, setFeather] = useState<number>(2);
   const [contiguous, setContiguous] = useState<boolean>(true);
@@ -63,6 +64,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
     try {
       const img = await loadImage(file);
       setImgElement(img);
+      setSeedPoint(null);
       setZoom(1);
     } catch (err) {
       console.error(err);
@@ -79,6 +81,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
       const options: PngMakerOptions = {
         mode,
         customColor,
+        seedPoint: seedPoint || undefined,
         tolerance,
         feather,
         contiguous,
@@ -102,7 +105,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
     } finally {
       setIsProcessing(false);
     }
-  }, [imgElement, mode, customColor, tolerance, feather, contiguous, defringe, showOriginal]);
+  }, [imgElement, mode, customColor, seedPoint, tolerance, feather, contiguous, defringe, showOriginal]);
 
   useEffect(() => {
     renderPng();
@@ -127,6 +130,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
         sCtx.drawImage(imgElement, 0, 0);
         const p = sCtx.getImageData(x, y, 1, 1).data;
         setCustomColor({ r: p[0], g: p[1], b: p[2] });
+        setSeedPoint({ x, y });
         setMode('custom');
         setIsEyedropperActive(false);
       }

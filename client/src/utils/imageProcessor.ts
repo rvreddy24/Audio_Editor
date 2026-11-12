@@ -1460,6 +1460,7 @@ export async function mergePhotoAndSignature(
  */
 export interface BgRemovalOptions {
   targetColor?: { r: number; g: number; b: number };
+  seedPoint?: { x: number; y: number };
   tolerance?: number; // 0 to 100 (percentage)
   feather?: number; // 0 to 10 (pixels)
   contiguous?: boolean; // flood-fill from borders vs global key
@@ -1545,15 +1546,32 @@ export function processBackgroundRemoval(
       }
     };
 
-    // Seed top and bottom borders
-    for (let x = 0; x < w; x++) {
-      pushBorder(x, 0);
-      pushBorder(x, h - 1);
-    }
-    // Seed left and right borders
-    for (let y = 0; y < h; y++) {
-      pushBorder(0, y);
-      pushBorder(w - 1, y);
+    if (options.seedPoint) {
+      const sx = Math.max(0, Math.min(w - 1, options.seedPoint.x));
+      const sy = Math.max(0, Math.min(h - 1, options.seedPoint.y));
+      const pIdx = sy * w + sx;
+      isBg[pIdx] = 1;
+      queue[qTail++] = pIdx;
+    } else {
+      // Smart perimeter seeding:
+      // Always seed top border (background is almost always at top of image)
+      for (let x = 0; x < w; x++) {
+        pushBorder(x, 0);
+      }
+      // Seed sides down to 70% height (avoids torso/clothes touching lower borders)
+      const maxSideY = Math.floor(h * 0.7);
+      for (let y = 1; y < maxSideY; y++) {
+        pushBorder(0, y);
+        pushBorder(w - 1, y);
+      }
+      // Only seed bottom border pixels if they match target color with strict tolerance
+      for (let x = 0; x < w; x++) {
+        const pIdx = (h - 1) * w + x;
+        const dIdx = pIdx * 4;
+        if (calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]) <= tolerance * 0.75) {
+          pushBorder(x, h - 1);
+        }
+      }
     }
 
     while (qHead < qTail) {
@@ -1569,10 +1587,19 @@ export function processBackgroundRemoval(
         cy < h - 1 ? cur + w : -1,
       ];
 
+      const cIdx = cur * 4;
+      const maxStep = Math.max(8, tolerance * 0.45);
+
       for (const n of neighbors) {
         if (n !== -1 && isBg[n] === 0) {
           const dIdx = n * 4;
-          if (calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]) <= tolerance) {
+          const distToTarget = calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]);
+          const stepDr = data[dIdx] - data[cIdx];
+          const stepDg = data[dIdx + 1] - data[cIdx + 1];
+          const stepDb = data[dIdx + 2] - data[cIdx + 2];
+          const stepDist = (Math.sqrt(stepDr * stepDr + stepDg * stepDg + stepDb * stepDb) / 441.67) * 100;
+
+          if (distToTarget <= tolerance && stepDist <= maxStep) {
             isBg[n] = 1;
             queue[qTail++] = n;
           }
@@ -1656,6 +1683,7 @@ export function processBackgroundRemoval(
 export interface PngMakerOptions {
   mode: 'white' | 'black' | 'custom' | 'signature';
   customColor?: { r: number; g: number; b: number };
+  seedPoint?: { x: number; y: number };
   tolerance: number; // 0 to 100
   feather: number; // 0 to 10
   contiguous: boolean;
@@ -1706,6 +1734,7 @@ export function processPngMaker(
       tempCtx.putImageData(imgData, 0, 0);
       return processBackgroundRemoval(tempC, {
         targetColor: { r: 255, g: 255, b: 255 },
+        seedPoint: options.seedPoint,
         tolerance: options.tolerance,
         feather: options.feather,
         contiguous: options.contiguous,
@@ -1717,6 +1746,7 @@ export function processPngMaker(
 
   return processBackgroundRemoval(source, {
     targetColor,
+    seedPoint: options.seedPoint,
     tolerance: options.tolerance,
     feather: options.feather,
     contiguous: options.contiguous,

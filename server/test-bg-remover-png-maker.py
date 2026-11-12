@@ -79,25 +79,90 @@ def test_background_removal():
         cw, ch = im_cg.size
         print(f"\n[Test 2] Loaded ChatGPT Image: {cw}x{ch} px")
 
-        # Test Eyedropper Color Keying on top-left corner color
-        corner_color = im_cg.getpixel((0, 0))
-        cr, cg, cb = corner_color[0], corner_color[1], corner_color[2]
-        print(f"  ✓ Sampled top-left corner color: RGB({cr}, {cg}, {cb})")
-
+        # Test 2a: Automatic Smart-Perimeter Background Removal
+        # Sample background from top area (e.g. x=100, y=100)
         cg_arr = np.array(im_cg)
-        c_r, c_g, c_b = cg_arr[:,:,0].astype(float), cg_arr[:,:,1].astype(float), cg_arr[:,:,2].astype(float)
-        dist_corner = np.sqrt((c_r - cr)**2 + (c_g - cg)**2 + (c_b - cb)**2) / 441.67 * 100
+        tr, tg, tb = int(cg_arr[100, 100, 0]), int(cg_arr[100, 100, 1]), int(cg_arr[100, 100, 2])
+        print(f"  ✓ Sampled studio grey background color: RGB({tr}, {tg}, {tb})")
 
-        # Key out with tolerance 25%
+        c_r = cg_arr[:,:,0].astype(float)
+        c_g = cg_arr[:,:,1].astype(float)
+        c_b = cg_arr[:,:,2].astype(float)
+        dist_cg = np.sqrt((c_r - tr)**2 + (c_g - tg)**2 + (c_b - tb)**2) / 441.67 * 100
+
+        # Smart flood fill (top border & upper sides, protecting lower suit)
+        from collections import deque
+        cg_visited = np.zeros((ch, cw), dtype=bool)
+        cg_q = deque()
+        tol = 24.0
+
+        for x in range(cw):
+            if dist_cg[0, x] <= tol and not cg_visited[0, x]:
+                cg_visited[0, x] = True
+                cg_q.append((0, x))
+        for y in range(int(ch * 0.65)):
+            if dist_cg[y, 0] <= tol and not cg_visited[y, 0]:
+                cg_visited[y, 0] = True
+                cg_q.append((y, 0))
+            if dist_cg[y, cw - 1] <= tol and not cg_visited[y, cw - 1]:
+                cg_visited[y, cw - 1] = True
+                cg_q.append((y, cw - 1))
+
+        while cg_q:
+            cy, cx = cg_q.popleft()
+            for dy, dx in [(-1,0), (1,0), (0,-1), (0,1)]:
+                ny, nx = cy + dy, cx + dx
+                if 0 <= ny < ch and 0 <= nx < cw and not cg_visited[ny, nx]:
+                    if dist_cg[ny, nx] <= tol:
+                        cg_visited[ny, nx] = True
+                        cg_q.append((ny, nx))
+
         cg_cutout_arr = cg_arr.copy()
-        cg_visited = dist_corner < 25.0
-        cg_cutout_arr[cg_visited, 3] = 0
-        cg_trans_pixels = np.sum(cg_cutout_arr[:,:,3] == 0)
-        print(f"  ✓ Keyed out {cg_trans_pixels:,} pixels matching corner color with 25% tolerance")
+        feather = 3.0
+        tol_min = tol - feather
+        for y in range(ch):
+            for x in range(cw):
+                if cg_visited[y, x]:
+                    d = dist_cg[y, x]
+                    if d <= tol_min:
+                        cg_cutout_arr[y, x, 3] = 0
+                    else:
+                        a_frac = (d - tol_min) / feather
+                        new_a = int(np.clip(a_frac * 255, 0, 255))
+                        cg_cutout_arr[y, x, 3] = new_a
+                        if 0 < new_a < 255:
+                            af = new_a / 255.0
+                            cg_cutout_arr[y, x, 0] = int(np.clip((cg_cutout_arr[y, x, 0] - tr * (1 - af)) / af, 0, 255))
+                            cg_cutout_arr[y, x, 1] = int(np.clip((cg_cutout_arr[y, x, 1] - tg * (1 - af)) / af, 0, 255))
+                            cg_cutout_arr[y, x, 2] = int(np.clip((cg_cutout_arr[y, x, 2] - tb * (1 - af)) / af, 0, 255))
 
-        out_cg_png = 'server/outputs/chatgpt_corner_keyed.png'
-        Image.fromarray(cg_cutout_arr).save(out_cg_png)
-        print(f"  ✓ Saved Keyed PNG -> {out_cg_png} ({os.path.getsize(out_cg_png):,} bytes)")
+        cg_trans_pixels = np.sum(cg_cutout_arr[:,:,3] == 0)
+        cg_fg_pixels = np.sum(cg_cutout_arr[:,:,3] == 255)
+        print(f"  ✓ Keyed out {cg_trans_pixels:,} studio backdrop pixels ({cg_trans_pixels/(cw*ch)*100:.1f}%)")
+        print(f"  ✓ Preserved {cg_fg_pixels:,} subject pixels (Face & Suit intact)")
+
+        # Verify subject intact
+        assert not cg_visited[500, cw // 2], "Face center must be preserved as foreground"
+        assert not cg_visited[1100, 200], "Suit shoulder must be preserved as foreground"
+
+        out_cg_png = 'server/outputs/chatgpt_transparent_cutout.png'
+        cg_cutout_img = Image.fromarray(cg_cutout_arr)
+        cg_cutout_img.save(out_cg_png)
+        print(f"  ✓ Saved Transparent Cutout PNG -> {out_cg_png} ({os.path.getsize(out_cg_png):,} bytes)")
+
+        # Test 2b: Background Replacement with Pure White
+        white_bg = Image.new('RGBA', (cw, ch), (255, 255, 255, 255))
+        replaced_white = Image.alpha_composite(white_bg, cg_cutout_img)
+        out_white = 'server/outputs/chatgpt_white_background.jpg'
+        replaced_white.convert('RGB').save(out_white, quality=95)
+        print(f"  ✓ Replaced Background with Pure White -> {out_white} ({os.path.getsize(out_white):,} bytes)")
+
+        # Test 2c: Background Replacement with Studio Navy Blue
+        navy_bg = Image.new('RGBA', (cw, ch), (30, 58, 138, 255))
+        replaced_navy = Image.alpha_composite(navy_bg, cg_cutout_img)
+        out_navy = 'server/outputs/chatgpt_navy_background.jpg'
+        replaced_navy.convert('RGB').save(out_navy, quality=95)
+        print(f"  ✓ Replaced Background with Studio Navy Blue -> {out_navy} ({os.path.getsize(out_navy):,} bytes)")
 
     print("\n" + "=" * 60)
     print("ALL TESTS PASSED: Background Remover & Transparent PNG Maker VERIFIED!")
