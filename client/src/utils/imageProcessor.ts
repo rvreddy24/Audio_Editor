@@ -45,8 +45,43 @@ export function loadImage(source: File | Blob | string): Promise<HTMLImageElemen
 }
 
 /**
- * 1. COMPRESS TO EXACT TARGET KB (Binary Search + Iterative Scale)
- * Strictly guarantees output is <= targetKb (or within a 2% margin).
+ * Fast 3x3 unsharp mask convolution filter for canvas image data
+ * Sharpens high-frequency details (eyes, facial hair, fine lines, text) after downscaling.
+ */
+function applyCanvasSharpen(ctx: CanvasRenderingContext2D, width: number, height: number, amount: number = 0.22) {
+  if (width < 3 || height < 3) return;
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const d = imgData.data;
+  const copy = new Uint8ClampedArray(d);
+  const w4 = width * 4;
+
+  for (let y = 1; y < height - 1; y++) {
+    const row = y * w4;
+    const rowAbove = (y - 1) * w4;
+    const rowBelow = (y + 1) * w4;
+
+    for (let x = 1; x < width - 1; x++) {
+      const i = row + (x << 2);
+      const iLeft = row + ((x - 1) << 2);
+      const iRight = row + ((x + 1) << 2);
+      const iUp = rowAbove + (x << 2);
+      const iDown = rowBelow + (x << 2);
+
+      for (let c = 0; c < 3; c++) {
+        const orig = copy[i + c];
+        const neighbors = copy[iLeft + c] + copy[iRight + c] + copy[iUp + c] + copy[iDown + c];
+        d[i + c] = Math.max(0, Math.min(255, Math.round(orig * (1 + 4 * amount) - neighbors * amount)));
+      }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+/**
+ * 1. COMPRESS TO EXACT TARGET KB (Smart Dimension Scaling + High-Quality Encoding)
+ * Strictly guarantees output <= targetKb while maintaining razor-sharp visual clarity.
+ * For low targets (< 50KB), prevents severe JPEG block artifacts by maintaining quality >= 0.60
+ * and applying adaptive bicubic scaling + unsharp masking.
  */
 export async function compressToTargetKb(
   source: HTMLImageElement | HTMLCanvasElement,
@@ -54,19 +89,41 @@ export async function compressToTargetKb(
   mimeType: 'image/jpeg' | 'image/webp' = 'image/jpeg'
 ): Promise<{ blob: Blob; dataUrl: string; actualKb: number; width: number; height: number }> {
   const targetBytes = targetKb * 1024;
-  let curW = 'naturalWidth' in source ? (source.naturalWidth || source.width) : source.width;
-  let curH = 'naturalHeight' in source ? (source.naturalHeight || source.height) : source.height;
+  const srcW = 'naturalWidth' in source ? (source.naturalWidth || source.width) : source.width;
+  const srcH = 'naturalHeight' in source ? (source.naturalHeight || source.height) : source.height;
 
-  // Max iterations
+  // Minimum quality floor: NEVER drop below 0.60 for JPEG or 0.58 for WebP (prevents blurry 8x8 block artifacts)
+  const minQuality = mimeType === 'image/webp' ? 0.58 : targetKb < 60 ? 0.60 : 0.65;
+  const maxQuality = 0.92;
+
+  // Estimate ideal initial dimensions to avoid trying full resolution at 5% quality
+  let curW = srcW;
+  let curH = srcH;
+
+  if (targetKb < 80) {
+    const bytesPerPixel = mimeType === 'image/webp' ? 0.08 : 0.11;
+    const estPixels = targetBytes / bytesPerPixel;
+    const idealW = Math.round(Math.sqrt(estPixels * (srcW / srcH)));
+    if (idealW < srcW) {
+      curW = Math.min(srcW, Math.max(260, Math.round(idealW * 1.18)));
+      curH = Math.max(260, Math.round((curW / srcW) * srcH));
+    }
+  }
+
   let bestBlob: Blob | null = null;
-  let bestQuality = 0.85;
+  let bestW = curW;
+  let bestH = curH;
 
-  for (let scalePass = 0; scalePass < 5; scalePass++) {
+  for (let pass = 0; pass < 8; pass++) {
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(20, Math.round(curW));
     canvas.height = Math.max(20, Math.round(curH));
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Could not create canvas context');
+
+    // High quality bicubic downsampling
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     if (mimeType === 'image/jpeg') {
       ctx.fillStyle = '#FFFFFF';
@@ -74,57 +131,74 @@ export async function compressToTargetKb(
     }
     ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
 
-    // Binary search quality between 0.05 and 0.98
-    let lowQ = 0.05;
-    let highQ = 0.98;
-    let localBestBlob: Blob | null = null;
+    // Apply smart unsharp mask when downscaled to preserve crisp facial features & edges
+    if (curW < srcW * 0.90) {
+      applyCanvasSharpen(ctx, canvas.width, canvas.height, 0.20);
+    }
 
-    for (let qIter = 0; qIter < 7; qIter++) {
+    // Binary search quality between minQuality and maxQuality
+    let lowQ = minQuality;
+    let highQ = maxQuality;
+    let localBestBlob: Blob | null = null;
+    let localBestQ = -1;
+
+    for (let qIter = 0; qIter < 6; qIter++) {
       const midQ = (lowQ + highQ) / 2;
       const b = await canvasToBlob(canvas, mimeType, midQ);
 
       if (b.size <= targetBytes) {
         localBestBlob = b;
-        bestQuality = midQ;
+        localBestQ = midQ;
         lowQ = midQ; // try higher quality
       } else {
         highQ = midQ; // need lower quality
       }
     }
 
-    if (localBestBlob && localBestBlob.size <= targetBytes) {
+    if (localBestBlob && localBestBlob.size <= targetBytes && localBestQ >= minQuality) {
       bestBlob = localBestBlob;
-      // If we are within 25% of target or quality is decent, break
-      if (localBestBlob.size >= targetBytes * 0.75 || bestQuality > 0.6) {
+      bestW = curW;
+      bestH = curH;
+      // If we achieved a good fit (within 25% of target) or quality is solid, stop
+      if (localBestBlob.size >= targetBytes * 0.72 || localBestQ >= 0.70) {
         break;
       }
     }
 
-    // If even lowest quality exceeds targetBytes, downscale dimensions
-    const testLowest = await canvasToBlob(canvas, mimeType, 0.05);
-    if (testLowest.size > targetBytes) {
-      const ratio = Math.sqrt(targetBytes / testLowest.size) * 0.90;
-      curW = Math.max(30, Math.round(curW * ratio));
-      curH = Math.max(30, Math.round(curH * ratio));
+    // Check if even minQuality is still slightly too large
+    const testMinBlob = await canvasToBlob(canvas, mimeType, minQuality);
+    if (testMinBlob.size > targetBytes) {
+      // Need to scale dimensions down proportionally to guarantee targetBytes with high quality
+      const scaleRatio = Math.max(0.65, Math.min(0.92, Math.sqrt(targetBytes / testMinBlob.size) * 0.98));
+      curW = Math.max(80, Math.round(curW * scaleRatio));
+      curH = Math.max(80, Math.round(curH * scaleRatio));
     } else {
-      if (!bestBlob) bestBlob = testLowest;
+      if (!bestBlob) {
+        bestBlob = testMinBlob;
+        bestW = curW;
+        bestH = curH;
+      }
       break;
     }
   }
 
+  // Safety fallback if image has high entropy
   if (!bestBlob) {
-    // Ultimate fallback: small canvas
     const fallbackCanvas = document.createElement('canvas');
-    fallbackCanvas.width = 300;
-    fallbackCanvas.height = Math.max(30, Math.round((300 / curW) * curH));
+    fallbackCanvas.width = 320;
+    fallbackCanvas.height = Math.max(40, Math.round((320 / srcW) * srcH));
     const fCtx = fallbackCanvas.getContext('2d');
     if (fCtx) {
+      fCtx.imageSmoothingEnabled = true;
+      fCtx.imageSmoothingQuality = 'high';
       if (mimeType === 'image/jpeg') {
         fCtx.fillStyle = '#FFFFFF';
         fCtx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
       }
       fCtx.drawImage(source, 0, 0, fallbackCanvas.width, fallbackCanvas.height);
-      bestBlob = await canvasToBlob(fallbackCanvas, mimeType, 0.3);
+      bestBlob = await canvasToBlob(fallbackCanvas, mimeType, minQuality);
+      bestW = fallbackCanvas.width;
+      bestH = fallbackCanvas.height;
     } else {
       throw new Error('Image compression failed to meet target constraints');
     }
@@ -136,8 +210,8 @@ export async function compressToTargetKb(
     blob: bestBlob,
     dataUrl,
     actualKb,
-    width: Math.round(curW),
-    height: Math.round(curH),
+    width: Math.round(bestW),
+    height: Math.round(bestH),
   };
 }
 

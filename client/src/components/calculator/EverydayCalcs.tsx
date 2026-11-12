@@ -253,6 +253,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="date"
                   value={birthDateStr}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setBirthDateStr(e.target.value)}
                   className="calc-input"
                 />
@@ -263,6 +264,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="date"
                   value={targetDateStr}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setTargetDateStr(e.target.value)}
                   className="calc-input"
                 />
@@ -342,6 +344,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="date"
                   value={date1Str}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setDate1Str(e.target.value)}
                   className="calc-input"
                 />
@@ -351,6 +354,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="date"
                   value={date2Str}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setDate2Str(e.target.value)}
                   className="calc-input"
                 />
@@ -376,6 +380,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 <input
                   type="date"
                   value={date1Str}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setDate1Str(e.target.value)}
                   className="calc-input"
                 />
@@ -397,6 +402,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   type="number"
                   placeholder="0"
                   value={addDays}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setAddDays(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -433,7 +439,8 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   <input
                     type="time"
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setStartTime(e.target.value)}
                     className="calc-input"
                   />
                 </div>
@@ -442,7 +449,8 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   <input
                     type="time"
                     value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setEndTime(e.target.value)}
                     className="calc-input"
                   />
                 </div>
@@ -454,6 +462,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   type="number"
                   placeholder="0"
                   value={breakMinutes}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setBreakMinutes(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -466,6 +475,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   step="0.5"
                   placeholder="0"
                   value={hourlyRate}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setHourlyRate(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -523,6 +533,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   step="0.01"
                   placeholder="0"
                   value={billAmount}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setBillAmount(parseCalcInput(e.target.value))}
                   className="calc-input text-lg font-bold"
                 />
@@ -553,7 +564,8 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                     max={100}
                     placeholder="0"
                     value={tipPercent}
-                    onChange={(e) => setTipPercent(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setTipPercent(parseCalcInput(e.target.value))}
                     className="calc-input !w-24 text-xs font-bold py-1"
                   />
                 </div>
@@ -566,6 +578,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   min={1}
                   placeholder="0"
                   value={splitCount}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setSplitCount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -651,6 +664,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   type="number"
                   placeholder="0"
                   value={unitValFrom}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setUnitValFrom(parseCalcInput(e.target.value))}
                   className="calc-input text-lg font-bold"
                 />

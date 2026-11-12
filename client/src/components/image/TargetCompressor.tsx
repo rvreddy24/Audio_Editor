@@ -217,10 +217,26 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
                 <span className="font-bold text-emerald-700">{targetKb} KB</span>
               </div>
               {result && (
-                <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-700 font-bold">
-                  <span>Result Size:</span>
-                  <span>{result.actualKb} KB</span>
-                </div>
+                <>
+                  <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-700 font-bold">
+                    <span>Result Size:</span>
+                    <span>{result.actualKb} KB</span>
+                  </div>
+                  {result.width && result.height && (
+                    <div className="flex justify-between text-slate-500">
+                      <span>Dimensions:</span>
+                      <span className="font-mono font-semibold text-slate-700">
+                        {result.width} × {result.height} px
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-500">
+                    <span>Clarity:</span>
+                    <span className="font-semibold text-emerald-600 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Sharp (Anti-Blur)
+                    </span>
+                  </div>
+                </>
               )}
             </div>
 

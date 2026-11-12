@@ -202,7 +202,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 type="number"
                 placeholder="0"
                 value={p1Pct}
-                onChange={(e) => setP1Pct(parseCalcInput(e.target.value))}
+                onFocus={(e) => e.target.select()}
+                  onChange={(e) => setP1Pct(parseCalcInput(e.target.value))}
                 className="w-24 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">% of</span>
@@ -210,7 +211,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 type="number"
                 placeholder="0"
                 value={p1Num}
-                onChange={(e) => setP1Num(parseCalcInput(e.target.value))}
+                onFocus={(e) => e.target.select()}
+                  onChange={(e) => setP1Num(parseCalcInput(e.target.value))}
                 className="w-32 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">=</span>
@@ -230,7 +232,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 type="number"
                 placeholder="0"
                 value={p2Num}
-                onChange={(e) => setP2Num(parseCalcInput(e.target.value))}
+                onFocus={(e) => e.target.select()}
+                  onChange={(e) => setP2Num(parseCalcInput(e.target.value))}
                 className="w-28 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">is what percent of</span>
@@ -238,7 +241,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 type="number"
                 placeholder="0"
                 value={p2Total}
-                onChange={(e) => setP2Total(parseCalcInput(e.target.value))}
+                onFocus={(e) => e.target.select()}
+                  onChange={(e) => setP2Total(parseCalcInput(e.target.value))}
                 className="w-32 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">=</span>
@@ -259,7 +263,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 type="number"
                 placeholder="0"
                 value={p3From}
-                onChange={(e) => setP3From(parseCalcInput(e.target.value))}
+                onFocus={(e) => e.target.select()}
+                  onChange={(e) => setP3From(parseCalcInput(e.target.value))}
                 className="w-28 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">to</span>
@@ -267,7 +272,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 type="number"
                 placeholder="0"
                 value={p3To}
-                onChange={(e) => setP3To(parseCalcInput(e.target.value))}
+                onFocus={(e) => e.target.select()}
+                  onChange={(e) => setP3To(parseCalcInput(e.target.value))}
                 className="w-28 calc-input"
               />
               <span className="text-sm font-semibold text-slate-700">=</span>
@@ -313,6 +319,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   type="number"
                   placeholder="0"
                   value={f1Num}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setF1Num(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
@@ -321,6 +328,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   type="number"
                   placeholder="0"
                   value={f1Den}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setF1Den(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
@@ -344,6 +352,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   type="number"
                   placeholder="0"
                   value={f2Num}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setF2Num(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
@@ -352,6 +361,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   type="number"
                   placeholder="0"
                   value={f2Den}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setF2Den(parseCalcInput(e.target.value))}
                   className="calc-input text-center text-base"
                 />
@@ -499,7 +509,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                     type="number"
                     placeholder="0"
                     value={randMin}
-                    onChange={(e) => setRandMin(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setRandMin(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -509,7 +520,8 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                     type="number"
                     placeholder="0"
                     value={randMax}
-                    onChange={(e) => setRandMax(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setRandMax(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -523,6 +535,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                   max={50}
                   placeholder="0"
                   value={randCount}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setRandCount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />

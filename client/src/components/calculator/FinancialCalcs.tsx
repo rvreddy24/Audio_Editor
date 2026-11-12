@@ -213,6 +213,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={homePrice}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setHomePrice(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -224,6 +225,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={downPayment}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setDownPayment(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -250,7 +252,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     step="0.05"
                     value={mortgageRate}
                     placeholder="0"
-                    onChange={(e) => setMortgageRate(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setMortgageRate(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -263,7 +266,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     value={propertyTaxAnnual}
                     placeholder="0"
-                    onChange={(e) => setPropertyTaxAnnual(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setPropertyTaxAnnual(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -273,7 +277,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     value={homeInsuranceAnnual}
                     placeholder="0"
-                    onChange={(e) => setHomeInsuranceAnnual(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setHomeInsuranceAnnual(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -342,6 +347,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={loanAmount}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setLoanAmount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -353,6 +359,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={loanTermMonths}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setLoanTermMonths(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -365,6 +372,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   step="0.1"
                   value={loanRate}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setLoanRate(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -424,6 +432,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={autoPrice}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setAutoPrice(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -436,7 +445,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     value={autoDownPayment}
                     placeholder="0"
-                    onChange={(e) => setAutoDownPayment(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setAutoDownPayment(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -446,7 +456,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     value={autoTradeIn}
                     placeholder="0"
-                    onChange={(e) => setAutoTradeIn(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setAutoTradeIn(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -460,7 +471,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     step="0.1"
                     value={autoRate}
                     placeholder="0"
-                    onChange={(e) => setAutoRate(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setAutoRate(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -487,6 +499,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   step="0.1"
                   value={autoSalesTaxRate}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setAutoSalesTaxRate(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -550,6 +563,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={initialPrincipal}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setInitialPrincipal(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -561,6 +575,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={monthlyContribution}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setMonthlyContribution(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -573,7 +588,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     value={investmentYears}
                     placeholder="0"
-                    onChange={(e) => setInvestmentYears(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setInvestmentYears(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -584,7 +600,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     step="0.5"
                     value={annualReturn}
                     placeholder="0"
-                    onChange={(e) => setAnnualReturn(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setAnnualReturn(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -669,7 +686,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     value={currentAge}
                     placeholder="0"
-                    onChange={(e) => setCurrentAge(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setCurrentAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -679,7 +697,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     type="number"
                     value={retireAge}
                     placeholder="0"
-                    onChange={(e) => setRetireAge(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setRetireAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -691,6 +710,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={currentSavings}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setCurrentSavings(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -702,6 +722,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={annualSavings}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setAnnualSavings(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -714,6 +735,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   step="0.5"
                   value={retireReturn}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setRetireReturn(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -814,6 +836,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={salaryAmount}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setSalaryAmount(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -825,6 +848,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   type="number"
                   value={hoursPerWeek}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setHoursPerWeek(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />

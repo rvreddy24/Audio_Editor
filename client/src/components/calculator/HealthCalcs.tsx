@@ -269,7 +269,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={age}
                     placeholder="0"
-                    onChange={(e) => setAge(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -283,7 +284,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                       type="number"
                       value={heightCm}
                       placeholder="0"
-                      onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -293,7 +295,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                       type="number"
                       value={weightKg}
                       placeholder="0"
-                      onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -307,7 +310,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                         type="number"
                         value={heightFeet}
                         placeholder="0"
-                        onChange={(e) => updateUsHeight(parseCalcInput(e.target.value), heightInches)}
+                        onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateUsHeight(parseCalcInput(e.target.value), heightInches)}
                         className="calc-input"
                       />
                     </div>
@@ -317,7 +321,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                         type="number"
                         value={heightInches}
                         placeholder="0"
-                        onChange={(e) => updateUsHeight(heightFeet, parseCalcInput(e.target.value))}
+                        onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateUsHeight(heightFeet, parseCalcInput(e.target.value))}
                         className="calc-input"
                       />
                     </div>
@@ -328,7 +333,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                       type="number"
                       value={weightLbs}
                       placeholder="0"
-                      onChange={(e) => updateUsWeight(parseCalcInput(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateUsWeight(parseCalcInput(e.target.value))}
                       className="calc-input"
                     />
                   </div>
@@ -420,7 +426,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={age}
                     placeholder="0"
-                    onChange={(e) => setAge(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -433,7 +440,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={heightCm}
                     placeholder="0"
-                    onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -443,7 +451,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={weightKg}
                     placeholder="0"
-                    onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -543,7 +552,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={weightKg}
                     placeholder="0"
-                    onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateMetricWeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -556,7 +566,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={heightCm}
                     placeholder="0"
-                    onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateMetricHeight(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -566,7 +577,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={neckCm}
                     placeholder="0"
-                    onChange={(e) => setNeckCm(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setNeckCm(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -578,6 +590,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   type="number"
                   value={waistCm}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setWaistCm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -590,7 +603,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={hipCm}
                     placeholder="0"
-                    onChange={(e) => setHipCm(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setHipCm(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -670,7 +684,8 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     value={age}
                     placeholder="0"
-                    onChange={(e) => setAge(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setAge(parseCalcInput(e.target.value))}
                     className="calc-input"
                   />
                 </div>
@@ -682,6 +697,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   type="number"
                   value={heightCm}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setHeightCm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -693,6 +709,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   type="number"
                   value={weightKg}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setWeightKg(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -768,6 +785,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   type="number"
                   value={heightCm}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setHeightCm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -850,6 +868,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   step="0.1"
                   value={paceDistanceKm}
                   placeholder="0"
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setPaceDistanceKm(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
@@ -862,21 +881,24 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     type="number"
                     placeholder="HH"
                     value={paceHours}
-                    onChange={(e) => setPaceHours(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setPaceHours(parseCalcInput(e.target.value))}
                     className="calc-input text-center"
                   />
                   <input
                     type="number"
                     placeholder="MM"
                     value={paceMinutes}
-                    onChange={(e) => setPaceMinutes(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setPaceMinutes(parseCalcInput(e.target.value))}
                     className="calc-input text-center"
                   />
                   <input
                     type="number"
                     placeholder="SS"
                     value={paceSeconds}
-                    onChange={(e) => setPaceSeconds(parseCalcInput(e.target.value))}
+                    onFocus={(e) => e.target.select()}
+                  onChange={(e) => setPaceSeconds(parseCalcInput(e.target.value))}
                     className="calc-input text-center"
                   />
                 </div>
