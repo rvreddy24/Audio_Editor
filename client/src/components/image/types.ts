@@ -18,7 +18,9 @@ export type ImageToolKey =
   | 'color-picker'
   | 'metadata-cleaner'
   | 'image-joiner'
-  | 'format-convert';
+  | 'format-convert'
+  | 'remove-bg'
+  | 'png-maker';
 
 export type ImageCategory = 'compress' | 'resize' | 'official' | 'crop' | 'edit' | 'utility';
 
@@ -170,8 +172,24 @@ export const IMAGE_TOOLS: ImageToolMeta[] = [
     category: 'edit',
     icon: 'Combine',
   },
+  {
+    key: 'remove-bg',
+    title: 'Remove Background from Image',
+    shortDesc: 'Automatically isolate subjects, erase or restore backgrounds with magic wand & brushes, and replace with transparent or solid colors.',
+    category: 'edit',
+    badge: 'Magic Cutout',
+    icon: 'Eraser',
+  },
 
   // 6. Utility & Conversions
+  {
+    key: 'png-maker',
+    title: 'Transparent PNG Maker',
+    shortDesc: 'Convert logos, signatures, and photos to transparent PNGs by removing white, black, or custom keyed backgrounds with edge feathering.',
+    category: 'utility',
+    badge: 'Popular',
+    icon: 'Sparkles',
+  },
   {
     key: 'format-convert',
     title: 'Image Format Converter',

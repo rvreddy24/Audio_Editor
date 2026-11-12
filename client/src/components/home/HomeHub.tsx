@@ -135,16 +135,16 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                 </div>
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
-                20 Tools
+                22 Tools
               </span>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed mb-3">
-              Target KB compression, passport photos with printable sheets, photo & sign merge, crop shapes, filters & censor.
+              Target KB compression, remove background, transparent PNG maker, passport photos, photo & sign merge, crop & censor.
             </p>
 
             <div className="flex flex-wrap gap-1 mb-4">
-              {['Exact KB', 'Passport', 'Merge Sign', 'Crop & Circle', 'Censor', 'Grid Split'].map((t) => (
+              {['Remove BG', 'PNG Maker', 'Exact KB', 'Passport', 'Merge Sign', 'Crop & Circle', 'Censor'].map((t) => (
                 <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium">
                   {t}
                 </span>

@@ -86,9 +86,19 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           {/* Column 2: Image Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              Image Studio (20 Tools)
+              Image Studio (22 Tools)
             </h4>
             <ul className="space-y-2">
+              <li>
+                <button onClick={() => onOpenImage?.('remove-bg')} className="hover:text-white transition-colors text-orange-400 font-semibold">
+                  Remove Background (Magic Cutout)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onOpenImage?.('png-maker')} className="hover:text-white transition-colors text-indigo-400 font-semibold">
+                  Transparent PNG Maker
+                </button>
+              </li>
               <li>
                 <button onClick={() => onOpenImage?.('compress-kb')} className="hover:text-white transition-colors">
                   Exact KB Compression

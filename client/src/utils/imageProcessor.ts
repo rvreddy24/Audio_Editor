@@ -1454,3 +1454,273 @@ export async function mergePhotoAndSignature(
   const comp = await compressToTargetKb(canvas, targetKb, 'image/jpeg');
   return { blob: comp.blob, dataUrl: comp.dataUrl, actualKb: comp.actualKb };
 }
+
+/**
+ * 11. ADVANCED BACKGROUND REMOVAL & TRANSPARENT CUTOUT ENGINE
+ */
+export interface BgRemovalOptions {
+  targetColor?: { r: number; g: number; b: number };
+  tolerance?: number; // 0 to 100 (percentage)
+  feather?: number; // 0 to 10 (pixels)
+  contiguous?: boolean; // flood-fill from borders vs global key
+  defringe?: boolean; // remove edge color halos
+  brushMask?: Uint8Array; // 0 = untouched, 1 = erased, 2 = restored
+  backgroundColor?: string; // 'transparent' or hex color e.g. '#FFFFFF'
+}
+
+export function processBackgroundRemoval(
+  source: HTMLImageElement | HTMLCanvasElement,
+  options: BgRemovalOptions = {}
+): HTMLCanvasElement {
+  const w = 'naturalWidth' in source ? source.naturalWidth : source.width;
+  const h = 'naturalHeight' in source ? source.naturalHeight : source.height;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('Could not create canvas context');
+
+  // Draw source image
+  ctx.drawImage(source, 0, 0, w, h);
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+
+  // Determine target background color (auto-sample corners if not explicitly provided)
+  let tr = 255, tg = 255, tb = 255;
+  if (options.targetColor) {
+    tr = options.targetColor.r;
+    tg = options.targetColor.g;
+    tb = options.targetColor.b;
+  } else {
+    // Sample 4 corners and borders to auto-detect background
+    const sampleCoords = [
+      [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+      [Math.floor(w / 2), 0], [0, Math.floor(h / 2)],
+      [w - 1, Math.floor(h / 2)], [Math.floor(w / 2), h - 1],
+    ];
+    let sumR = 0, sumG = 0, sumB = 0, validSamples = 0;
+    for (const [sx, sy] of sampleCoords) {
+      const idx = (sy * w + sx) * 4;
+      sumR += data[idx];
+      sumG += data[idx + 1];
+      sumB += data[idx + 2];
+      validSamples++;
+    }
+    tr = Math.round(sumR / validSamples);
+    tg = Math.round(sumG / validSamples);
+    tb = Math.round(sumB / validSamples);
+  }
+
+  const tolerance = Math.max(1, Math.min(100, options.tolerance ?? 25));
+  const feather = Math.max(0, Math.min(15, options.feather ?? 2));
+  const contiguous = options.contiguous !== false;
+  const defringe = options.defringe !== false;
+  const brushMask = options.brushMask;
+
+  // Compute color distance function (normalized 0 to 100)
+  const calcDist = (r: number, g: number, b: number): number => {
+    const dr = r - tr;
+    const dg = g - tg;
+    const db = b - tb;
+    return (Math.sqrt(dr * dr + dg * dg + db * db) / 441.67) * 100;
+  };
+
+  const isBg = new Uint8Array(w * h); // 0 = fg, 1 = bg
+
+  if (contiguous) {
+    // Breadth-first flood fill from all perimeter pixels matching target color
+    const queue = new Int32Array(w * h);
+    let qHead = 0;
+    let qTail = 0;
+
+    const pushBorder = (x: number, y: number) => {
+      const pIdx = y * w + x;
+      if (isBg[pIdx] === 0) {
+        const dIdx = pIdx * 4;
+        if (calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]) <= tolerance) {
+          isBg[pIdx] = 1;
+          queue[qTail++] = pIdx;
+        }
+      }
+    };
+
+    // Seed top and bottom borders
+    for (let x = 0; x < w; x++) {
+      pushBorder(x, 0);
+      pushBorder(x, h - 1);
+    }
+    // Seed left and right borders
+    for (let y = 0; y < h; y++) {
+      pushBorder(0, y);
+      pushBorder(w - 1, y);
+    }
+
+    while (qHead < qTail) {
+      const cur = queue[qHead++];
+      const cx = cur % w;
+      const cy = Math.floor(cur / w);
+
+      // Check 4 neighbors
+      const neighbors = [
+        cx > 0 ? cur - 1 : -1,
+        cx < w - 1 ? cur + 1 : -1,
+        cy > 0 ? cur - w : -1,
+        cy < h - 1 ? cur + w : -1,
+      ];
+
+      for (const n of neighbors) {
+        if (n !== -1 && isBg[n] === 0) {
+          const dIdx = n * 4;
+          if (calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]) <= tolerance) {
+            isBg[n] = 1;
+            queue[qTail++] = n;
+          }
+        }
+      }
+    }
+  } else {
+    // Global color keying
+    for (let i = 0; i < w * h; i++) {
+      const dIdx = i * 4;
+      if (calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]) <= tolerance) {
+        isBg[i] = 1;
+      }
+    }
+  }
+
+  // Soft feathering and alpha calculation
+  const tolMin = Math.max(0, tolerance - feather);
+  const tolMax = tolerance + feather;
+  const tolRange = Math.max(1, tolMax - tolMin);
+
+  for (let i = 0; i < w * h; i++) {
+    const dIdx = i * 4;
+
+    // Check manual brush mask first (1 = force erased, 2 = force restored)
+    if (brushMask && brushMask[i] === 1) {
+      data[dIdx + 3] = 0;
+      continue;
+    }
+    if (brushMask && brushMask[i] === 2) {
+      // Retain full original opacity
+      data[dIdx + 3] = 255;
+      continue;
+    }
+
+    if (isBg[i] === 1) {
+      const dist = calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]);
+      if (dist <= tolMin) {
+        data[dIdx + 3] = 0; // Pure transparent
+      } else {
+        // Smooth transition zone
+        const alphaFraction = (dist - tolMin) / tolRange;
+        const newAlpha = Math.round(Math.max(0, Math.min(255, alphaFraction * 255)));
+        data[dIdx + 3] = newAlpha;
+
+        // De-fringe halo on edge pixels
+        if (defringe && newAlpha > 0 && newAlpha < 255) {
+          const aFac = newAlpha / 255;
+          data[dIdx] = Math.max(0, Math.min(255, (data[dIdx] - tr * (1 - aFac)) / aFac));
+          data[dIdx + 1] = Math.max(0, Math.min(255, (data[dIdx + 1] - tg * (1 - aFac)) / aFac));
+          data[dIdx + 2] = Math.max(0, Math.min(255, (data[dIdx + 2] - tb * (1 - aFac)) / aFac));
+        }
+      }
+    }
+  }
+
+  // Put modified pixel data back
+  ctx.putImageData(imgData, 0, 0);
+
+  // If a solid background color is requested (instead of transparent), render on a colored canvas
+  const bg = options.backgroundColor;
+  if (bg && bg !== 'transparent') {
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = w;
+    outCanvas.height = h;
+    const outCtx = outCanvas.getContext('2d');
+    if (outCtx) {
+      outCtx.fillStyle = bg;
+      outCtx.fillRect(0, 0, w, h);
+      outCtx.drawImage(canvas, 0, 0);
+      return outCanvas;
+    }
+  }
+
+  return canvas;
+}
+
+/**
+ * 12. TRANSPARENT PNG MAKER ENGINE
+ */
+export interface PngMakerOptions {
+  mode: 'white' | 'black' | 'custom' | 'signature';
+  customColor?: { r: number; g: number; b: number };
+  tolerance: number; // 0 to 100
+  feather: number; // 0 to 10
+  contiguous: boolean;
+  defringe: boolean;
+}
+
+export function processPngMaker(
+  source: HTMLImageElement | HTMLCanvasElement,
+  options: PngMakerOptions
+): HTMLCanvasElement {
+  let targetColor = { r: 255, g: 255, b: 255 };
+
+  if (options.mode === 'white' || options.mode === 'signature') {
+    targetColor = { r: 255, g: 255, b: 255 };
+  } else if (options.mode === 'black') {
+    targetColor = { r: 0, g: 0, b: 0 };
+  } else if (options.mode === 'custom' && options.customColor) {
+    targetColor = options.customColor;
+  }
+
+  // If signature mode, apply paper contrast boosting first before transparency
+  if (options.mode === 'signature') {
+    const w = 'naturalWidth' in source ? source.naturalWidth : source.width;
+    const h = 'naturalHeight' in source ? source.naturalHeight : source.height;
+    const tempC = document.createElement('canvas');
+    tempC.width = w;
+    tempC.height = h;
+    const tempCtx = tempC.getContext('2d', { willReadFrequently: true });
+    if (tempCtx) {
+      tempCtx.drawImage(source, 0, 0);
+      const imgData = tempCtx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        if (lum > 210) {
+          // Push near-white paper shadows to pure white for 100% clean cutout
+          d[i] = 255;
+          d[i + 1] = 255;
+          d[i + 2] = 255;
+        } else {
+          // Darken ink for crisp signature
+          const inkFactor = Math.max(0, lum - 30);
+          d[i] = Math.min(d[i], inkFactor);
+          d[i + 1] = Math.min(d[i + 1], inkFactor);
+          d[i + 2] = Math.min(d[i + 2], inkFactor);
+        }
+      }
+      tempCtx.putImageData(imgData, 0, 0);
+      return processBackgroundRemoval(tempC, {
+        targetColor: { r: 255, g: 255, b: 255 },
+        tolerance: options.tolerance,
+        feather: options.feather,
+        contiguous: options.contiguous,
+        defringe: options.defringe,
+        backgroundColor: 'transparent',
+      });
+    }
+  }
+
+  return processBackgroundRemoval(source, {
+    targetColor,
+    tolerance: options.tolerance,
+    feather: options.feather,
+    contiguous: options.contiguous,
+    defringe: options.defringe,
+    backgroundColor: 'transparent',
+  });
+}

@@ -25,6 +25,7 @@ import {
   Grid,
   Pipette,
   FileSearch,
+  Eraser,
 } from 'lucide-react';
 import { ImageToolKey, ImageCategory, IMAGE_TOOLS, ImageToolMeta } from './types';
 import { TargetCompressor } from './TargetCompressor';
@@ -43,6 +44,8 @@ import { ColorPickerWorkspace } from './ColorPickerWorkspace';
 import { MetadataWorkspace } from './MetadataWorkspace';
 import { ImageJoinerWorkspace } from './ImageJoinerWorkspace';
 import { ConvertImageWorkspace } from '../pdf/workspaces/ConvertImageWorkspace';
+import { BackgroundRemoverWorkspace } from './BackgroundRemoverWorkspace';
+import { PngMakerWorkspace } from './PngMakerWorkspace';
 
 interface ImageStudioHubProps {
   initialTool?: ImageToolKey;
@@ -69,7 +72,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
   };
 
   const categories = [
-    { id: 'all', label: 'All Tools (20)' },
+    { id: 'all', label: 'All Tools (22)' },
     { id: 'compress', label: 'Compress Size' },
     { id: 'official', label: 'Official Forms & Exams' },
     { id: 'resize', label: 'Resize & DPI' },
@@ -118,6 +121,10 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
         return <Pipette className="w-6 h-6 text-pink-600" />;
       case 'FileSearch':
         return <FileSearch className="w-6 h-6 text-cyan-600" />;
+      case 'Eraser':
+        return <Eraser className="w-6 h-6 text-orange-600" />;
+      case 'Sparkles':
+        return <Sparkles className="w-6 h-6 text-indigo-600" />;
       case 'RefreshCw':
       default:
         return <RefreshCw className="w-6 h-6 text-slate-600" />;
@@ -192,6 +199,12 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
   }
   if (activeTool === 'format-convert') {
     return <ConvertImageWorkspace onBack={() => handleSelectTool(null)} />;
+  }
+  if (activeTool === 'remove-bg') {
+    return <BackgroundRemoverWorkspace onBack={() => handleSelectTool(null)} />;
+  }
+  if (activeTool === 'png-maker') {
+    return <PngMakerWorkspace onBack={() => handleSelectTool(null)} />;
   }
 
   // Otherwise render Image Studio Hub Dashboard

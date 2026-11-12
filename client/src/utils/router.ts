@@ -36,6 +36,8 @@ export const VALID_IMAGE_TOOLS: ImageToolKey[] = [
   'metadata-cleaner',
   'image-joiner',
   'format-convert',
+  'remove-bg',
+  'png-maker',
 ];
 
 export const VALID_PDF_TOOLS: PdfToolKey[] = [
