@@ -90,12 +90,12 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             </h4>
             <ul className="space-y-2">
               <li>
-                <button onClick={() => onOpenImage?.('remove-bg')} className="hover:text-white transition-colors text-orange-400 font-semibold">
+                <button onClick={() => onOpenImage?.('remove-bg')} className="hover:text-white transition-colors">
                   Remove Background (Magic Cutout)
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenImage?.('png-maker')} className="hover:text-white transition-colors text-indigo-400 font-semibold">
+                <button onClick={() => onOpenImage?.('png-maker')} className="hover:text-white transition-colors">
                   Transparent PNG Maker
                 </button>
               </li>
@@ -145,19 +145,14 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           {/* Column 3: Audio & Video Studio */}
           <div>
             <h4 className="text-white font-bold text-xs mb-4 uppercase tracking-wider">
-              <button
-                onClick={onOpenMedia || onOpenVideo}
-                className="hover:text-purple-400 transition-colors"
-              >
-                Audio & Video Studio
-              </button>
+              Audio & Video Studio
             </h4>
-            <ul className="space-y-2">
-              <li>
-                <button onClick={onOpenVideo} className="hover:text-white transition-colors text-rose-400 font-bold">
-                  🎬 Video Editor & Shorts
-                </button>
-              </li>
+
+            {/* Video Subheading - Text Only */}
+            <div className="text-white font-semibold text-xs mb-2">
+              Video Editor & Shorts
+            </div>
+            <ul className="space-y-2 mb-4">
               <li>
                 <button onClick={onOpenVideo} className="hover:text-white transition-colors">
                   Trim & Cut Video
@@ -173,27 +168,31 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
                   Video to Animated GIF
                 </button>
               </li>
-              <li className="pt-2 border-t border-slate-800">
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors text-indigo-400 font-bold">
-                  🎵 Audio Editor & Tools
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Waveform Trimmer
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Audio Format Converter
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenAudio} className="hover:text-white transition-colors">
-                  Extract Video Audio
-                </button>
-              </li>
             </ul>
+
+            {/* Audio Subheading - Text Only */}
+            <div className="pt-3 border-t border-slate-800">
+              <div className="text-white font-semibold text-xs mb-2">
+                Audio Editor & Tools
+              </div>
+              <ul className="space-y-2">
+                <li>
+                  <button onClick={onOpenAudio} className="hover:text-white transition-colors">
+                    Waveform Trimmer
+                  </button>
+                </li>
+                <li>
+                  <button onClick={onOpenAudio} className="hover:text-white transition-colors">
+                    Audio Format Converter
+                  </button>
+                </li>
+                <li>
+                  <button onClick={onOpenAudio} className="hover:text-white transition-colors">
+                    Extract Video Audio
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
 
           {/* Column 4: Calculator Studio */}
