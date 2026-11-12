@@ -21,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "concurrently": "^10.0.7"
+    "concurrently": "^10.0.7",
+    "wrangler": "^4.160.1"
   }
 }
