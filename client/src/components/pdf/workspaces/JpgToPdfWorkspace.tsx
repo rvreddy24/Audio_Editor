@@ -30,10 +30,19 @@ interface JpgToPdfWorkspaceProps {
 export const JpgToPdfWorkspace: React.FC<JpgToPdfWorkspaceProps> = ({ onBack }) => {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const [pageSize, setPageSize] = useState<'fit' | 'a4'>('a4');
+  const [pageSize, setPageSize] = useState<'fit' | 'a4' | 'letter'>('a4');
   const [margin, setMargin] = useState<number>(20);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+
+  // Clean up object URLs on unmount to prevent browser memory leaks
+  React.useEffect(() => {
+    return () => {
+      images.forEach((img) => {
+        if (img.previewUrl) URL.revokeObjectURL(img.previewUrl);
+      });
+    };
+  }, [images]);
 
   const handleFilesSelected = async (files: File[]) => {
     const items: ImageItem[] = [];
@@ -290,26 +299,36 @@ export const JpgToPdfWorkspace: React.FC<JpgToPdfWorkspaceProps> = ({ onBack }) 
               {/* Page Size */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700">Page Size</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   <button
                     onClick={() => setPageSize('a4')}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                    className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all text-center ${
                       pageSize === 'a4'
                         ? 'bg-red-50 text-[#e5322d] border-red-200'
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    Standard A4
+                    A4
+                  </button>
+                  <button
+                    onClick={() => setPageSize('letter')}
+                    className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all text-center ${
+                      pageSize === 'letter'
+                        ? 'bg-red-50 text-[#e5322d] border-red-200'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    US Letter
                   </button>
                   <button
                     onClick={() => setPageSize('fit')}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                    className={`py-2 px-1 rounded-xl text-xs font-bold border transition-all text-center ${
                       pageSize === 'fit'
                         ? 'bg-red-50 text-[#e5322d] border-red-200'
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    Fit to image
+                    Auto Fit
                   </button>
                 </div>
               </div>

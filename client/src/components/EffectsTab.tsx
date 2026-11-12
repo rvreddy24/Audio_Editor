@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, Gauge, Volume2, Sparkles, Mic, Headphones, RotateCcw } from 'lucide-react';
+import { Sliders, Gauge, Volume2, Sparkles, Mic, Headphones, RotateCcw, ShieldCheck, Waves } from 'lucide-react';
 import { applyEffects } from '../api';
 import { LoadedFile, ProcessingResult } from '../types';
 
@@ -20,6 +20,7 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
   const [reverse, setReverse] = useState<boolean>(false);
   const [panning8D, setPanning8D] = useState<boolean>(false);
   const [vocalRemover, setVocalRemover] = useState<boolean>(false);
+  const [noiseReduction, setNoiseReduction] = useState<'none' | 'light' | 'medium' | 'heavy'>('none');
   const [targetFormat, setTargetFormat] = useState<string>('mp3');
   const [bitrate, setBitrate] = useState<string>('320k');
 
@@ -38,6 +39,7 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
     setReverse(false);
     setPanning8D(false);
     setVocalRemover(false);
+    setNoiseReduction('none');
   };
 
   const handleApply = async () => {
@@ -57,6 +59,7 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
         reverse,
         panning8D,
         vocalRemover,
+        noiseReduction,
         targetFormat,
         bitrate
       });
@@ -163,7 +166,14 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
 
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs font-medium text-slate-700">
-              <span>Gain Multiplier / Boost</span>
+              <span className="flex items-center gap-1.5">
+                Gain Multiplier / Boost
+                {volume > 1.0 && (
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    Soft Limiter
+                  </span>
+                )}
+              </span>
               <span className="text-indigo-600 font-bold font-mono">{Math.round(volume * 100)}%</span>
             </div>
             <input
@@ -178,7 +188,7 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
             <div className="flex justify-between text-[10px] text-slate-400 font-medium">
               <span>10%</span>
               <span>100% (Original)</span>
-              <span>300% (+10dB)</span>
+              <span>300% (+10dB Safe)</span>
             </div>
           </div>
 
@@ -253,10 +263,10 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
       {/* Special Effects Toggles */}
       <div className="bg-slate-50 border border-slate-200/80 p-4 rounded-xl flex flex-col gap-3">
         <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Special Effects
+          <Sparkles className="w-3.5 h-3.5 text-indigo-600" /> Special Effects & DSP Tools
         </span>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* 8D Audio */}
           <label className={`p-3.5 rounded-xl border cursor-pointer select-none flex items-center gap-3 transition-all ${
             panning8D ? 'bg-indigo-50 border-indigo-600 text-indigo-900 ring-1 ring-indigo-600' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
@@ -292,6 +302,26 @@ export const EffectsTab: React.FC<EffectsTabProps> = ({ currentFile, onProcessed
               <div className="text-[11px] text-slate-500">Backwards playback effect</div>
             </div>
           </label>
+
+          {/* Noise Reduction */}
+          <div className={`p-3 rounded-xl border flex flex-col justify-between gap-1.5 transition-all ${
+            noiseReduction !== 'none' ? 'bg-indigo-50 border-indigo-600 text-indigo-900 ring-1 ring-indigo-600' : 'bg-white border-slate-200 text-slate-700'
+          }`}>
+            <div className="flex items-center gap-2">
+              <Waves className={`w-4 h-4 ${noiseReduction !== 'none' ? 'text-indigo-600' : 'text-slate-400'}`} />
+              <span className="text-xs font-semibold">Noise Reduction</span>
+            </div>
+            <select
+              value={noiseReduction}
+              onChange={(e) => setNoiseReduction(e.target.value as any)}
+              className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-800 font-medium focus:outline-none focus:border-indigo-500 w-full"
+            >
+              <option value="none">Off (Original)</option>
+              <option value="light">Light (-10 dB)</option>
+              <option value="medium">Medium (-18 dB)</option>
+              <option value="heavy">Heavy (-25 dB)</option>
+            </select>
+          </div>
         </div>
       </div>
 

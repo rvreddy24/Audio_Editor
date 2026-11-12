@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   CheckCircle2,
@@ -18,6 +18,7 @@ interface CompressImageWorkspaceProps {
 
 export const CompressImageWorkspace: React.FC<CompressImageWorkspaceProps> = ({ onBack }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [quality, setQuality] = useState(0.7);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<{
@@ -26,6 +27,18 @@ export const CompressImageWorkspace: React.FC<CompressImageWorkspaceProps> = ({ 
     newSize: number;
     dataUrl: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl('');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [file]);
 
   const handleFilesSelected = (files: File[]) => {
     if (files.length > 0) {
@@ -117,7 +130,7 @@ export const CompressImageWorkspace: React.FC<CompressImageWorkspaceProps> = ({ 
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center">
             <div className="w-64 h-64 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center p-2 shadow-xs">
               <img
-                src={URL.createObjectURL(file)}
+                src={previewUrl}
                 alt="Original"
                 className="max-h-full object-contain"
               />

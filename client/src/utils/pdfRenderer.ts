@@ -6,13 +6,14 @@ if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs`;
 }
 
-export async function getPdfDocument(data: ArrayBuffer) {
+export async function getPdfDocument(data: ArrayBuffer, password?: string) {
   // CRITICAL: Always slice(0) so worker transferable object does not detach caller's ArrayBuffer
   const bufferCopy = data.slice(0);
   const loadingTask = pdfjsLib.getDocument({
     data: new Uint8Array(bufferCopy),
     cMapUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/cmaps/',
     cMapPacked: true,
+    password: password || undefined,
   });
   return await loadingTask.promise;
 }
@@ -20,9 +21,11 @@ export async function getPdfDocument(data: ArrayBuffer) {
 export async function renderPdfPageToDataUrl(
   data: ArrayBuffer,
   pageNum: number,
-  scale: number = 1.2
+  scale: number = 1.2,
+  password?: string,
+  format: 'jpg' | 'png' = 'jpg'
 ): Promise<string> {
-  const pdf = await getPdfDocument(data);
+  const pdf = await getPdfDocument(data, password);
   const page = await pdf.getPage(pageNum);
   const viewport = page.getViewport({ scale });
 
@@ -39,15 +42,21 @@ export async function renderPdfPageToDataUrl(
   };
 
   await page.render(renderContext as any).promise;
-  return canvas.toDataURL('image/jpeg', 0.85);
+  const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+  const quality = format === 'png' ? undefined : 0.85;
+  return canvas.toDataURL(mimeType, quality);
 }
 
 export async function renderAllPagesToImages(
   data: ArrayBuffer,
-  scale: number = 2.0
+  scale: number = 2.0,
+  format: 'jpg' | 'png' = 'jpg',
+  password?: string
 ): Promise<{ pageNum: number; dataUrl: string; blob: Blob; width: number; height: number }[]> {
-  const pdf = await getPdfDocument(data);
+  const pdf = await getPdfDocument(data, password);
   const results: { pageNum: number; dataUrl: string; blob: Blob; width: number; height: number }[] = [];
+  const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+  const quality = format === 'png' ? undefined : 0.92;
 
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -65,9 +74,9 @@ export async function renderAllPagesToImages(
       viewport: viewport,
     } as any).promise;
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const dataUrl = canvas.toDataURL(mimeType, quality);
     const blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((b) => resolve(b || new Blob()), 'image/jpeg', 0.92);
+      canvas.toBlob((b) => resolve(b || new Blob()), mimeType, quality);
     });
 
     results.push({ pageNum: i, dataUrl, blob, width: viewport.width, height: viewport.height });
@@ -76,8 +85,8 @@ export async function renderAllPagesToImages(
   return results;
 }
 
-export async function extractPdfTextPages(data: ArrayBuffer): Promise<string[]> {
-  const pdf = await getPdfDocument(data);
+export async function extractPdfTextPages(data: ArrayBuffer, password?: string): Promise<string[]> {
+  const pdf = await getPdfDocument(data, password);
   const pagesText: string[] = [];
 
   for (let i = 1; i <= pdf.numPages; i++) {

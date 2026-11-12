@@ -24,6 +24,12 @@ export const WatermarkImageStudioWorkspace: React.FC<WatermarkImageStudioWorkspa
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imgElement, setImgElement] = useState<HTMLImageElement | null>(null);
 
+  // Watermark Type: Text vs Image Logo
+  const [wmType, setWmType] = useState<'text' | 'logo'>('text');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoImg, setLogoImg] = useState<HTMLImageElement | null>(null);
+  const [logoScale, setLogoScale] = useState<number>(0.22);
+
   const [text, setText] = useState<string>('rajvarshith.com');
   const [position, setPosition] = useState<WatermarkOptions['position']>('tile');
   const [opacity, setOpacity] = useState<number>(0.4);
@@ -48,12 +54,23 @@ export const WatermarkImageStudioWorkspace: React.FC<WatermarkImageStudioWorkspa
     }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setLogoFile(file);
+      const img = await loadImage(file);
+      setLogoImg(img);
+    }
+  };
+
   const handleProcess = async () => {
     if (!imgElement) return;
     setIsProcessing(true);
     try {
       const res = await addWatermarkToImage(imgElement, {
-        text,
+        text: wmType === 'text' ? text : undefined,
+        logoImg: wmType === 'logo' ? (logoImg || undefined) : undefined,
+        logoScale,
         position,
         opacity,
         fontSize,
@@ -72,7 +89,7 @@ export const WatermarkImageStudioWorkspace: React.FC<WatermarkImageStudioWorkspa
     if (imgElement) {
       handleProcess();
     }
-  }, [imgElement, text, position, opacity, fontSize, color, rotation]);
+  }, [imgElement, wmType, logoImg, logoScale, text, position, opacity, fontSize, color, rotation]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -113,18 +130,80 @@ export const WatermarkImageStudioWorkspace: React.FC<WatermarkImageStudioWorkspa
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Controls Column */}
           <div className="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-5">
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
-                Watermark Text
-              </label>
-              <input
-                type="text"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Enter watermark text..."
-                className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+            {/* Type selector */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setWmType('text')}
+                className={`py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  wmType === 'text'
+                    ? 'bg-white text-indigo-700 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Text Watermark
+              </button>
+              <button
+                onClick={() => setWmType('logo')}
+                className={`py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  wmType === 'logo'
+                    ? 'bg-white text-indigo-700 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Image Logo
+              </button>
             </div>
+
+            {wmType === 'text' ? (
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
+                  Watermark Text
+                </label>
+                <input
+                  type="text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Enter watermark text..."
+                  className="w-full text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+                  Upload Logo Image (PNG / JPG)
+                </label>
+                <label className="border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition-colors text-center">
+                  <span className="text-xs font-bold text-slate-700 truncate max-w-[200px]">
+                    {logoFile ? logoFile.name : 'Choose Logo File'}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5">
+                    Transparent PNG recommended
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
+                </label>
+
+                <div>
+                  <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                    <span>Logo Scale</span>
+                    <span>{Math.round(logoScale * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.08"
+                    max="0.60"
+                    step="0.02"
+                    value={logoScale}
+                    onChange={(e) => setLogoScale(parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600"
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">

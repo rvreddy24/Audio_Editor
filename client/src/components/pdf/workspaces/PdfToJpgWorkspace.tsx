@@ -29,19 +29,16 @@ interface PdfToJpgWorkspaceProps {
 
 export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) => {
   const [file, setFile] = useState<PdfFileInfo | null>(null);
+  const [format, setFormat] = useState<'jpg' | 'png'>('jpg');
   const [images, setImages] = useState<RenderedImage[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
 
-  const handleFileSelected = async (files: File[]) => {
-    if (files.length === 0) return;
-    const parsed = await parsePdfFile(files[0]);
-    setFile(parsed);
+  const extractPages = async (targetFile: PdfFileInfo, targetFormat: 'jpg' | 'png') => {
     setIsExtracting(true);
-
     try {
-      const buf = await getBufferFromFile(parsed);
-      const extracted = await renderAllPagesToImages(buf, 2.0);
+      const buf = await getBufferFromFile(targetFile);
+      const extracted = await renderAllPagesToImages(buf, 2.0, targetFormat);
       setImages(extracted);
     } catch (err: any) {
       alert('Failed to render PDF pages: ' + err.message);
@@ -50,13 +47,27 @@ export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) 
     }
   };
 
+  const handleFileSelected = async (files: File[]) => {
+    if (files.length === 0) return;
+    const parsed = await parsePdfFile(files[0]);
+    setFile(parsed);
+    await extractPages(parsed, format);
+  };
+
+  const handleFormatChange = async (newFormat: 'jpg' | 'png') => {
+    setFormat(newFormat);
+    if (file) {
+      await extractPages(file, newFormat);
+    }
+  };
+
   const handleDownloadZip = async () => {
     if (!file) return;
     setIsZipping(true);
     try {
       const buf = await getBufferFromFile(file);
-      const zipBlob = await convertPdfToImagesZip(buf, file.name);
-      downloadBlob(zipBlob, `${file.name.replace(/\.pdf$/i, '')}_images.zip`);
+      const zipBlob = await convertPdfToImagesZip(buf, file.name, format);
+      downloadBlob(zipBlob, `${file.name.replace(/\.pdf$/i, '')}_images_${format}.zip`);
     } catch (err: any) {
       alert('Failed to generate ZIP: ' + err.message);
     } finally {
@@ -66,7 +77,7 @@ export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) 
 
   const handleDownloadSingle = (img: RenderedImage) => {
     if (!file) return;
-    downloadBlob(img.blob, `${file.name.replace(/\.pdf$/i, '')}_page_${img.pageNum}.jpg`);
+    downloadBlob(img.blob, `${file.name.replace(/\.pdf$/i, '')}_page_${img.pageNum}.${format}`);
   };
 
   return (
@@ -83,10 +94,10 @@ export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) 
 
       <div className="text-center mb-10">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          PDF to JPG
+          PDF to Image (JPG / PNG)
         </h1>
         <p className="mt-2 text-sm text-slate-500 max-w-xl mx-auto">
-          Convert each PDF page into high-resolution JPG images in seconds.
+          Convert each PDF page into high-resolution JPG or lossless PNG images in seconds.
         </p>
       </div>
 
@@ -100,7 +111,7 @@ export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) 
       ) : isExtracting ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-16 flex flex-col items-center justify-center gap-4 text-center">
           <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-          <h3 className="text-sm font-bold text-slate-900">Rendering high-res JPG images...</h3>
+          <h3 className="text-sm font-bold text-slate-900">Rendering high-res {format.toUpperCase()} images...</h3>
           <p className="text-xs text-slate-400">Processing {file.pageCount} pages</p>
         </div>
       ) : (
@@ -109,10 +120,34 @@ export const PdfToJpgWorkspace: React.FC<PdfToJpgWorkspaceProps> = ({ onBack }) 
           <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
             <div>
               <h3 className="text-sm font-bold text-slate-900">{file.name}</h3>
-              <p className="text-xs text-slate-400">{images.length} pages converted to JPG</p>
+              <p className="text-xs text-slate-400">{images.length} pages converted to {format.toUpperCase()}</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Format Switcher */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button
+                  onClick={() => handleFormatChange('jpg')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    format === 'jpg'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  JPG
+                </button>
+                <button
+                  onClick={() => handleFormatChange('png')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    format === 'png'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  PNG
+                </button>
+              </div>
+
               <button
                 disabled={isZipping}
                 onClick={handleDownloadZip}

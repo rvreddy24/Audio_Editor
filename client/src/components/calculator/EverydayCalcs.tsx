@@ -23,6 +23,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   const [date2Str, setDate2Str] = useState<string>('2027-01-01');
   const [addDays, setAddDays] = useState<number | ''>(30);
   const [addMode, setAddMode] = useState<'add' | 'subtract'>('add');
+  const [addUnit, setAddUnit] = useState<'days' | 'weeks' | 'months' | 'years'>('days');
 
   // 3. WORK HOURS STATE
   const [startTime, setStartTime] = useState<string>('09:00');
@@ -73,6 +74,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   const totalDays = Math.round(totalDiffMs / (1000 * 60 * 60 * 24));
   const totalWeeks = Math.floor(totalDays / 7);
   const totalHours = totalDays * 24;
+  const totalMinutes = totalHours * 60;
 
   // Next birthday countdown with Feb 29 handling
   let nextBday = new Date(tDate.getFullYear(), bDate.getMonth(), bDate.getDate());
@@ -86,6 +88,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
     nextBday = new Date(tDate.getFullYear() + 1, bDate.getMonth(), bDate.getDate());
   }
   const daysToNextBday = Math.max(0, Math.round((nextBday.getTime() - tDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const nextBdayDayOfWeek = nextBday.toLocaleDateString('en-US', { weekday: 'long' });
 
   // -------------------------------------------------------------------
   // 2. DATE DIFFERENCE & ADDITION
@@ -97,8 +100,17 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
   // Add / Subtract Date
   const addedDate = parseLocalDate(date1Str);
-  const safeAddDays = Math.abs(Number(addDays) || 0);
-  addedDate.setDate(addedDate.getDate() + (addMode === 'add' ? safeAddDays : -safeAddDays));
+  const safeAddQty = Math.abs(Number(addDays) || 0);
+  const offset = addMode === 'add' ? safeAddQty : -safeAddQty;
+  if (addUnit === 'days') {
+    addedDate.setDate(addedDate.getDate() + offset);
+  } else if (addUnit === 'weeks') {
+    addedDate.setDate(addedDate.getDate() + offset * 7);
+  } else if (addUnit === 'months') {
+    addedDate.setMonth(addedDate.getMonth() + offset);
+  } else if (addUnit === 'years') {
+    addedDate.setFullYear(addedDate.getFullYear() + offset);
+  }
   const formattedAddedDate = addedDate.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -120,7 +132,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   const workHours = Math.floor(durationMins / 60);
   const workRemainderMins = durationMins % 60;
   const decimalHours = durationMins / 60;
-  const totalGrossPay = decimalHours * Math.max(0, Number(hourlyRate) || 0);
+  const totalGrossPay = Math.round(decimalHours * Math.max(0, Number(hourlyRate) || 0) * 100) / 100;
 
   // -------------------------------------------------------------------
   // 4. TIP CALCULATOR
@@ -128,10 +140,10 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
   const safeBill = Math.max(0, Number(billAmount) || 0);
   const safeTipPct = Math.max(0, Number(tipPercent) || 0);
   const safeSplit = Math.max(1, Math.floor(Number(splitCount) || 1));
-  const tipAmount = (safeBill * safeTipPct) / 100;
-  const totalBillWithTip = safeBill + tipAmount;
-  const tipPerPerson = tipAmount / safeSplit;
-  const totalPerPerson = totalBillWithTip / safeSplit;
+  const tipAmount = Math.round(((safeBill * safeTipPct) / 100) * 100) / 100;
+  const totalBillWithTip = Math.round((safeBill + tipAmount) * 100) / 100;
+  const tipPerPerson = Math.round((tipAmount / safeSplit) * 100) / 100;
+  const totalPerPerson = Math.round((totalBillWithTip / safeSplit) * 100) / 100;
 
   // -------------------------------------------------------------------
   // 5. UNIT CONVERTER
@@ -292,8 +304,10 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
                     <div className="mt-6 space-y-2.5 text-xs border-t border-slate-800 pt-4">
                       <div className="flex justify-between text-slate-300">
-                        <span>Countdown to Next Birthday:</span>
-                        <span className="font-mono font-bold text-emerald-400">{daysToNextBday} days</span>
+                        <span>Next Birthday Countdown:</span>
+                        <span className="font-mono font-bold text-emerald-400">
+                          {daysToNextBday} days ({nextBdayDayOfWeek})
+                        </span>
                       </div>
                       <div className="flex justify-between text-slate-300">
                         <span>Total Weeks Lived:</span>
@@ -306,6 +320,10 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                       <div className="flex justify-between text-slate-300">
                         <span>Total Approximate Hours:</span>
                         <span className="font-mono font-bold text-white">{totalHours.toLocaleString()} hours</span>
+                      </div>
+                      <div className="flex justify-between text-slate-300">
+                        <span>Total Approximate Minutes:</span>
+                        <span className="font-mono font-bold text-slate-300">{totalMinutes.toLocaleString()} mins</span>
                       </div>
                     </div>
                   </>
@@ -372,9 +390,9 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
           {/* Section 2: Add/Subtract */}
           <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/80">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
-              2. Add or Subtract Days from Date
+              2. Add or Subtract Time from Date
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-center">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Base Date</label>
                 <input
@@ -397,7 +415,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Number of Days</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Quantity</label>
                 <input
                   type="number"
                   placeholder="0"
@@ -406,6 +424,19 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   onChange={(e) => setAddDays(parseCalcInput(e.target.value))}
                   className="calc-input"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Time Unit</label>
+                <select
+                  value={addUnit}
+                  onChange={(e) => setAddUnit(e.target.value as any)}
+                  className="calc-input font-bold"
+                >
+                  <option value="days">Days</option>
+                  <option value="weeks">Weeks</option>
+                  <option value="months">Months</option>
+                  <option value="years">Years</option>
+                </select>
               </div>
               <div className="bg-slate-900 text-white rounded-xl p-4 text-center">
                 <span className="text-[11px] text-slate-400">Result Date</span>

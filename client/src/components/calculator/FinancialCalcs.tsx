@@ -34,6 +34,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
   const [monthlyContribution, setMonthlyContribution] = useState<number | ''>(500);
   const [investmentYears, setInvestmentYears] = useState<number | ''>(20);
   const [annualReturn, setAnnualReturn] = useState<number | ''>(8.0);
+  const [compoundFreq, setCompoundFreq] = useState<number>(12); // 1 = Annually, 2 = Semi-Annually, 4 = Quarterly, 12 = Monthly, 365 = Daily
 
   // 5. RETIREMENT STATE
   const [currentAge, setCurrentAge] = useState<number | ''>(30);
@@ -41,6 +42,11 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
   const [currentSavings, setCurrentSavings] = useState<number | ''>(50000);
   const [annualSavings, setAnnualSavings] = useState<number | ''>(12000);
   const [retireReturn, setRetireReturn] = useState<number | ''>(7.0);
+  const [retireDrawdownPct, setRetireDrawdownPct] = useState<number | ''>(4.0);
+
+  // Schedule display toggles
+  const [showMortgageSchedule, setShowMortgageSchedule] = useState<boolean>(false);
+  const [showLoanSchedule, setShowLoanSchedule] = useState<boolean>(false);
 
   // 6. SALARY STATE
   const [salaryMode, setSalaryMode] = useState<'annual' | 'hourly'>('annual');
@@ -52,12 +58,12 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
   // -------------------------------------------------------------
 
   // Mortgage Calculation
-  const validHomePrice = Math.max(0, homePrice || 0);
-  const validDownPayment = Math.max(0, downPayment || 0);
+  const validHomePrice = Math.max(0, Number(homePrice) || 0);
+  const validDownPayment = Math.max(0, Number(downPayment) || 0);
   const loanPrincipal = Math.max(0, validHomePrice - validDownPayment);
-  const validMortgageRate = Math.max(0, mortgageRate || 0);
+  const validMortgageRate = Math.max(0, Number(mortgageRate) || 0);
   const monthlyRate = validMortgageRate / 100 / 12;
-  const numPayments = Math.max(1, (mortgageTermYears || 30) * 12);
+  const numPayments = Math.max(1, (Number(mortgageTermYears) || 30) * 12);
   const monthlyPI =
     loanPrincipal <= 0
       ? 0
@@ -65,16 +71,47 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
       ? (loanPrincipal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments))) /
         (Math.pow(1 + monthlyRate, numPayments) - 1)
       : loanPrincipal / numPayments;
-  const monthlyTax = Math.max(0, propertyTaxAnnual || 0) / 12;
-  const monthlyInsurance = Math.max(0, homeInsuranceAnnual || 0) / 12;
+  const monthlyTax = Math.max(0, Number(propertyTaxAnnual) || 0) / 12;
+  const monthlyInsurance = Math.max(0, Number(homeInsuranceAnnual) || 0) / 12;
   const totalMonthlyMortgage = monthlyPI + monthlyTax + monthlyInsurance;
   const totalInterestMortgage = Math.max(0, monthlyPI * numPayments - loanPrincipal);
   const totalCostMortgage = monthlyPI * numPayments + Math.min(validDownPayment, validHomePrice);
 
+  // Amortization Schedule (Year-by-Year breakdown)
+  const mortgageAmortization = React.useMemo(() => {
+    if (loanPrincipal <= 0 || monthlyPI <= 0) return [];
+    const schedule: { year: number; startBal: number; principalPaid: number; interestPaid: number; endBal: number }[] = [];
+    let currentBal = loanPrincipal;
+    const totalYears = Math.min(40, Math.max(1, Number(mortgageTermYears) || 30));
+
+    for (let y = 1; y <= totalYears && currentBal > 0.01; y++) {
+      const startBal = currentBal;
+      let yrPrincipal = 0;
+      let yrInterest = 0;
+
+      for (let m = 1; m <= 12 && currentBal > 0.01; m++) {
+        const intPmt = currentBal * monthlyRate;
+        const princPmt = Math.min(currentBal, Math.max(0, monthlyPI - intPmt));
+        yrInterest += intPmt;
+        yrPrincipal += princPmt;
+        currentBal = Math.max(0, currentBal - princPmt);
+      }
+
+      schedule.push({
+        year: y,
+        startBal,
+        principalPaid: yrPrincipal,
+        interestPaid: yrInterest,
+        endBal: currentBal,
+      });
+    }
+    return schedule;
+  }, [loanPrincipal, monthlyPI, monthlyRate, mortgageTermYears]);
+
   // Loan Calculation
-  const validLoanAmount = Math.max(0, loanAmount || 0);
-  const validLoanTerm = Math.max(1, loanTermMonths || 1);
-  const validLoanRate = Math.max(0, loanRate || 0);
+  const validLoanAmount = Math.max(0, Number(loanAmount) || 0);
+  const validLoanTerm = Math.max(1, Number(loanTermMonths) || 1);
+  const validLoanRate = Math.max(0, Number(loanRate) || 0);
   const loanMonthlyRate = validLoanRate / 100 / 12;
   const monthlyLoanPayment =
     validLoanAmount <= 0
@@ -86,13 +123,44 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
   const totalLoanInterest = Math.max(0, monthlyLoanPayment * validLoanTerm - validLoanAmount);
   const totalLoanCost = monthlyLoanPayment * validLoanTerm;
 
+  // Loan Payback Schedule
+  const loanPaybackSchedule = React.useMemo(() => {
+    if (validLoanAmount <= 0 || monthlyLoanPayment <= 0) return [];
+    const schedule: { period: string; principalPaid: number; interestPaid: number; remainingBal: number }[] = [];
+    let currentBal = validLoanAmount;
+    const totalMonths = Math.min(120, validLoanTerm);
+    const stepMonths = totalMonths <= 24 ? 3 : totalMonths <= 60 ? 6 : 12;
+    let periodPrincipal = 0;
+    let periodInterest = 0;
+
+    for (let m = 1; m <= totalMonths && currentBal > 0.01; m++) {
+      const intPmt = currentBal * loanMonthlyRate;
+      const princPmt = Math.min(currentBal, Math.max(0, monthlyLoanPayment - intPmt));
+      periodInterest += intPmt;
+      periodPrincipal += princPmt;
+      currentBal = Math.max(0, currentBal - princPmt);
+
+      if (m % stepMonths === 0 || m === totalMonths) {
+        schedule.push({
+          period: `Month ${m}`,
+          principalPaid: periodPrincipal,
+          interestPaid: periodInterest,
+          remainingBal: currentBal,
+        });
+        periodPrincipal = 0;
+        periodInterest = 0;
+      }
+    }
+    return schedule;
+  }, [validLoanAmount, monthlyLoanPayment, loanMonthlyRate, validLoanTerm]);
+
   // Auto Loan Calculation
-  const validAutoPrice = Math.max(0, autoPrice || 0);
-  const validTradeIn = Math.max(0, autoTradeIn || 0);
-  const validAutoDown = Math.max(0, autoDownPayment || 0);
-  const validTaxRate = Math.max(0, autoSalesTaxRate || 0);
-  const validAutoRate = Math.max(0, autoRate || 0);
-  const validAutoTerm = Math.max(1, autoTermMonths || 1);
+  const validAutoPrice = Math.max(0, Number(autoPrice) || 0);
+  const validTradeIn = Math.max(0, Number(autoTradeIn) || 0);
+  const validAutoDown = Math.max(0, Number(autoDownPayment) || 0);
+  const validTaxRate = Math.max(0, Number(autoSalesTaxRate) || 0);
+  const validAutoRate = Math.max(0, Number(autoRate) || 0);
+  const validAutoTerm = Math.max(1, Number(autoTermMonths) || 1);
 
   const taxableAmount = Math.max(0, validAutoPrice - validTradeIn);
   const salesTax = (taxableAmount * validTaxRate) / 100;
@@ -113,34 +181,40 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
   const totalAutoInterest = Math.max(0, monthlyAutoPayment * validAutoTerm - totalAutoFinanced);
   const totalAutoCost = effectiveDownPayment + effectiveTradeIn + totalAutoFinanced + totalAutoInterest;
 
-  // Compound Interest Calculation
-  const validPrincipal = Math.max(0, initialPrincipal || 0);
-  const validContribution = Math.max(0, monthlyContribution || 0);
-  const validYears = Math.max(0, investmentYears || 0);
+  // Compound Interest Calculation with Compounding Intervals
+  const validPrincipal = Math.max(0, Number(initialPrincipal) || 0);
+  const validContribution = Math.max(0, Number(monthlyContribution) || 0);
+  const validYears = Math.max(0, Number(investmentYears) || 0);
   const numInvMonths = Math.round(validYears * 12);
-  const monthlyInvRate = Math.max(0, annualReturn || 0) / 100 / 12;
+  const validAnnualReturn = Math.max(0, Number(annualReturn) || 0) / 100;
   const totalDeposits = validPrincipal + validContribution * numInvMonths;
   let totalInvestmentValue = validPrincipal;
+
   if (numInvMonths > 0) {
-    if (monthlyInvRate === 0) {
+    if (validAnnualReturn === 0) {
       totalInvestmentValue = totalDeposits;
     } else {
-      totalInvestmentValue =
-        validPrincipal * Math.pow(1 + monthlyInvRate, numInvMonths) +
-        validContribution *
-          ((Math.pow(1 + monthlyInvRate, numInvMonths) - 1) / monthlyInvRate) *
-          (1 + monthlyInvRate);
+      const k = compoundFreq || 12;
+      const fvPrincipal = validPrincipal * Math.pow(1 + validAnnualReturn / k, k * validYears);
+      const effectiveMonthlyRate = Math.pow(1 + validAnnualReturn / k, k / 12) - 1;
+      const fvDeposits =
+        effectiveMonthlyRate > 0
+          ? validContribution *
+            ((Math.pow(1 + effectiveMonthlyRate, numInvMonths) - 1) / effectiveMonthlyRate) *
+            (1 + effectiveMonthlyRate)
+          : validContribution * numInvMonths;
+      totalInvestmentValue = fvPrincipal + fvDeposits;
     }
   }
   const totalInvestmentInterest = Math.max(0, totalInvestmentValue - totalDeposits);
 
-  // Retirement Calculation
-  const validCurrentAge = Math.max(0, currentAge || 0);
-  const validRetireAge = Math.max(0, retireAge || 0);
+  // Retirement Calculation & Trajectory
+  const validCurrentAge = Math.max(0, Number(currentAge) || 0);
+  const validRetireAge = Math.max(0, Number(retireAge) || 0);
   const yearsToRetire = Math.max(0, validRetireAge - validCurrentAge);
-  const validCurrentSavings = Math.max(0, currentSavings || 0);
-  const validAnnualSavings = Math.max(0, annualSavings || 0);
-  const retAnnualRate = Math.max(0, retireReturn || 0) / 100;
+  const validCurrentSavings = Math.max(0, Number(currentSavings) || 0);
+  const validAnnualSavings = Math.max(0, Number(annualSavings) || 0);
+  const retAnnualRate = Math.max(0, Number(retireReturn) || 0) / 100;
   const totalRetirementContributed = validCurrentSavings + validAnnualSavings * yearsToRetire;
   let retirementNestEgg = validCurrentSavings;
   if (yearsToRetire > 0) {
@@ -154,12 +228,48 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
           (1 + retAnnualRate);
     }
   }
-  // 4% safe withdrawal rule
-  const safeMonthlyRetireIncome = (retirementNestEgg * 0.04) / 12;
+
+  // Drawdown Calculations
+  const validDrawdownRate = Math.max(0, Number(retireDrawdownPct) || 0) / 100;
+  const annualDrawdown = retirementNestEgg * validDrawdownRate;
+  const safeMonthlyRetireIncome = annualDrawdown / 12;
+
+  // Retirement Trajectory Milestones
+  const retirementTrajectory = React.useMemo(() => {
+    if (yearsToRetire <= 0) return [];
+    const milestones: { age: number; balance: number; contributed: number }[] = [];
+    const step = Math.max(5, Math.round(yearsToRetire / 4));
+    for (let yr = 0; yr <= yearsToRetire; yr += step) {
+      const cAge = validCurrentAge + yr;
+      let bal = validCurrentSavings;
+      const contrib = validCurrentSavings + validAnnualSavings * yr;
+      if (yr > 0) {
+        if (retAnnualRate === 0) {
+          bal = contrib;
+        } else {
+          bal =
+            validCurrentSavings * Math.pow(1 + retAnnualRate, yr) +
+            validAnnualSavings *
+              ((Math.pow(1 + retAnnualRate, yr) - 1) / retAnnualRate) *
+              (1 + retAnnualRate);
+        }
+      }
+      milestones.push({ age: cAge, balance: bal, contributed: contrib });
+      if (yr + step > yearsToRetire && yr < yearsToRetire) {
+        milestones.push({
+          age: validRetireAge,
+          balance: retirementNestEgg,
+          contributed: totalRetirementContributed,
+        });
+        break;
+      }
+    }
+    return milestones;
+  }, [validCurrentAge, validRetireAge, yearsToRetire, validCurrentSavings, validAnnualSavings, retAnnualRate, retirementNestEgg, totalRetirementContributed]);
 
   // Salary Conversion
-  const validHours = Math.max(1, hoursPerWeek || 0);
-  const validSalary = Math.max(0, salaryAmount || 0);
+  const validHours = Math.max(1, Number(hoursPerWeek) || 0);
+  const validSalary = Math.max(0, Number(salaryAmount) || 0);
   let annualVal = validSalary;
   let hourlyVal = 0;
   if (salaryMode === 'annual') {
@@ -173,11 +283,14 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
   const weeklySalary = annualVal / 52;
   const dailySalary = hourlyVal * 8;
 
-  const formatCurrency = (n: number) => {
+  const formatCurrency = (n: number, showCents: boolean = false) => {
     if (!Number.isFinite(n) || isNaN(n)) return '$0';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(
-      Math.round(n)
-    );
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: showCents ? 2 : 0,
+      minimumFractionDigits: showCents ? 2 : 0,
+    }).format(showCents ? Math.round(n * 100) / 100 : Math.round(n));
   };
 
   return (
@@ -290,22 +403,22 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               <div>
                 <span className="text-xs font-semibold text-slate-400">Total Monthly Payment</span>
                 <div className="text-3xl sm:text-4xl font-black text-orange-400 font-mono mt-1">
-                  {formatCurrency(totalMonthlyMortgage)}
+                  {formatCurrency(totalMonthlyMortgage, true)}
                   <span className="text-xs text-slate-400 font-normal"> / mo</span>
                 </div>
 
                 <div className="mt-6 space-y-2.5 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-300">
                     <span>Principal & Interest:</span>
-                    <span className="font-mono font-bold text-white">{formatCurrency(monthlyPI)}</span>
+                    <span className="font-mono font-bold text-white">{formatCurrency(monthlyPI, true)}</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span>Property Taxes:</span>
-                    <span className="font-mono font-bold text-white">{formatCurrency(monthlyTax)}</span>
+                    <span className="font-mono font-bold text-white">{formatCurrency(monthlyTax, true)}</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
                     <span>Home Insurance:</span>
-                    <span className="font-mono font-bold text-white">{formatCurrency(monthlyInsurance)}</span>
+                    <span className="font-mono font-bold text-white">{formatCurrency(monthlyInsurance, true)}</span>
                   </div>
                   <div className="flex justify-between text-slate-300 border-t border-slate-800 pt-2 font-semibold">
                     <span>Total Interest Paid:</span>
@@ -323,6 +436,51 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               </div>
             </div>
           </div>
+
+          {/* Amortization Schedule Toggle & Breakdown */}
+          {mortgageAmortization.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-slate-200/80">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Annual Amortization Schedule</h3>
+                  <p className="text-xs text-slate-500">Yearly breakdown of principal reduction, interest paid, and remaining balance.</p>
+                </div>
+                <button
+                  onClick={() => setShowMortgageSchedule(!showMortgageSchedule)}
+                  className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
+                >
+                  {showMortgageSchedule ? 'Hide Amortization' : 'View Amortization Schedule'}
+                </button>
+              </div>
+
+              {showMortgageSchedule && (
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">
+                      <tr>
+                        <th className="p-3">Year</th>
+                        <th className="p-3">Starting Balance</th>
+                        <th className="p-3">Principal Paid</th>
+                        <th className="p-3">Interest Paid</th>
+                        <th className="p-3">Ending Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
+                      {mortgageAmortization.map((row) => (
+                        <tr key={row.year} className="hover:bg-slate-50">
+                          <td className="p-3 font-bold text-slate-900">Year {row.year}</td>
+                          <td className="p-3">{formatCurrency(row.startBal)}</td>
+                          <td className="p-3 text-emerald-600 font-semibold">{formatCurrency(row.principalPaid)}</td>
+                          <td className="p-3 text-orange-600">{formatCurrency(row.interestPaid)}</td>
+                          <td className="p-3 font-semibold">{formatCurrency(row.endBal)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -383,7 +541,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               <div>
                 <span className="text-xs font-semibold text-slate-400">Monthly Payment</span>
                 <div className="text-3xl sm:text-4xl font-black text-blue-400 font-mono mt-1">
-                  {formatCurrency(monthlyLoanPayment)}
+                  {formatCurrency(monthlyLoanPayment, true)}
                   <span className="text-xs text-slate-400 font-normal"> / mo</span>
                 </div>
 
@@ -408,6 +566,49 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               </div>
             </div>
           </div>
+
+          {/* Loan Payback Schedule */}
+          {loanPaybackSchedule.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-slate-200/80">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Loan Payoff Schedule</h3>
+                  <p className="text-xs text-slate-500">Milestone breakdown of principal repayment and outstanding balance.</p>
+                </div>
+                <button
+                  onClick={() => setShowLoanSchedule(!showLoanSchedule)}
+                  className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                >
+                  {showLoanSchedule ? 'Hide Schedule' : 'View Payoff Schedule'}
+                </button>
+              </div>
+
+              {showLoanSchedule && (
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">
+                      <tr>
+                        <th className="p-3">Period</th>
+                        <th className="p-3">Principal Repaid</th>
+                        <th className="p-3">Interest Paid</th>
+                        <th className="p-3">Remaining Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
+                      {loanPaybackSchedule.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="p-3 font-bold text-slate-900">{row.period}</td>
+                          <td className="p-3 text-emerald-600 font-semibold">{formatCurrency(row.principalPaid)}</td>
+                          <td className="p-3 text-orange-600">{formatCurrency(row.interestPaid)}</td>
+                          <td className="p-3 font-semibold">{formatCurrency(row.remainingBal)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -510,7 +711,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               <div>
                 <span className="text-xs font-semibold text-slate-400">Monthly Auto Payment</span>
                 <div className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono mt-1">
-                  {formatCurrency(monthlyAutoPayment)}
+                  {formatCurrency(monthlyAutoPayment, true)}
                   <span className="text-xs text-slate-400 font-normal"> / mo</span>
                 </div>
 
@@ -606,6 +807,21 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Compounding Frequency</label>
+                <select
+                  value={compoundFreq}
+                  onChange={(e) => setCompoundFreq(Number(e.target.value))}
+                  className="calc-input"
+                >
+                  <option value={12}>Monthly (12 times / year)</option>
+                  <option value={4}>Quarterly (4 times / year)</option>
+                  <option value={2}>Semi-Annually (2 times / year)</option>
+                  <option value={1}>Annually (1 time / year)</option>
+                  <option value={365}>Daily (365 times / year)</option>
+                </select>
+              </div>
             </div>
 
             <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-between">
@@ -621,8 +837,14 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                     <span className="font-mono font-bold text-white">{formatCurrency(totalDeposits)}</span>
                   </div>
                   <div className="flex justify-between text-slate-300">
-                    <span>Total Compound Growth:</span>
+                    <span>Total Compound Growth (Net Profit):</span>
                     <span className="font-mono font-bold text-emerald-400">+{formatCurrency(totalInvestmentInterest)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Growth / Net Profit Margin:</span>
+                    <span className="font-mono font-bold text-purple-300">
+                      {totalInvestmentValue > 0 ? ((totalInvestmentInterest / totalInvestmentValue) * 100).toFixed(1) : '0'}%
+                    </span>
                   </div>
                   <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden mt-3 flex">
                     <div
@@ -639,14 +861,14 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-400">
                     <span>
-                      ■ Principal (
+                      ■ Capital (
                       {totalInvestmentValue > 0
                         ? Math.round((totalDeposits / totalInvestmentValue) * 100)
                         : 100}
                       %)
                     </span>
                     <span>
-                      ■ Interest Earned (
+                      ■ Net Profit (
                       {totalInvestmentValue > 0
                         ? Math.round((totalInvestmentInterest / totalInvestmentValue) * 100)
                         : 0}
@@ -657,7 +879,7 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
-                Compound growth accelerates dramatically over time through exponential returns.
+                Compounded {compoundFreq === 12 ? 'monthly' : compoundFreq === 4 ? 'quarterly' : compoundFreq === 2 ? 'semi-annually' : compoundFreq === 1 ? 'annually' : 'daily'}.
               </div>
             </div>
           </div>
@@ -672,8 +894,8 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Retirement Nest Egg Calculator</h2>
-              <p className="text-xs text-slate-500">Plan your 401(k), IRA, and retirement nest egg for financial freedom.</p>
+              <h2 className="text-xl font-bold text-slate-900">Retirement Nest Egg Planner</h2>
+              <p className="text-xs text-slate-500">Plan your 401(k), IRA, savings trajectory, and annual drawdown for financial freedom.</p>
             </div>
           </div>
 
@@ -728,17 +950,31 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Expected Annual Return (%)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={retireReturn}
-                  placeholder="0"
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => setRetireReturn(parseCalcInput(e.target.value))}
-                  className="calc-input"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Expected Return (%)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={retireReturn}
+                    placeholder="0"
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setRetireReturn(parseCalcInput(e.target.value))}
+                    className="calc-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Annual Drawdown Rate (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={retireDrawdownPct}
+                    placeholder="0"
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setRetireDrawdownPct(parseCalcInput(e.target.value))}
+                    className="calc-input"
+                  />
+                </div>
               </div>
             </div>
 
@@ -751,9 +987,15 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
 
                 <div className="mt-6 space-y-3 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-300">
-                    <span>Safe Monthly Income (4% Rule):</span>
+                    <span>Annual Safe Drawdown ({Number(retireDrawdownPct) || 4}%):</span>
                     <span className="font-mono font-bold text-emerald-400 text-sm">
-                      {formatCurrency(safeMonthlyRetireIncome)} / mo
+                      {formatCurrency(annualDrawdown)} / yr
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Monthly Safe Income:</span>
+                    <span className="font-mono font-bold text-white text-sm">
+                      {formatCurrency(safeMonthlyRetireIncome, true)} / mo
                     </span>
                   </div>
                   <div className="flex justify-between text-slate-300">
@@ -774,6 +1016,36 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
               </div>
             </div>
           </div>
+
+          {/* Savings Trajectory Table */}
+          {retirementTrajectory.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-slate-200/80">
+              <h3 className="text-sm font-bold text-slate-900 mb-1">Projected Savings Trajectory</h3>
+              <p className="text-xs text-slate-500 mb-4">Milestone forecast of your nest egg accumulation over time.</p>
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="p-3">Milestone Age</th>
+                      <th className="p-3">Total Portfolio</th>
+                      <th className="p-3">Total Contributed</th>
+                      <th className="p-3">Compound Earnings</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-mono text-slate-700">
+                    {retirementTrajectory.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="p-3 font-bold text-slate-900">Age {row.age} {row.age === Number(retireAge) ? '(Retirement)' : ''}</td>
+                        <td className="p-3 text-amber-600 font-bold">{formatCurrency(row.balance)}</td>
+                        <td className="p-3">{formatCurrency(row.contributed)}</td>
+                        <td className="p-3 text-emerald-600 font-semibold">+{formatCurrency(Math.max(0, row.balance - row.contributed))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

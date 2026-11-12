@@ -202,6 +202,15 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
   const numPaceDist = Number(paceDistanceKm) || 0;
   const speedKmh = numPaceDist > 0 && totalSeconds > 0 ? numPaceDist / (totalSeconds / 3600) : 0;
 
+  const formatPaceDuration = (totalSec: number) => {
+    if (!Number.isFinite(totalSec) || totalSec <= 0) return '—';
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = Math.round(totalSec % 60);
+    if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+    return `${m}m ${s.toString().padStart(2, '0')}s`;
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {onBack && (
@@ -718,13 +727,18 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
 
             <div className="bg-slate-900 rounded-2xl p-6 text-white flex flex-col justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-400">Basal Metabolic Rate</span>
+                <span className="text-xs font-semibold text-slate-400">Basal Metabolic Rate (Mifflin-St Jeor)</span>
                 <div className="text-3xl sm:text-4xl font-black text-pink-400 font-mono mt-1">
                   {Math.round(bmr).toLocaleString()}
                   <span className="text-xs text-slate-400 font-normal"> kcal / day</span>
                 </div>
 
-                <div className="mt-6 space-y-2.5 text-xs border-t border-slate-800 pt-4">
+                <div className="mt-4 p-2.5 bg-slate-800/60 rounded-xl flex justify-between text-xs text-slate-300">
+                  <span>Harris-Benedict Formula:</span>
+                  <span className="font-mono font-bold text-pink-300">{Math.round(bmrHarrisBenedict).toLocaleString()} kcal / day</span>
+                </div>
+
+                <div className="mt-5 space-y-2.5 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-300">
                     <span>Sedentary (BMR × 1.2):</span>
                     <span className="font-mono font-bold text-white">{Math.round(bmr * 1.2)} kcal</span>
@@ -745,7 +759,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
-                Mifflin-St Jeor Equation (Widely considered the most accurate medical standard).
+                Compares Mifflin-St Jeor (clinical standard) and Harris-Benedict formulas.
               </div>
             </div>
           </div>
@@ -913,7 +927,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                   <span className="text-xs text-slate-400 font-normal"> / km</span>
                 </div>
 
-                <div className="mt-6 space-y-2.5 text-xs border-t border-slate-800 pt-4">
+                <div className="mt-5 space-y-2.5 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-300">
                     <span>Pace per Mile:</span>
                     <span className="font-mono font-bold text-white">
@@ -927,10 +941,35 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
                     </span>
                   </div>
                 </div>
+
+                {/* Target Splits & Finish Time Projections */}
+                <div className="mt-5 pt-4 border-t border-slate-800 space-y-2">
+                  <span className="text-[11px] font-bold text-indigo-300 block uppercase tracking-wider">
+                    Race Finish Projections
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-slate-800/70 p-2 rounded-xl">
+                      <div className="text-[10px] text-slate-400">5K Finish</div>
+                      <div className="font-mono font-bold text-white mt-0.5">{formatPaceDuration(paceSecPerKm * 5)}</div>
+                    </div>
+                    <div className="bg-slate-800/70 p-2 rounded-xl">
+                      <div className="text-[10px] text-slate-400">10K Finish</div>
+                      <div className="font-mono font-bold text-white mt-0.5">{formatPaceDuration(paceSecPerKm * 10)}</div>
+                    </div>
+                    <div className="bg-slate-800/70 p-2 rounded-xl">
+                      <div className="text-[10px] text-slate-400">Half Marathon (21.1k)</div>
+                      <div className="font-mono font-bold text-amber-300 mt-0.5">{formatPaceDuration(paceSecPerKm * 21.0975)}</div>
+                    </div>
+                    <div className="bg-slate-800/70 p-2 rounded-xl">
+                      <div className="text-[10px] text-slate-400">Marathon (42.2k)</div>
+                      <div className="font-mono font-bold text-emerald-400 mt-0.5">{formatPaceDuration(paceSecPerKm * 42.195)}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="text-[11px] text-slate-500 mt-4">
-                Calculated over {(Number(paceDistanceKm) || 0).toFixed(2)} km distance.
+                Calculated over {(Number(paceDistanceKm) || 0).toFixed(2)} km distance. Split: 1km @ {formatPaceDuration(paceSecPerKm)}
               </div>
             </div>
           </div>

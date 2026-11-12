@@ -7,10 +7,11 @@ import {
   Copy,
   Check,
   FileText,
+  Zap,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
 import { parsePdfFile, PdfFileInfo, downloadBlob } from '../../../utils/pdfOperations';
-import { renderPdfPageToDataUrl } from '../../../utils/pdfRenderer';
+import { renderPdfPageToDataUrl, extractPdfTextPages } from '../../../utils/pdfRenderer';
 
 interface OcrPdfWorkspaceProps {
   onBack: () => void;
@@ -18,6 +19,8 @@ interface OcrPdfWorkspaceProps {
 
 export const OcrPdfWorkspace: React.FC<OcrPdfWorkspaceProps> = ({ onBack }) => {
   const [file, setFile] = useState<PdfFileInfo | null>(null);
+  const [selectedPage, setSelectedPage] = useState<number>(1);
+  const [ocrMode, setOcrMode] = useState<'single' | 'all'>('single');
   const [recognizedText, setRecognizedText] = useState<string>('');
   const [progress, setProgress] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,7 +30,27 @@ export const OcrPdfWorkspace: React.FC<OcrPdfWorkspaceProps> = ({ onBack }) => {
     if (files.length > 0) {
       const parsed = await parsePdfFile(files[0]);
       setFile(parsed);
+      setSelectedPage(1);
       setRecognizedText('');
+    }
+  };
+
+  const handleFastExtract = async () => {
+    if (!file) return;
+    setIsProcessing(true);
+    try {
+      const pages = await extractPdfTextPages(file.data);
+      if (ocrMode === 'single') {
+        const text = pages[selectedPage - 1] || '';
+        setRecognizedText(text || 'No digital text found on this page. Please use Deep OCR below.');
+      } else {
+        const fullText = pages.map((t, idx) => `--- Page ${idx + 1} ---\n${t}`).join('\n\n');
+        setRecognizedText(fullText || 'No digital text found in document. Please use Deep OCR below.');
+      }
+    } catch (err: any) {
+      alert('Text extraction error: ' + err.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -37,18 +60,28 @@ export const OcrPdfWorkspace: React.FC<OcrPdfWorkspaceProps> = ({ onBack }) => {
     setProgress(10);
 
     try {
-      // Render page 1 to image dataUrl
-      const imageUrl = await renderPdfPageToDataUrl(file.data, 1, 1.5);
-      setProgress(30);
-
       const { createWorker } = await import('tesseract.js');
       const worker = await createWorker('eng');
-      setProgress(50);
+      setProgress(25);
 
-      const ret = await worker.recognize(imageUrl);
-      setProgress(90);
+      if (ocrMode === 'single') {
+        const imageUrl = await renderPdfPageToDataUrl(file.data, selectedPage, 1.8);
+        setProgress(50);
+        const ret = await worker.recognize(imageUrl);
+        setProgress(90);
+        setRecognizedText(ret.data.text || 'No text recognized on this page.');
+      } else {
+        const pagesToScan = Math.min(5, file.pageCount);
+        let accumulated = '';
+        for (let p = 1; p <= pagesToScan; p++) {
+          setProgress(Math.round(25 + (p / pagesToScan) * 65));
+          const imageUrl = await renderPdfPageToDataUrl(file.data, p, 1.6);
+          const ret = await worker.recognize(imageUrl);
+          accumulated += `--- Page ${p} ---\n${ret.data.text || ''}\n\n`;
+        }
+        setRecognizedText(accumulated);
+      }
 
-      setRecognizedText(ret.data.text || 'No text recognized on this page.');
       await worker.terminate();
       setProgress(100);
     } catch (err: any) {
@@ -110,25 +143,76 @@ export const OcrPdfWorkspace: React.FC<OcrPdfWorkspaceProps> = ({ onBack }) => {
             </div>
             <h3 className="mt-4 font-bold text-slate-900 text-sm truncate max-w-sm">{file.name}</h3>
 
-            {!recognizedText && (
-              <button
-                disabled={isProcessing}
-                onClick={handleRunOcr}
-                className="mt-6 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-xl text-xs shadow-md transition-all flex items-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Recognizing Text ({progress}%)...</span>
-                  </>
-                ) : (
-                  <>
-                    <ScanText className="w-4 h-4" />
-                    <span>Run OCR Recognition</span>
-                  </>
-                )}
-              </button>
-            )}
+            <div className="flex flex-col gap-3 mt-4 w-full max-w-xs">
+              <div className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                <span className="font-semibold">Target Pages:</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setOcrMode('single')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      ocrMode === 'single'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    Page {selectedPage}
+                  </button>
+                  <button
+                    onClick={() => setOcrMode('all')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      ocrMode === 'all'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    All ({file.pageCount})
+                  </button>
+                </div>
+              </div>
+
+              {ocrMode === 'single' && file.pageCount > 1 && (
+                <div className="flex items-center justify-between text-xs text-slate-600 px-1">
+                  <span>Page number:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={file.pageCount}
+                    value={selectedPage}
+                    onChange={(e) => setSelectedPage(Math.max(1, Math.min(file.pageCount, parseInt(e.target.value, 10) || 1)))}
+                    className="w-16 px-2 py-1 text-center font-bold bg-slate-50 border border-slate-200 rounded-lg"
+                  />
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 pt-2">
+                <button
+                  disabled={isProcessing}
+                  onClick={handleFastExtract}
+                  className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-xs transition-all flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Instant Text Extract (Searchable PDF)</span>
+                </button>
+
+                <button
+                  disabled={isProcessing}
+                  onClick={handleRunOcr}
+                  className="bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Recognizing Text ({progress}%)...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ScanText className="w-3.5 h-3.5" />
+                      <span>Deep OCR Recognition (Scanned PDF)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* OCR Result */}

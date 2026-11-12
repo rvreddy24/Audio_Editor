@@ -114,6 +114,20 @@ export const DimensionResizer: React.FC<DimensionResizerProps> = ({
     }
   };
 
+  const handleScalePercent = (pct: number) => {
+    if (!imgElement) return;
+    const factor = pct / 100;
+    if (unit === 'px') {
+      setWidth(Math.max(1, Math.round(imgElement.naturalWidth * factor)));
+      setHeight(Math.max(1, Math.round(imgElement.naturalHeight * factor)));
+    } else {
+      const origW = convertBetweenUnits(imgElement.naturalWidth, 'px', unit, dpi);
+      const origH = convertBetweenUnits(imgElement.naturalHeight, 'px', unit, dpi);
+      setWidth(Math.round(origW * factor * 100) / 100);
+      setHeight(Math.round(origH * factor * 100) / 100);
+    }
+  };
+
   const handleProcess = async () => {
     if (!imgElement) return;
     setIsProcessing(true);
@@ -249,6 +263,24 @@ export const DimensionResizer: React.FC<DimensionResizerProps> = ({
                 {lockAspect ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                 <span>{lockAspect ? 'Aspect Ratio Locked' : 'Free Dimensions'}</span>
               </button>
+            </div>
+
+            {/* Quick Percentage Scaling */}
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
+                Quick Scale by Percentage
+              </span>
+              <div className="grid grid-cols-6 gap-1">
+                {[25, 50, 75, 100, 150, 200].map((pct) => (
+                  <button
+                    key={pct}
+                    onClick={() => handleScalePercent(pct)}
+                    className="py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition-colors"
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* DPI Settings */}

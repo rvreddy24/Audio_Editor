@@ -129,6 +129,7 @@ export async function applyEffects(params: {
   reverse?: boolean;
   panning8D?: boolean;
   vocalRemover?: boolean;
+  noiseReduction?: 'none' | 'light' | 'medium' | 'heavy';
   targetFormat?: string;
   bitrate?: string;
 }): Promise<ProcessingResult> {
@@ -140,6 +141,43 @@ export async function applyEffects(params: {
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Effects processing failed' }));
     throw new Error(err.error || 'Effects processing failed');
+  }
+  return res.json();
+}
+
+export async function adjustVolume(params: {
+  fileId: string;
+  volume: number;
+  targetFormat?: string;
+  bitrate?: string;
+}): Promise<ProcessingResult> {
+  const res = await fetch(`${API_BASE}/volume`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Volume adjustment failed' }));
+    throw new Error(err.error || 'Volume adjustment failed');
+  }
+  return res.json();
+}
+
+export async function reduceNoise(params: {
+  fileId: string;
+  strength?: 'light' | 'medium' | 'heavy';
+  noiseReductionDb?: number;
+  targetFormat?: string;
+  bitrate?: string;
+}): Promise<ProcessingResult> {
+  const res = await fetch(`${API_BASE}/noise-reduction`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Noise reduction failed' }));
+    throw new Error(err.error || 'Noise reduction failed');
   }
   return res.json();
 }

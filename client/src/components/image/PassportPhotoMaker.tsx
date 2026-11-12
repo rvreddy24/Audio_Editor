@@ -37,7 +37,12 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
 
   const [country, setCountry] = useState<keyof typeof PASSPORT_SPECS>('india');
   const [bgColor, setBgColor] = useState<string>('#FFFFFF');
-  
+
+  // Name & Date stamp (Mandatory for SSC/UPSC)
+  const [stampNameDate, setStampNameDate] = useState<boolean>(false);
+  const [candidateName, setCandidateName] = useState<string>('');
+  const [dateOfPhoto, setDateOfPhoto] = useState<string>(new Date().toISOString().split('T')[0]);
+
   // Adjusters
   const [zoom, setZoom] = useState<number>(1.1);
   const [panX, setPanX] = useState<number>(0);
@@ -98,6 +103,8 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
         panX,
         panY,
         rotation,
+        candidateName: stampNameDate ? candidateName : undefined,
+        dateOfPhoto: stampNameDate ? dateOfPhoto : undefined,
       });
       setSingleResult(single);
 
@@ -116,7 +123,20 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
     if (imgElement) {
       handleProcess();
     }
-  }, [imgElement, country, bgColor, zoom, panX, panY, rotation, sheetLayout, sheetPaper]);
+  }, [
+    imgElement,
+    country,
+    bgColor,
+    zoom,
+    panX,
+    panY,
+    rotation,
+    sheetLayout,
+    sheetPaper,
+    stampNameDate,
+    candidateName,
+    dateOfPhoto,
+  ]);
 
   // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -274,6 +294,54 @@ export const PassportPhotoMaker: React.FC<PassportPhotoMakerProps> = ({ onBack }
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Candidate Name & Date of Photo (DoP) Stamp */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 block">
+                    Stamp Candidate Name & Date (DoP)
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    Required for SSC, UPSC, and Indian competitive exams
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={stampNameDate}
+                  onChange={(e) => setStampNameDate(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                />
+              </label>
+
+              {stampNameDate && (
+                <div className="space-y-2.5 pt-2 border-t border-slate-200">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase text-slate-500 block mb-1">
+                      Candidate Name
+                    </label>
+                    <input
+                      type="text"
+                      value={candidateName}
+                      onChange={(e) => setCandidateName(e.target.value)}
+                      placeholder="e.g. RAJESH SHARMA"
+                      className="w-full text-xs font-bold text-slate-900 border border-slate-300 rounded-xl px-3 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold uppercase text-slate-500 block mb-1">
+                      Date of Photo
+                    </label>
+                    <input
+                      type="date"
+                      value={dateOfPhoto}
+                      onChange={(e) => setDateOfPhoto(e.target.value)}
+                      className="w-full text-xs font-bold text-slate-900 border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Manual Adjusters Suite */}

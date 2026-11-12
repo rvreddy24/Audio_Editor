@@ -39,13 +39,26 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
   } | null>(null);
 
   const presets =
-    mode === 'compress' ? [20, 50, 100, 200, 500] : [50, 100, 200, 300, 500];
+    mode === 'compress'
+      ? [10, 20, 50, 100, 200, 500, 1000, 2000]
+      : [50, 100, 200, 500, 1000, 2000, 3000];
+
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewSrc('');
+      return;
+    }
+    const url = URL.createObjectURL(selectedFile);
+    setPreviewSrc(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [selectedFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      setPreviewSrc(URL.createObjectURL(file));
       setResult(null);
     }
   };
@@ -156,7 +169,7 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Popular Form Limits
               </span>
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-4 gap-1.5">
                 {presets.map((kb) => (
                   <button
                     key={kb}

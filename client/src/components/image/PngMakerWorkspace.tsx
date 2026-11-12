@@ -137,6 +137,32 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
     }
   };
 
+  const handleCanvasTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isEyedropperActive || !imgElement || !displayCanvasRef.current || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const canvas = displayCanvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = Math.floor((touch.clientX - rect.left) * scaleX);
+    const y = Math.floor((touch.clientY - rect.top) * scaleY);
+
+    if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+      const sampleC = document.createElement('canvas');
+      sampleC.width = imgElement.naturalWidth;
+      sampleC.height = imgElement.naturalHeight;
+      const sCtx = sampleC.getContext('2d', { willReadFrequently: true });
+      if (sCtx) {
+        sCtx.drawImage(imgElement, 0, 0);
+        const p = sCtx.getImageData(x, y, 1, 1).data;
+        setCustomColor({ r: p[0], g: p[1], b: p[2] });
+        setSeedPoint({ x, y });
+        setMode('custom');
+        setIsEyedropperActive(false);
+      }
+    }
+  };
+
   // Export Transparent PNG
   const handleDownload = async () => {
     if (!imgElement) return;
@@ -506,8 +532,9 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
                 <canvas
                   ref={displayCanvasRef}
                   onClick={handleCanvasClick}
+                  onTouchStart={handleCanvasTouch}
                   className={`block max-w-none ${isEyedropperActive ? 'cursor-crosshair' : 'cursor-default'}`}
-                  style={{ maxHeight: '75vh', maxWidth: '100%', objectFit: 'contain' }}
+                  style={{ maxHeight: '75vh', maxWidth: '100%', objectFit: 'contain', touchAction: 'none' }}
                 />
               </div>
             </div>

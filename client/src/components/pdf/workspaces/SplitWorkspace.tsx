@@ -12,6 +12,7 @@ import {
   parsePdfFile,
   splitPdfByRanges,
   splitPdfAllPagesToZip,
+  splitPdfByPageCountToZip,
   downloadBytes,
   downloadBlob,
   getBufferFromFile,
@@ -25,8 +26,9 @@ interface SplitWorkspaceProps {
 
 export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
   const [file, setFile] = useState<PdfFileInfo | null>(null);
-  const [mode, setMode] = useState<'ranges' | 'all'>('ranges');
+  const [mode, setMode] = useState<'ranges' | 'all' | 'count'>('ranges');
   const [rangeInput, setRangeInput] = useState<string>('1-2');
+  const [pageCountChunk, setPageCountChunk] = useState<number>(2);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [cachedResult, setCachedResult] = useState<{ type: 'bytes' | 'blob'; data: Uint8Array | Blob } | null>(null);
@@ -36,6 +38,7 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
       const parsed = await parsePdfFile(files[0]);
       setFile(parsed);
       setRangeInput(`1-${Math.min(2, parsed.pageCount)}`);
+      setPageCountChunk(Math.min(2, Math.max(1, Math.floor(parsed.pageCount / 2) || 1)));
       setCachedResult(null);
     }
   };
@@ -46,7 +49,7 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
       if (cachedResult.type === 'bytes') {
         downloadBytes(cachedResult.data as Uint8Array, `split_${file.name}`);
       } else {
-        downloadBlob(cachedResult.data as Blob, `split_all_${file.name.replace(/\.pdf$/i, '')}.zip`);
+        downloadBlob(cachedResult.data as Blob, `split_${mode}_${file.name.replace(/\.pdf$/i, '')}.zip`);
       }
       return;
     }
@@ -58,10 +61,14 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
         const resultBytes = await splitPdfByRanges(buf, rangeInput);
         setCachedResult({ type: 'bytes', data: resultBytes });
         downloadBytes(resultBytes, `split_${file.name}`);
-      } else {
+      } else if (mode === 'all') {
         const zipBlob = await splitPdfAllPagesToZip(buf, file.name);
         setCachedResult({ type: 'blob', data: zipBlob });
         downloadBlob(zipBlob, `split_all_${file.name.replace(/\.pdf$/i, '')}.zip`);
+      } else {
+        const zipBlob = await splitPdfByPageCountToZip(buf, pageCountChunk, file.name);
+        setCachedResult({ type: 'blob', data: zipBlob });
+        downloadBlob(zipBlob, `split_chunks_${file.name.replace(/\.pdf$/i, '')}.zip`);
       }
       setIsDone(true);
     } catch (err: any) {
@@ -152,26 +159,36 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
                 Split Mode
               </h3>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 <button
                   onClick={() => setMode('ranges')}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                  className={`py-2 px-2 rounded-xl text-[11px] font-bold transition-all border text-center ${
                     mode === 'ranges'
                       ? 'bg-red-50 text-[#e5322d] border-red-200 shadow-2xs'
                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                   }`}
                 >
-                  Custom ranges
+                  By Ranges
+                </button>
+                <button
+                  onClick={() => setMode('count')}
+                  className={`py-2 px-2 rounded-xl text-[11px] font-bold transition-all border text-center ${
+                    mode === 'count'
+                      ? 'bg-red-50 text-[#e5322d] border-red-200 shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  By Page Count
                 </button>
                 <button
                   onClick={() => setMode('all')}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border ${
+                  className={`py-2 px-2 rounded-xl text-[11px] font-bold transition-all border text-center ${
                     mode === 'all'
                       ? 'bg-red-50 text-[#e5322d] border-red-200 shadow-2xs'
                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                   }`}
                 >
-                  Extract all pages
+                  All to ZIP
                 </button>
               </div>
 
@@ -189,6 +206,26 @@ export const SplitWorkspace: React.FC<SplitWorkspaceProps> = ({ onBack }) => {
                   />
                   <p className="text-[11px] text-slate-400">
                     Example: <span className="font-mono">1-3, 5</span> extracts pages 1 through 3 and page 5.
+                  </p>
+                </div>
+              ) : mode === 'count' ? (
+                <div className="space-y-2 pt-2">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Split every N pages:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={file.pageCount}
+                      value={pageCountChunk}
+                      onChange={(e) => setPageCountChunk(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      className="w-24 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    />
+                    <span className="text-xs text-slate-500">pages per file</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Produces separate PDFs of {pageCountChunk} page{pageCountChunk > 1 ? 's' : ''} each bundled in a ZIP.
                   </p>
                 </div>
               ) : (

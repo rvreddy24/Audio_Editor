@@ -34,6 +34,8 @@ export async function compressImage(
 
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D context error');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, 0, 0);
 
   const dataUrl = canvas.toDataURL('image/jpeg', quality);
@@ -93,6 +95,8 @@ export async function cropImage(
 
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas context error');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(
     img,
     cropArea.x,
@@ -162,6 +166,9 @@ export async function rotateAndFlipImage(
 
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas error');
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate(rad);

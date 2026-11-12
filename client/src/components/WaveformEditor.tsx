@@ -51,35 +51,52 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     fetch(audioUrl)
       .then(res => res.arrayBuffer())
       .then(async buffer => {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const audioCtx = new AudioContextClass();
         try {
+          if (audioCtx.state === 'suspended') {
+            await audioCtx.resume().catch(() => {});
+          }
           const decoded = await audioCtx.decodeAudioData(buffer);
           if (!isCancelled) {
             const rawData = decoded.getChannelData(0);
             const samples = 1200;
-            const blockSize = Math.floor(rawData.length / samples);
+            const blockSize = Math.max(1, Math.floor(rawData.length / samples));
             const calculatedPeaks: number[] = [];
             for (let i = 0; i < samples; i++) {
               let blockStart = blockSize * i;
               let sum = 0;
-              for (let j = 0; j < blockSize; j++) {
+              const count = Math.min(blockSize, rawData.length - blockStart);
+              for (let j = 0; j < count; j++) {
                 sum += Math.abs(rawData[blockStart + j]);
               }
-              calculatedPeaks.push(sum / blockSize);
+              calculatedPeaks.push(count > 0 ? sum / count : 0.05);
             }
             const max = Math.max(...calculatedPeaks, 0.001);
             setPeaks(calculatedPeaks.map(p => p / max));
           }
         } catch (e) {
-          console.error('Audio decode error:', e);
+          console.warn('Audio decode error, creating synthetic waveform envelope:', e);
+          if (!isCancelled) {
+            const samples = 1200;
+            const fallbackPeaks = Array.from({ length: samples }, (_, i) => {
+              const norm = i / samples;
+              return 0.25 + 0.55 * Math.abs(Math.sin(norm * Math.PI * 18) * Math.cos(norm * Math.PI * 6));
+            });
+            setPeaks(fallbackPeaks);
+          }
         } finally {
           if (!isCancelled) setIsLoadingAudio(false);
-          audioCtx.close();
+          audioCtx.close().catch(() => {});
         }
       })
       .catch(err => {
         console.error('Error fetching audio for waveform:', err);
-        if (!isCancelled) setIsLoadingAudio(false);
+        if (!isCancelled) {
+          setIsLoadingAudio(false);
+          const samples = 1200;
+          setPeaks(Array.from({ length: samples }, () => 0.3));
+        }
       });
 
     return () => {
@@ -119,11 +136,28 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
       if (currentTime < startTime || currentTime >= endTime) {
         audio.currentTime = startTime;
       }
-      audio.play().catch(console.error);
+      audio.play().catch(err => {
+        console.warn('Audio playback prevented by autoplay policy:', err);
+        if (onPlayStateChange) onPlayStateChange(false);
+      });
     } else if (!externalIsPlaying && !audio.paused) {
       audio.pause();
     }
-  }, [externalIsPlaying]);
+  }, [externalIsPlaying, onPlayStateChange, startTime, endTime, currentTime]);
+
+  // Auto-scroll container to follow playhead when zoomed in
+  useEffect(() => {
+    if (zoomLevel > 1 && isPlaying && containerRef.current) {
+      const totalDur = duration || 1;
+      const width = containerRef.current.clientWidth * zoomLevel;
+      const playheadX = (currentTime / totalDur) * width;
+      const scrollLeft = containerRef.current.scrollLeft;
+      const clientWidth = containerRef.current.clientWidth;
+      if (playheadX > scrollLeft + clientWidth - 80 || playheadX < scrollLeft) {
+        containerRef.current.scrollLeft = Math.max(0, playheadX - 100);
+      }
+    }
+  }, [currentTime, zoomLevel, isPlaying, duration]);
 
   // Draw clean light waveform canvas
   const drawWaveform = useCallback(() => {
@@ -206,7 +240,7 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     // Timeline Ruler at bottom
     ctx.fillStyle = '#64748b';
     ctx.font = '500 10px "Inter", sans-serif';
-    const intervalSec = totalDur > 120 ? 15 : totalDur > 60 ? 10 : totalDur > 20 ? 5 : 1;
+    const intervalSec = totalDur > 120 ? 15 : totalDur > 60 ? 10 : totalDur > 20 ? 5 : totalDur > 5 ? 1 : totalDur > 2 ? 0.5 : 0.1;
     for (let s = 0; s <= totalDur; s += intervalSec) {
       const markX = (s / totalDur) * width;
       ctx.strokeStyle = '#e2e8f0';
@@ -215,7 +249,8 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
       ctx.moveTo(markX, height - 16);
       ctx.lineTo(markX, height);
       ctx.stroke();
-      ctx.fillText(formatTime(s, false), markX + 3, height - 4);
+      const label = intervalSec < 1 ? `${s.toFixed(1)}s` : formatTime(s, false);
+      ctx.fillText(label, markX + 3, height - 4);
     }
 
     // Start Marker (Clean Emerald Green)
@@ -272,30 +307,47 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     drawWaveform();
   }, [drawWaveform]);
 
-  // Mouse & Touch interaction
-  const getTimeFromEvent = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  // Coordinate helper with pixel-distance grabbing
+  const getPixelCoords = useCallback((e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
-    if (!canvas) return 0;
+    if (!canvas) return { x: 0, time: 0, rect: null };
     const rect = canvas.getBoundingClientRect();
     let clientX = 0;
-    if ('touches' in e && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
+    if ('touches' in e && (e as any).touches && (e as any).touches.length > 0) {
+      clientX = (e as any).touches[0].clientX;
     } else if ('clientX' in e) {
-      clientX = (e as React.MouseEvent<HTMLCanvasElement>).clientX;
+      clientX = (e as any).clientX;
     }
     const x = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, x / rect.width));
-    return ratio * (duration || 1);
-  };
+    return { x, time: ratio * (duration || 1), rect };
+  }, [duration]);
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const time = getTimeFromEvent(e);
+  const seek = useCallback((time: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const clamped = Math.max(0, Math.min(duration, time));
+    audio.currentTime = clamped;
+    setCurrentTime(clamped);
+    if (onCurrentTimeChange) onCurrentTimeChange(clamped);
+  }, [duration, onCurrentTimeChange]);
+
+  const handlePointerDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const { x, time, rect } = getPixelCoords(e);
+    if (!rect) return;
     const totalDur = duration || 1;
-    const threshold = totalDur * 0.03;
+    const width = rect.width;
+    const startX = (startTime / totalDur) * width;
+    const endX = (endTime / totalDur) * width;
+    const distStart = Math.abs(x - startX);
+    const distEnd = Math.abs(x - endX);
+    const grabThreshold = 24; // 24px grab radius for reliable finger/mouse selection
 
-    if (Math.abs(time - startTime) < threshold) {
+    if (distStart <= grabThreshold && distEnd <= grabThreshold) {
+      setDragTarget(distStart <= distEnd ? 'start' : 'end');
+    } else if (distStart <= grabThreshold) {
       setDragTarget('start');
-    } else if (Math.abs(time - endTime) < threshold) {
+    } else if (distEnd <= grabThreshold) {
       setDragTarget('end');
     } else {
       setDragTarget('playhead');
@@ -303,52 +355,44 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    const time = getTimeFromEvent(e);
-    const totalDur = duration || 1;
-    const threshold = totalDur * 0.05;
-
-    if (Math.abs(time - startTime) < threshold) {
-      setDragTarget('start');
-    } else if (Math.abs(time - endTime) < threshold) {
-      setDragTarget('end');
-    } else {
-      setDragTarget('playhead');
-      seek(time);
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Global window listeners for drag so cursor movement outside canvas remains active
+  useEffect(() => {
     if (!dragTarget) return;
-    const time = getTimeFromEvent(e);
 
-    if (dragTarget === 'start') {
-      const newStart = Math.min(time, endTime - 0.05);
-      onRangeChange(Math.max(0, newStart), endTime);
-    } else if (dragTarget === 'end') {
-      const newEnd = Math.max(time, startTime + 0.05);
-      onRangeChange(startTime, Math.min(duration, newEnd));
-    } else if (dragTarget === 'playhead') {
-      seek(time);
-    }
-  };
+    const handleGlobalMove = (e: MouseEvent | TouchEvent) => {
+      if ('touches' in e && (e as any).cancelable) {
+        e.preventDefault();
+      }
+      const { time } = getPixelCoords(e);
+      if (dragTarget === 'start') {
+        const newStart = Math.min(time, endTime - 0.01);
+        onRangeChange(Math.max(0, newStart), endTime);
+      } else if (dragTarget === 'end') {
+        const newEnd = Math.max(time, startTime + 0.01);
+        onRangeChange(startTime, Math.min(duration, newEnd));
+      } else if (dragTarget === 'playhead') {
+        seek(time);
+      }
+    };
 
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!dragTarget) return;
-    const time = getTimeFromEvent(e);
+    const handleGlobalUp = () => {
+      setDragTarget(null);
+    };
 
-    if (dragTarget === 'start') {
-      const newStart = Math.min(time, endTime - 0.05);
-      onRangeChange(Math.max(0, newStart), endTime);
-    } else if (dragTarget === 'end') {
-      const newEnd = Math.max(time, startTime + 0.05);
-      onRangeChange(startTime, Math.min(duration, newEnd));
-    } else if (dragTarget === 'playhead') {
-      seek(time);
-    }
-  };
+    window.addEventListener('mousemove', handleGlobalMove);
+    window.addEventListener('mouseup', handleGlobalUp);
+    window.addEventListener('touchmove', handleGlobalMove, { passive: false });
+    window.addEventListener('touchend', handleGlobalUp);
+    window.addEventListener('touchcancel', handleGlobalUp);
 
-  const handleMouseUp = () => setDragTarget(null);
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMove);
+      window.removeEventListener('mouseup', handleGlobalUp);
+      window.removeEventListener('touchmove', handleGlobalMove);
+      window.removeEventListener('touchend', handleGlobalUp);
+      window.removeEventListener('touchcancel', handleGlobalUp);
+    };
+  }, [dragTarget, startTime, endTime, duration, onRangeChange, getPixelCoords, seek]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -365,17 +409,12 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
       audio.play().then(() => {
         setInternalPlaying(true);
         if (onPlayStateChange) onPlayStateChange(true);
-      }).catch(console.error);
+      }).catch(err => {
+        console.warn('Audio playback error:', err);
+        setInternalPlaying(false);
+        if (onPlayStateChange) onPlayStateChange(false);
+      });
     }
-  };
-
-  const seek = (time: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const clamped = Math.max(0, Math.min(duration, time));
-    audio.currentTime = clamped;
-    setCurrentTime(clamped);
-    if (onCurrentTimeChange) onCurrentTimeChange(clamped);
   };
 
   return (
@@ -492,13 +531,8 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
         )}
         <canvas
           ref={canvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleMouseUp}
+          onMouseDown={handlePointerDown}
+          onTouchStart={handlePointerDown}
           className="block touch-none"
         />
       </div>

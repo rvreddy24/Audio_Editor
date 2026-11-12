@@ -225,6 +225,47 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
     isPaintingRef.current = false;
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      if (toolMode === 'eyedropper') {
+        if (!imgElement || !displayCanvasRef.current) return;
+        const canvas = displayCanvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = Math.floor((touch.clientX - rect.left) * scaleX);
+        const y = Math.floor((touch.clientY - rect.top) * scaleY);
+        if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+          const offscreen = document.createElement('canvas');
+          offscreen.width = imgElement.naturalWidth;
+          offscreen.height = imgElement.naturalHeight;
+          const octx = offscreen.getContext('2d')!;
+          octx.drawImage(imgElement, 0, 0);
+          const pixel = octx.getImageData(x, y, 1, 1).data;
+          setTargetColor({ r: pixel[0], g: pixel[1], b: pixel[2] });
+        }
+      } else if (toolMode === 'eraser' || toolMode === 'restore') {
+        if (brushMask) {
+          setMaskHistory((prev) => [...prev.slice(-9), new Uint8Array(brushMask)]);
+        }
+        isPaintingRef.current = true;
+        applyBrushAt(touch.clientX, touch.clientY);
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 1 && isPaintingRef.current) {
+      const touch = e.touches[0];
+      applyBrushAt(touch.clientX, touch.clientY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isPaintingRef.current = false;
+  };
+
   const handleUndo = () => {
     if (maskHistory.length > 0) {
       const last = maskHistory[maskHistory.length - 1];
@@ -646,10 +687,13 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                   className={`block max-w-none cursor-${
                     toolMode === 'eyedropper' ? 'crosshair' : toolMode === 'eraser' || toolMode === 'restore' ? 'cell' : 'default'
                   }`}
-                  style={{ maxHeight: '75vh', maxWidth: '100%', objectFit: 'contain' }}
+                  style={{ maxHeight: '75vh', maxWidth: '100%', objectFit: 'contain', touchAction: 'none' }}
                 />
               </div>
             </div>

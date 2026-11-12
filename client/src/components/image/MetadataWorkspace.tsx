@@ -8,6 +8,7 @@ import {
   Loader2,
   Lock,
   CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   loadImage,
@@ -20,9 +21,140 @@ interface MetadataWorkspaceProps {
   onBack: () => void;
 }
 
+interface ExifDetailItem {
+  label: string;
+  value: string;
+}
+
+function extractExifTags(buffer: ArrayBuffer): ExifDetailItem[] {
+  const bytes = new Uint8Array(buffer);
+  const items: ExifDetailItem[] = [];
+
+  // Find 0xFF, 0xE1 (APP1 marker)
+  let app1Pos = -1;
+  for (let i = 0; i < Math.min(bytes.length - 4, 32768); i++) {
+    if (bytes[i] === 0xff && bytes[i + 1] === 0xe1) {
+      app1Pos = i;
+      break;
+    }
+  }
+  if (app1Pos === -1) return items;
+
+  // Check 'Exif\0\0' header
+  if (
+    bytes[app1Pos + 4] !== 0x45 || // 'E'
+    bytes[app1Pos + 5] !== 0x78 || // 'x'
+    bytes[app1Pos + 6] !== 0x69 || // 'i'
+    bytes[app1Pos + 7] !== 0x66 || // 'f'
+    bytes[app1Pos + 8] !== 0x00 ||
+    bytes[app1Pos + 9] !== 0x00
+  ) {
+    return items;
+  }
+
+  const tiff = app1Pos + 10;
+  if (tiff + 8 > bytes.length) return items;
+
+  const isLittle = bytes[tiff] === 0x49 && bytes[tiff + 1] === 0x49; // 'II'
+  const isBig = bytes[tiff] === 0x4d && bytes[tiff + 1] === 0x4d; // 'MM'
+  if (!isLittle && !isBig) return items;
+
+  const readU16 = (o: number) => {
+    if (o + 2 > bytes.length) return 0;
+    return isLittle ? bytes[o] | (bytes[o + 1] << 8) : (bytes[o] << 8) | bytes[o + 1];
+  };
+
+  const readU32 = (o: number) => {
+    if (o + 4 > bytes.length) return 0;
+    return isLittle
+      ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0
+      : ((bytes[o] << 24) | (bytes[o + 1] << 16) | (bytes[o + 2] << 8) | bytes[o + 3]) >>> 0;
+  };
+
+  const readAscii = (o: number, count: number) => {
+    if (o + count > bytes.length) return '';
+    let str = '';
+    for (let i = 0; i < count; i++) {
+      const code = bytes[o + i];
+      if (code === 0) break;
+      str += String.fromCharCode(code);
+    }
+    return str.trim();
+  };
+
+  const ifd0Offset = readU32(tiff + 4);
+  const ifd0 = tiff + ifd0Offset;
+  if (ifd0 + 2 > bytes.length) return items;
+
+  const numEntries = readU16(ifd0);
+  let exifSubIfd = 0;
+  let gpsSubIfd = 0;
+
+  for (let i = 0; i < numEntries && i < 60; i++) {
+    const entry = ifd0 + 2 + i * 12;
+    if (entry + 12 > bytes.length) break;
+    const tag = readU16(entry);
+    const type = readU16(entry + 2);
+    const count = readU32(entry + 4);
+    const valOffset = count <= 4 ? entry + 8 : tiff + readU32(entry + 8);
+
+    if (tag === 0x010f && type === 2) {
+      const make = readAscii(valOffset, count);
+      if (make) items.push({ label: 'Camera / Brand', value: make });
+    } else if (tag === 0x0110 && type === 2) {
+      const model = readAscii(valOffset, count);
+      if (model) items.push({ label: 'Model', value: model });
+    } else if (tag === 0x0131 && type === 2) {
+      const software = readAscii(valOffset, count);
+      if (software) items.push({ label: 'Software / OS', value: software });
+    } else if (tag === 0x0132 && type === 2) {
+      const dt = readAscii(valOffset, count);
+      if (dt) items.push({ label: 'Date & Time Taken', value: dt });
+    } else if (tag === 0x8769) {
+      exifSubIfd = readU32(entry + 8);
+    } else if (tag === 0x8825) {
+      gpsSubIfd = readU32(entry + 8);
+    }
+  }
+
+  if (gpsSubIfd > 0) {
+    items.push({
+      label: 'GPS Geolocation',
+      value: 'Coordinates Embedded (Privacy Risk)',
+    });
+  }
+
+  if (exifSubIfd > 0 && tiff + exifSubIfd + 2 <= bytes.length) {
+    const subPos = tiff + exifSubIfd;
+    const subEntries = readU16(subPos);
+    for (let i = 0; i < subEntries && i < 40; i++) {
+      const entry = subPos + 2 + i * 12;
+      if (entry + 12 > bytes.length) break;
+      const tag = readU16(entry);
+      const type = readU16(entry + 2);
+      const count = readU32(entry + 4);
+      const valOffset = count <= 4 ? entry + 8 : tiff + readU32(entry + 8);
+
+      if (tag === 0x9003 && type === 2) {
+        const dtOrig = readAscii(valOffset, count);
+        if (dtOrig && !items.some((x) => x.label === 'Date & Time Taken')) {
+          items.push({ label: 'Date & Time Taken', value: dtOrig });
+        }
+      } else if (tag === 0xa434 && type === 2) {
+        const lens = readAscii(valOffset, count);
+        if (lens) items.push({ label: 'Lens Model', value: lens });
+      }
+    }
+  }
+
+  return items;
+}
+
 export const MetadataWorkspace: React.FC<MetadataWorkspaceProps> = ({ onBack }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imgElement, setImgElement] = useState<HTMLImageElement | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [exifTags, setExifTags] = useState<ExifDetailItem[]>([]);
 
   const [metaInfo, setMetaInfo] = useState<{
     name: string;
@@ -36,10 +168,21 @@ export const MetadataWorkspace: React.FC<MetadataWorkspaceProps> = ({ onBack }) 
   const [isStripping, setIsStripping] = useState(false);
   const [isStrippedDone, setIsStrippedDone] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
+
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const pUrl = URL.createObjectURL(file);
+      setPreviewUrl(pUrl);
+
       const img = await loadImage(file);
       setImgElement(img);
 
@@ -53,6 +196,9 @@ export const MetadataWorkspace: React.FC<MetadataWorkspaceProps> = ({ onBack }) 
           break;
         }
       }
+
+      const parsedTags = extractExifTags(buffer);
+      setExifTags(parsedTags);
 
       const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
       const g = gcd(img.naturalWidth, img.naturalHeight);
@@ -187,6 +333,29 @@ export const MetadataWorkspace: React.FC<MetadataWorkspaceProps> = ({ onBack }) 
                   </div>
                 </div>
               )}
+
+              {/* Extracted EXIF Tags List if Present */}
+              {exifTags.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-slate-100">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 block mb-2 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Embedded Camera & Privacy Tags</span>
+                  </span>
+                  <div className="space-y-1.5 text-xs">
+                    {exifTags.map((tag, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between p-2 rounded-lg bg-amber-50/70 border border-amber-200/60"
+                      >
+                        <span className="text-slate-600 font-medium">{tag.label}:</span>
+                        <span className="font-bold text-slate-800 text-right truncate max-w-[190px]">
+                          {tag.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Strip Action */}
@@ -228,10 +397,10 @@ export const MetadataWorkspace: React.FC<MetadataWorkspaceProps> = ({ onBack }) 
             <div className="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between w-full">
               <span>Image Preview</span>
             </div>
-            {imgElement && (
+            {previewUrl && (
               <div className="max-h-[400px] max-w-full flex items-center justify-center overflow-hidden rounded-2xl bg-slate-50 border border-slate-200 p-2">
                 <img
-                  src={imgElement.src}
+                  src={previewUrl}
                   alt="Preview"
                   className="max-h-[380px] max-w-full object-contain rounded-xl shadow-xs"
                 />

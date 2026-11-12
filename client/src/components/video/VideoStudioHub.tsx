@@ -30,6 +30,7 @@ import {
   FileAudio,
   ChevronRight,
   Check,
+  XCircle,
 } from 'lucide-react';
 import {
   VideoFileInfo,
@@ -43,6 +44,8 @@ import {
   OutputFormat,
   ResolutionPreset,
   QualityPreset,
+  CutMode,
+  GifDither,
   WatermarkPosition,
 } from './types';
 
@@ -65,6 +68,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
   // Edit Options State
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
+  const [cutMode, setCutMode] = useState<CutMode>('precise');
   const [aspectRatio, setAspectRatio] = useState<AspectRatioPreset>('original');
   const [aspectMode, setAspectMode] = useState<AspectMode>('crop');
   const [panX, setPanX] = useState<number>(50); // 0 (Left) to 100 (Right)
@@ -90,10 +94,15 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('mp4');
   const [resolution, setResolution] = useState<ResolutionPreset>('original');
   const [quality, setQuality] = useState<QualityPreset>('medium');
+  const [targetSizeMB, setTargetSizeMB] = useState<number | undefined>(undefined);
+  const [gifFps, setGifFps] = useState<number>(15);
+  const [gifWidth, setGifWidth] = useState<number>(480);
+  const [gifDither, setGifDither] = useState<GifDither>('bayer');
 
-  // Processing state
+  // Processing state & cancellation
   const [isProcessing, setIsProcessing] = useState(false);
   const [processProgress, setProcessProgress] = useState(0);
+  const [processStatusText, setProcessStatusText] = useState<string>('Preparing video render...');
   const [resultModal, setResultModal] = useState<{
     downloadUrl: string;
     downloadName: string;
@@ -104,8 +113,27 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgVideoRef = useRef<HTMLVideoElement>(null);
+  const activeObjectUrlRef = useRef<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const progressTimerRef = useRef<any>(null);
 
-  // Load video file
+  // Cleanup object URLs on unmount to prevent browser memory leaks
+  useEffect(() => {
+    return () => {
+      if (activeObjectUrlRef.current) {
+        URL.revokeObjectURL(activeObjectUrlRef.current);
+        activeObjectUrlRef.current = null;
+      }
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // Load video file with memory leak protection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       loadVideo(e.target.files[0]);
@@ -120,20 +148,26 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
   };
 
   const loadVideo = (file: File) => {
+    if (activeObjectUrlRef.current) {
+      URL.revokeObjectURL(activeObjectUrlRef.current);
+      activeObjectUrlRef.current = null;
+    }
     const objectUrl = URL.createObjectURL(file);
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.src = objectUrl;
+    activeObjectUrlRef.current = objectUrl;
 
-    video.onloadedmetadata = () => {
-      const dur = video.duration || 10;
+    const tempVideo = document.createElement('video');
+    tempVideo.preload = 'metadata';
+    tempVideo.src = objectUrl;
+
+    tempVideo.onloadedmetadata = () => {
+      const dur = tempVideo.duration || 10;
       setVideoInfo({
         file,
         name: file.name,
         size: file.size,
         duration: dur,
-        width: video.videoWidth || 1280,
-        height: video.videoHeight || 720,
+        width: tempVideo.videoWidth || 1280,
+        height: tempVideo.videoHeight || 720,
         fps: 30,
         objectUrl,
       });
@@ -154,7 +188,10 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
       setAspectMode('crop');
       setPanX(50);
       setPanY(50);
+      setCutMode('precise');
+      setTargetSizeMB(undefined);
       setResultModal(null);
+      tempVideo.src = '';
     };
   };
 
@@ -315,11 +352,46 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
     };
   };
 
+  // Cancel in-progress processing
+  const handleCancelProcess = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+    }
+    setIsProcessing(false);
+    setProcessProgress(0);
+    setProcessStatusText('Rendering cancelled.');
+  };
+
   // Execute processing via backend FFmpeg
   const handleProcessVideo = async () => {
     if (!videoInfo) return;
     setIsProcessing(true);
-    setProcessProgress(15);
+    setProcessProgress(10);
+    setProcessStatusText('Uploading media to render engine...');
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    progressTimerRef.current = setInterval(() => {
+      setProcessProgress((prev) => {
+        if (prev < 30) {
+          setProcessStatusText('Analyzing video streams & keyframes...');
+          return prev + 5;
+        } else if (prev < 65) {
+          setProcessStatusText('Encoding video frames & audio filters...');
+          return prev + 3;
+        } else if (prev < 90) {
+          setProcessStatusText('Finalizing container & muxing audio...');
+          return prev + 1;
+        }
+        return prev;
+      });
+    }, 450);
 
     try {
       const formData = new FormData();
@@ -330,6 +402,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
 
       formData.append('trimStart', trimStart.toString());
       formData.append('trimEnd', trimEnd.toString());
+      formData.append('cutMode', cutMode);
       formData.append('aspectRatio', aspectRatio);
       formData.append('aspectMode', aspectMode);
       formData.append('panX', panX.toString());
@@ -350,15 +423,20 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
       formData.append('resolution', resolution);
       formData.append('outputFormat', outputFormat);
       formData.append('quality', quality);
-
-      setProcessProgress(40);
+      if (targetSizeMB) formData.append('targetSizeMB', targetSizeMB.toString());
+      formData.append('gifFps', gifFps.toString());
+      formData.append('gifWidth', gifWidth.toString());
+      formData.append('gifDither', gifDither);
 
       const res = await fetch('/api/video/process', {
         method: 'POST',
         body: formData,
+        signal: abortController.signal,
       });
 
-      setProcessProgress(85);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      setProcessProgress(95);
+      setProcessStatusText('Receiving rendered media...');
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
@@ -367,6 +445,7 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
 
       const data = await res.json();
       setProcessProgress(100);
+      setProcessStatusText('Render completed successfully!');
 
       setResultModal({
         downloadUrl: data.downloadUrl,
@@ -376,8 +455,14 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
         format: outputFormat,
       });
     } catch (err: any) {
-      alert(`Video processing error: ${err.message || 'Please check your settings and try again.'}`);
+      if (err.name === 'AbortError') {
+        console.log('Rendering cancelled by user');
+      } else {
+        alert(`Video processing error: ${err.message || 'Please check your settings and try again.'}`);
+      }
     } finally {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      abortControllerRef.current = null;
       setIsProcessing(false);
       setProcessProgress(0);
     }
@@ -623,7 +708,8 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                     step="0.05"
                     value={currentTime}
                     onChange={(e) => seek(parseFloat(e.target.value))}
-                    className="w-full accent-rose-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
+                    className="w-full accent-rose-600 cursor-pointer h-2 bg-slate-200 rounded-lg touch-none"
+                    aria-label="Video scrubber"
                   />
 
                   {/* Trim bounds indicators */}
@@ -798,30 +884,73 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                   </button>
                 </div>
 
+                {/* Precision Millisecond Input */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-600">Start Time (sec)</label>
+                    <label className="text-[11px] font-bold text-slate-600">Start Time (sec, ms)</label>
                     <input
                       type="number"
-                      step="0.1"
+                      step="0.001"
                       min="0"
                       max={trimEnd}
-                      value={parseFloat(trimStart.toFixed(2))}
+                      value={parseFloat(trimStart.toFixed(3))}
                       onChange={(e) => setTrimStart(Math.max(0, parseFloat(e.target.value) || 0))}
                       className="w-full text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-600">End Time (sec)</label>
+                    <label className="text-[11px] font-bold text-slate-600">End Time (sec, ms)</label>
                     <input
                       type="number"
-                      step="0.1"
+                      step="0.001"
                       min={trimStart}
                       max={duration}
-                      value={parseFloat(trimEnd.toFixed(2))}
+                      value={parseFloat(trimEnd.toFixed(3))}
                       onChange={(e) => setTrimEnd(Math.min(duration, parseFloat(e.target.value) || duration))}
                       className="w-full text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
                     />
+                  </div>
+                </div>
+
+                {/* Cutting Precision Mode Selector */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700 block mb-1.5">
+                    Cutting Precision Mode
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setCutMode('precise')}
+                      className={`p-2.5 rounded-2xl text-left border transition-all ${
+                        cutMode === 'precise'
+                          ? 'border-rose-600 bg-rose-50/50 ring-2 ring-rose-500/20'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs font-bold text-slate-800">Precise Re-encode</span>
+                        {cutMode === 'precise' && <Check className="w-3.5 h-3.5 text-rose-600" />}
+                      </div>
+                      <span className="text-[10px] text-slate-500 block leading-tight">
+                        Frame-accurate cuts at exact millisecond marks
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setCutMode('fast')}
+                      className={`p-2.5 rounded-2xl text-left border transition-all ${
+                        cutMode === 'fast'
+                          ? 'border-rose-600 bg-rose-50/50 ring-2 ring-rose-500/20'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs font-bold text-slate-800">Fast Keyframe Cut</span>
+                        {cutMode === 'fast' && <Check className="w-3.5 h-3.5 text-rose-600" />}
+                      </div>
+                      <span className="text-[10px] text-slate-500 block leading-tight">
+                        Instant stream copy without re-encoding
+                      </span>
+                    </button>
                   </div>
                 </div>
 
@@ -1401,8 +1530,82 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                   </div>
                 </div>
 
+                {/* GIF Tuning Controls (When GIF is selected) */}
+                {outputFormat === 'gif' && (
+                  <div className="space-y-3 pt-2 border-t border-slate-100">
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[11px] font-bold text-slate-700">GIF Framerate (Smoothness)</label>
+                        <span className="font-mono text-xs font-bold text-rose-600">{gifFps} fps</span>
+                      </div>
+                      <div className="grid grid-cols-5 gap-1">
+                        {[10, 12, 15, 20, 24].map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => setGifFps(f)}
+                            className={`py-1.5 rounded-xl text-[11px] font-bold border transition-all ${
+                              gifFps === f
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {f} fps
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">GIF Width Scale</label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { w: 320, label: '320px (Compact)' },
+                          { w: 480, label: '480px (Standard)' },
+                          { w: 640, label: '640px (High Res)' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.w}
+                            onClick={() => setGifWidth(opt.w)}
+                            className={`py-1.5 rounded-xl text-[10px] font-bold border transition-all ${
+                              gifWidth === opt.w
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Dithering & Color Palette</label>
+                      <div className="grid grid-cols-4 gap-1">
+                        {[
+                          { key: 'bayer', label: 'Bayer' },
+                          { key: 'floyd_steinberg', label: 'Floyd-St.' },
+                          { key: 'sierra2_4a', label: 'Sierra' },
+                          { key: 'none', label: 'None' },
+                        ].map((d) => (
+                          <button
+                            key={d.key}
+                            onClick={() => setGifDither(d.key as any)}
+                            className={`py-1.5 rounded-xl text-[10px] font-bold border transition-all ${
+                              gifDither === d.key
+                                ? 'bg-rose-600 text-white border-rose-600'
+                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Resolution */}
-                {outputFormat !== 'mp3' && outputFormat !== 'wav' && (
+                {outputFormat !== 'mp3' && outputFormat !== 'wav' && outputFormat !== 'gif' && (
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 block mb-1.5">Target Resolution</label>
                     <div className="grid grid-cols-4 gap-1.5">
@@ -1428,58 +1631,120 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                   </div>
                 )}
 
-                {/* Quality / CRF */}
+                {/* Quality / CRF & Target Size */}
                 {outputFormat !== 'mp3' && outputFormat !== 'wav' && outputFormat !== 'gif' && (
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1.5">Quality Profile</label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {[
-                        { key: 'high', label: 'High (CRF 18)' },
-                        { key: 'medium', label: 'Balanced (CRF 23)' },
-                        { key: 'low', label: 'Small Size (CRF 28)' },
-                      ].map((q) => (
-                        <button
-                          key={q.key}
-                          onClick={() => setQuality(q.key as any)}
-                          className={`py-1.5 rounded-xl text-[11px] font-bold border transition-all ${
-                            quality === q.key
-                              ? 'bg-rose-600 text-white border-rose-600'
-                              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          {q.label}
-                        </button>
-                      ))}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1.5">Quality Profile</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { key: 'high', label: 'High Quality', desc: 'CRF 18 • Crisp visuals' },
+                          { key: 'medium', label: 'Balanced', desc: 'CRF 23 • Recommended' },
+                          { key: 'low', label: 'Low Size', desc: 'CRF 28 • Fast encode' },
+                          { key: 'max_compression', label: 'Max Compression', desc: 'CRF 34 • Smallest file' },
+                        ].map((q) => (
+                          <button
+                            key={q.key}
+                            onClick={() => {
+                              setQuality(q.key as any);
+                              setTargetSizeMB(undefined);
+                            }}
+                            className={`p-2 rounded-xl text-left border transition-all ${
+                              quality === q.key && !targetSizeMB
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="text-[11px] font-bold block">{q.label}</span>
+                            <span className={`text-[9px] block ${quality === q.key && !targetSizeMB ? 'text-rose-100' : 'text-slate-400'}`}>
+                              {q.desc}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Target File Size Compression Presets */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[11px] font-bold text-slate-700">Target File Size Limit (Optional)</label>
+                        {targetSizeMB && (
+                          <span className="text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-200">
+                            Limit: {targetSizeMB} MB
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { mb: undefined, label: 'Auto (CRF)' },
+                          { mb: 8, label: '8 MB (Discord)' },
+                          { mb: 15, label: '15 MB (WhatsApp)' },
+                          { mb: 25, label: '25 MB (Email)' },
+                        ].map((t, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setTargetSizeMB(t.mb)}
+                            className={`py-1.5 rounded-xl text-[10px] font-bold border transition-all ${
+                              targetSizeMB === t.mb
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* ACTION BUTTON: RENDER / EXPORT */}
-            <div className="pt-4 border-t border-slate-200 space-y-2">
-              <button
-                disabled={isProcessing}
-                onClick={handleProcessVideo}
-                className="w-full bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-black py-4 rounded-2xl text-sm shadow-md transition-all hover:scale-101 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Rendering Your Video...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-5 h-5" />
-                    <span>
-                      Export {outputFormat === 'gif' ? 'Animated GIF' : outputFormat === 'mp3' || outputFormat === 'wav' ? 'Audio Track' : 'Edited Video'}
+            {/* ACTION BUTTON & LIVE RENDERING PROGRESS BAR */}
+            <div className="pt-4 border-t border-slate-200 space-y-3">
+              {isProcessing ? (
+                <div className="space-y-2 bg-slate-50 border border-slate-200/80 rounded-2xl p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-800 flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 text-rose-600 animate-spin" />
+                      <span>{processStatusText}</span>
                     </span>
-                  </>
-                )}
-              </button>
+                    <span className="font-mono font-black text-rose-600 text-sm">
+                      {processProgress}%
+                    </span>
+                  </div>
+
+                  {/* Progress track */}
+                  <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-rose-600 h-2.5 rounded-full transition-all duration-300"
+                      style={{ width: `${processProgress}%` }}
+                    />
+                  </div>
+
+                  {/* Cancel button */}
+                  <button
+                    onClick={handleCancelProcess}
+                    className="w-full mt-2 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200/80 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Cancel Rendering</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleProcessVideo}
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white font-black py-4 rounded-2xl text-sm shadow-md transition-all hover:scale-101 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span>
+                    Export {outputFormat === 'gif' ? 'Animated GIF' : outputFormat === 'mp3' || outputFormat === 'wav' ? 'Audio Track' : 'Edited Video'}
+                  </span>
+                </button>
+              )}
 
               <p className="text-[10px] text-center text-slate-400">
-                High-performance rendering • Fast, secure & watermark-free
+                Studio-grade hardware accelerated FFmpeg rendering • Zero quality loss
               </p>
             </div>
           </div>

@@ -306,7 +306,7 @@ export function App() {
         <main className="flex-1">
           <MediaStudioHub
             onSelectVideo={() => handleOpenVideo()}
-            onSelectAudio={() => handleOpenAudio()}
+            onSelectAudio={(tab) => handleOpenAudio(tab as any)}
             onBackToHome={handleOpenHome}
           />
         </main>

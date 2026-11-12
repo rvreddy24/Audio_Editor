@@ -12,6 +12,7 @@ export interface PdfFileInfo {
   pageCount: number;
   previewUrl?: string;
   data: ArrayBuffer;
+  isEncrypted?: boolean;
 }
 
 export async function getBufferFromFile(fileInfo: PdfFileInfo): Promise<ArrayBuffer> {
@@ -33,20 +34,35 @@ export async function getBufferFromFile(fileInfo: PdfFileInfo): Promise<ArrayBuf
 }
 
 export async function parsePdfFile(file: File): Promise<PdfFileInfo> {
+  if (!file || file.size === 0) {
+    throw new Error(`The file "${file?.name || 'document'}" is empty (0 bytes). Please upload a valid PDF.`);
+  }
+
   const data = await file.arrayBuffer();
+  if (data.byteLength === 0) {
+    throw new Error(`The file "${file.name}" contains no readable data.`);
+  }
+
   let pageCount = 1;
   let previewUrl = '';
+  let isEncrypted = false;
 
   try {
-    const pdfDoc = await PDFDocument.load(data.slice(0), { ignoreEncryption: true });
-    pageCount = pdfDoc.getPageCount();
+    const pdfDoc = await PDFDocument.load(data.slice(0), {
+      ignoreEncryption: true,
+      throwOnInvalidObject: false,
+    });
+    isEncrypted = !!pdfDoc.isEncrypted;
+    pageCount = Math.max(1, pdfDoc.getPageCount());
+
     try {
       previewUrl = await renderPdfPageToDataUrl(data.slice(0), 1, 0.6);
     } catch (e) {
       console.warn('Could not generate page thumbnail:', e);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Failed to parse PDF document:', err);
+    throw new Error(`Failed to read "${file.name}": The file is corrupted or not a valid PDF document.`);
   }
 
   return {
@@ -57,6 +73,7 @@ export async function parsePdfFile(file: File): Promise<PdfFileInfo> {
     pageCount,
     previewUrl,
     data,
+    isEncrypted,
   };
 }
 
@@ -196,6 +213,33 @@ export async function splitPdfAllPagesToZip(
   return await zip.generateAsync({ type: 'blob' });
 }
 
+export async function splitPdfByPageCountToZip(
+  buffer: ArrayBuffer,
+  pagesPerChunk: number,
+  baseFilename: string
+): Promise<Blob> {
+  const srcDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const totalPages = srcDoc.getPageCount();
+  const chunk = Math.max(1, Math.floor(pagesPerChunk));
+  const zip = new JSZip();
+  const cleanName = baseFilename.replace(/\.pdf$/i, '');
+
+  let part = 1;
+  for (let i = 0; i < totalPages; i += chunk) {
+    const end = Math.min(i + chunk, totalPages);
+    const destDoc = await PDFDocument.create();
+    const indices = [];
+    for (let p = i; p < end; p++) indices.push(p);
+    const copiedPages = await destDoc.copyPages(srcDoc, indices);
+    copiedPages.forEach((p) => destDoc.addPage(p));
+    const pdfBytes = await destDoc.save();
+    zip.file(`${cleanName}_part_${part}_pages_${i + 1}-${end}.pdf`, pdfBytes);
+    part++;
+  }
+
+  return await zip.generateAsync({ type: 'blob' });
+}
+
 /**
  * 3. COMPRESS PDF
  */
@@ -208,6 +252,19 @@ export async function compressPdf(
     ignoreEncryption: true,
     throwOnInvalidObject: false,
   });
+
+  if (level === 'extreme') {
+    // Aggressive compression: strip document info and structural metadata
+    srcDoc.setTitle('');
+    srcDoc.setAuthor('');
+    srcDoc.setSubject('');
+    srcDoc.setKeywords([]);
+    srcDoc.setProducer('');
+    srcDoc.setCreator('');
+  } else if (level === 'recommended') {
+    srcDoc.setSubject('');
+    srcDoc.setKeywords([]);
+  }
 
   // Re-save with object stream compression and stripped unused elements
   const bytes = await srcDoc.save({
@@ -277,18 +334,20 @@ export async function rotateAllPages(
 }
 
 /**
- * 6. PDF TO JPG / IMAGES (Render pages to images and zip)
+ * 6. PDF TO JPG / PNG / IMAGES (Render pages to images and zip)
  */
 export async function convertPdfToImagesZip(
   buffer: ArrayBuffer,
-  baseFilename: string
+  baseFilename: string,
+  format: 'jpg' | 'png' = 'jpg'
 ): Promise<Blob> {
-  const images = await renderAllPagesToImages(buffer, 2.0);
+  const images = await renderAllPagesToImages(buffer, 2.0, format);
   const zip = new JSZip();
   const cleanName = baseFilename.replace(/\.pdf$/i, '');
+  const ext = format === 'png' ? 'png' : 'jpg';
 
   images.forEach((img) => {
-    zip.file(`${cleanName}_page_${img.pageNum}.jpg`, img.blob);
+    zip.file(`${cleanName}_page_${img.pageNum}.${ext}`, img.blob);
   });
 
   return await zip.generateAsync({ type: 'blob' });
@@ -302,7 +361,7 @@ export async function convertImagesToPdf(
   options: {
     orientation?: 'portrait' | 'landscape';
     margin?: number; // 0, 20, 40
-    pageSize?: 'fit' | 'a4';
+    pageSize?: 'fit' | 'a4' | 'letter';
   } = {}
 ): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
@@ -325,6 +384,9 @@ export async function convertImagesToPdf(
     if (options.pageSize === 'a4') {
       pageWidth = options.orientation === 'landscape' ? 841.89 : 595.28;
       pageHeight = options.orientation === 'landscape' ? 595.28 : 841.89;
+    } else if (options.pageSize === 'letter') {
+      pageWidth = options.orientation === 'landscape' ? 792.0 : 612.0;
+      pageHeight = options.orientation === 'landscape' ? 612.0 : 792.0;
     }
 
     const page = pdfDoc.addPage([pageWidth, pageHeight]);
@@ -373,11 +435,21 @@ export async function addWatermarkToPdf(
     const sanitized = sanitizeForPdfText(options.text, font);
     const textWidth = font.widthOfTextAtSize(sanitized, options.fontSize);
     const textHeight = font.heightAtSize(options.fontSize);
+    const rotDeg = options.rotation || 0;
+    const rad = (rotDeg * Math.PI) / 180;
 
     let x = (width - textWidth) / 2;
     let y = (height - textHeight) / 2;
 
-    if (options.position === 'top-left') {
+    if (options.position === 'center') {
+      // Offset so the rotation pivot (bottom-left) keeps the center of the text at page center
+      const cx = width / 2;
+      const cy = height / 2;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      x = cx - (textWidth / 2) * cos + (textHeight / 2) * sin;
+      y = cy - (textWidth / 2) * sin - (textHeight / 2) * cos;
+    } else if (options.position === 'top-left') {
       x = 40;
       y = height - 60;
     } else if (options.position === 'top-right') {
@@ -398,7 +470,7 @@ export async function addWatermarkToPdf(
       font,
       color: rgb(0.85, 0.1, 0.1),
       opacity: options.opacity,
-      rotate: degrees(options.rotation || 0),
+      rotate: degrees(rotDeg),
     });
   });
 
@@ -412,7 +484,7 @@ export async function addPageNumbersToPdf(
   buffer: ArrayBuffer,
   options: {
     format: '1' | '1 of n' | 'Page 1' | 'Page 1 of n';
-    position: 'bottom-center' | 'bottom-right' | 'bottom-left' | 'top-center' | 'top-right';
+    position: 'bottom-center' | 'bottom-right' | 'bottom-left' | 'top-center' | 'top-right' | 'top-left';
     fontSize?: number;
     startFrom?: number;
   }
@@ -448,6 +520,9 @@ export async function addPageNumbersToPdf(
       y = height - 40;
     } else if (options.position === 'top-right') {
       x = width - textWidth - 40;
+      y = height - 40;
+    } else if (options.position === 'top-left') {
+      x = 40;
       y = height - 40;
     }
 

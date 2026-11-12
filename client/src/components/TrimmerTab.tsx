@@ -35,13 +35,13 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
   const duration = currentFile.probe.duration || 0;
 
   const handleStartChange = (val: number) => {
-    const clamped = Math.max(0, Math.min(endTime - 0.05, val));
-    onRangeChange(clamped, endTime);
+    const clamped = Math.max(0, Math.min(endTime - 0.01, val));
+    onRangeChange(parseFloat(clamped.toFixed(3)), endTime);
   };
 
   const handleEndChange = (val: number) => {
-    const clamped = Math.max(startTime + 0.05, Math.min(duration, val));
-    onRangeChange(startTime, clamped);
+    const clamped = Math.max(startTime + 0.01, Math.min(duration, val));
+    onRangeChange(startTime, parseFloat(clamped.toFixed(3)));
   };
 
   const handleExport = async () => {
@@ -124,10 +124,10 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
           <div className="flex items-center gap-2">
             <input
               type="number"
-              step="0.01"
+              step="0.001"
               min="0"
-              max={endTime - 0.05}
-              value={startTime.toFixed(2)}
+              max={endTime - 0.01}
+              value={startTime.toFixed(3)}
               onChange={(e) => handleStartChange(parseFloat(e.target.value) || 0)}
               className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-mono text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
@@ -138,6 +138,8 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
           <div className="flex items-center gap-1.5 text-xs font-medium">
             <button onClick={() => handleStartChange(startTime - 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-1s</button>
             <button onClick={() => handleStartChange(startTime - 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-0.1s</button>
+            <button onClick={() => handleStartChange(startTime - 0.01)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-10ms</button>
+            <button onClick={() => handleStartChange(startTime + 0.01)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+10ms</button>
             <button onClick={() => handleStartChange(startTime + 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+0.1s</button>
             <button onClick={() => handleStartChange(startTime + 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+1s</button>
           </div>
@@ -160,10 +162,10 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
           <div className="flex items-center gap-2">
             <input
               type="number"
-              step="0.01"
-              min={startTime + 0.05}
+              step="0.001"
+              min={startTime + 0.01}
               max={duration}
-              value={endTime.toFixed(2)}
+              value={endTime.toFixed(3)}
               onChange={(e) => handleEndChange(parseFloat(e.target.value) || duration)}
               className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-mono text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
@@ -174,6 +176,8 @@ export const TrimmerTab: React.FC<TrimmerTabProps> = ({
           <div className="flex items-center gap-1.5 text-xs font-medium">
             <button onClick={() => handleEndChange(endTime - 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-1s</button>
             <button onClick={() => handleEndChange(endTime - 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-0.1s</button>
+            <button onClick={() => handleEndChange(endTime - 0.01)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">-10ms</button>
+            <button onClick={() => handleEndChange(endTime + 0.01)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+10ms</button>
             <button onClick={() => handleEndChange(endTime + 0.1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+0.1s</button>
             <button onClick={() => handleEndChange(endTime + 1)} className="px-2 py-1 bg-white hover:bg-slate-200/60 border border-slate-200 rounded text-slate-600">+1s</button>
           </div>

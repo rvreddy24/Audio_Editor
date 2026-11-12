@@ -31,8 +31,11 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
   useEffect(() => {
     return () => {
       cleanupStream();
+      if (previewUrl) {
+        try { URL.revokeObjectURL(previewUrl); } catch (e) {}
+      }
     };
-  }, []);
+  }, [previewUrl]);
 
   const cleanupStream = () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -45,6 +48,14 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
+  };
+
+  const handleClose = () => {
+    cleanupStream();
+    if (previewUrl) {
+      try { URL.revokeObjectURL(previewUrl); } catch (e) {}
+    }
+    onClose();
   };
 
   const startVisualizer = (stream: MediaStream) => {
@@ -166,10 +177,7 @@ export const RecorderModal: React.FC<RecorderModalProps> = ({
             Voice & Microphone Recorder
           </div>
           <button
-            onClick={() => {
-              cleanupStream();
-              onClose();
-            }}
+            onClick={handleClose}
             className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
           >
             <X className="w-5 h-5" />

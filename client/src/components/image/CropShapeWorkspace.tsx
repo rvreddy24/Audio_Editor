@@ -7,8 +7,9 @@ import {
   Upload,
   ArrowLeft,
   Loader2,
-  CheckCircle2,
-  Sparkles,
+  Move,
+  Eye,
+  Sliders,
 } from 'lucide-react';
 import {
   loadImage,
@@ -39,6 +40,12 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
     w: 300,
     h: 300,
   });
+  const [cropViewMode, setCropViewMode] = useState<'interactive' | 'preview'>('interactive');
+
+  // Dragging state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number; initialBoxX: number; initialBoxY: number } | null>(null);
+  const cropCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Circle mode state
   const [circleBorderWidth, setCircleBorderWidth] = useState<number>(0);
@@ -62,10 +69,10 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
       const img = await loadImage(file);
       setImgElement(img);
       setCropBox({
-        x: Math.round(img.naturalWidth * 0.025),
-        y: Math.round(img.naturalHeight * 0.025),
-        w: Math.round(img.naturalWidth * 0.95),
-        h: Math.round(img.naturalHeight * 0.95),
+        x: Math.round(img.naturalWidth * 0.05),
+        y: Math.round(img.naturalHeight * 0.05),
+        w: Math.round(img.naturalWidth * 0.90),
+        h: Math.round(img.naturalHeight * 0.90),
       });
       setResult(null);
     }
@@ -79,10 +86,10 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
         const res = await cropImage(
           imgElement,
           {
-            x: cropBox.x,
-            y: cropBox.y,
-            width: cropBox.w,
-            height: cropBox.h,
+            x: Math.max(0, cropBox.x),
+            y: Math.max(0, cropBox.y),
+            width: Math.max(10, Math.min(imgElement.naturalWidth - cropBox.x, cropBox.w)),
+            height: Math.max(10, Math.min(imgElement.naturalHeight - cropBox.y, cropBox.h)),
           },
           'image/jpeg'
         );
@@ -116,6 +123,49 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
     }
   }, [imgElement, mode, cropBox, circleBorderWidth, circleBorderColor, cornerRadius]);
 
+  // Render crop box and rule of thirds on interactive canvas
+  useEffect(() => {
+    if (!imgElement || !cropCanvasRef.current || mode !== 'crop') return;
+    const canvas = cropCanvasRef.current;
+    canvas.width = imgElement.naturalWidth;
+    canvas.height = imgElement.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw original image
+    ctx.drawImage(imgElement, 0, 0);
+
+    // Dark semi-transparent mask outside crop area
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    // Top
+    ctx.fillRect(0, 0, canvas.width, Math.max(0, cropBox.y));
+    // Bottom
+    ctx.fillRect(0, cropBox.y + cropBox.h, canvas.width, Math.max(0, canvas.height - (cropBox.y + cropBox.h)));
+    // Left
+    ctx.fillRect(0, cropBox.y, Math.max(0, cropBox.x), cropBox.h);
+    // Right
+    ctx.fillRect(cropBox.x + cropBox.w, cropBox.y, Math.max(0, canvas.width - (cropBox.x + cropBox.w)), cropBox.h);
+
+    // Outer border of crop box
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = Math.max(2, Math.round(canvas.width / 400));
+    ctx.strokeRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
+
+    // Rule of thirds lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cropBox.x + cropBox.w / 3, cropBox.y);
+    ctx.lineTo(cropBox.x + cropBox.w / 3, cropBox.y + cropBox.h);
+    ctx.moveTo(cropBox.x + (cropBox.w * 2) / 3, cropBox.y);
+    ctx.lineTo(cropBox.x + (cropBox.w * 2) / 3, cropBox.y + cropBox.h);
+    ctx.moveTo(cropBox.x, cropBox.y + cropBox.h / 3);
+    ctx.lineTo(cropBox.x + cropBox.w, cropBox.y + cropBox.h / 3);
+    ctx.moveTo(cropBox.x, cropBox.y + (cropBox.h * 2) / 3);
+    ctx.lineTo(cropBox.x + cropBox.w, cropBox.y + (cropBox.h * 2) / 3);
+    ctx.stroke();
+  }, [imgElement, cropBox, mode]);
+
   const handleAspectChange = (ratioStr: string) => {
     setAspectRatio(ratioStr);
     if (!imgElement) return;
@@ -124,10 +174,10 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
 
     if (ratioStr === 'free') {
       setCropBox({
-        x: Math.round(iw * 0.025),
-        y: Math.round(ih * 0.025),
-        w: Math.round(iw * 0.95),
-        h: Math.round(ih * 0.95),
+        x: Math.round(iw * 0.05),
+        y: Math.round(ih * 0.05),
+        w: Math.round(iw * 0.90),
+        h: Math.round(ih * 0.90),
       });
       return;
     }
@@ -135,10 +185,10 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
     const [rW, rH] = ratioStr.split(':').map(Number);
     const targetRatio = rW / rH;
 
-    let nw = iw * 0.95;
+    let nw = iw * 0.90;
     let nh = nw / targetRatio;
-    if (nh > ih * 0.95) {
-      nh = ih * 0.95;
+    if (nh > ih * 0.90) {
+      nh = ih * 0.90;
       nw = nh * targetRatio;
     }
 
@@ -148,6 +198,54 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
       w: Math.round(nw),
       h: Math.round(nh),
     });
+  };
+
+  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!cropCanvasRef.current) return { x: 0, y: 0 };
+    const rect = cropCanvasRef.current.getBoundingClientRect();
+    let cx = 0, cy = 0;
+    if ('touches' in e && e.touches.length > 0) {
+      cx = e.touches[0].clientX;
+      cy = e.touches[0].clientY;
+    } else if ('clientX' in e) {
+      cx = (e as React.MouseEvent).clientX;
+      cy = (e as React.MouseEvent).clientY;
+    }
+    const scaleX = cropCanvasRef.current.width / rect.width;
+    const scaleY = cropCanvasRef.current.height / rect.height;
+    return {
+      x: Math.round((cx - rect.left) * scaleX),
+      y: Math.round((cy - rect.top) * scaleY),
+    };
+  };
+
+  const handlePointerDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const coords = getCanvasCoords(e);
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: coords.x,
+      y: coords.y,
+      initialBoxX: cropBox.x,
+      initialBoxY: cropBox.y,
+    };
+  };
+
+  const handlePointerMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDragging || !dragStartRef.current || !imgElement) return;
+    const coords = getCanvasCoords(e);
+    const dx = coords.x - dragStartRef.current.x;
+    const dy = coords.y - dragStartRef.current.y;
+    const iw = imgElement.naturalWidth;
+    const ih = imgElement.naturalHeight;
+
+    const newX = Math.max(0, Math.min(iw - cropBox.w, dragStartRef.current.initialBoxX + dx));
+    const newY = Math.max(0, Math.min(ih - cropBox.h, dragStartRef.current.initialBoxY + dy));
+    setCropBox((prev) => ({ ...prev, x: newX, y: newY }));
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
   };
 
   return (
@@ -239,33 +337,73 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
           {/* Controls Column */}
           <div className="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6">
             {mode === 'crop' && (
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                  Aspect Ratio Presets
-                </label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[
-                    { id: 'free', label: 'Free' },
-                    { id: '1:1', label: '1:1' },
-                    { id: '4:5', label: '4:5' },
-                    { id: '16:9', label: '16:9' },
-                    { id: '4:3', label: '4:3' },
-                    { id: '9:16', label: '9:16' },
-                    { id: '3:2', label: '3:2' },
-                    { id: '2:3', label: '2:3' },
-                  ].map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => handleAspectChange(r.id)}
-                      className={`py-2 text-xs font-bold rounded-xl border transition-all ${
-                        aspectRatio === r.id
-                          ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
+                    Aspect Ratio Presets
+                  </label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { id: 'free', label: 'Free' },
+                      { id: '1:1', label: '1:1 Square' },
+                      { id: '4:5', label: '4:5 Portrait' },
+                      { id: '16:9', label: '16:9 Landscape' },
+                      { id: '4:3', label: '4:3 Standard' },
+                      { id: '9:16', label: '9:16 Story' },
+                      { id: '3:2', label: '3:2 Photo' },
+                      { id: '2:3', label: '2:3 Tall' },
+                    ].map((r) => (
+                      <button
+                        key={r.id}
+                        onClick={() => handleAspectChange(r.id)}
+                        className={`py-2 text-[11px] font-bold rounded-xl border transition-all truncate px-1 text-center ${
+                          aspectRatio === r.id
+                            ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fine-Tuning Sliders */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                    <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Crop Box Position & Scale</span>
+                  </span>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                      <span>Horizontal Position</span>
+                      <span className="font-mono text-[11px]">{cropBox.x} px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max={imgElement ? Math.max(0, imgElement.naturalWidth - cropBox.w) : 100}
+                      value={cropBox.x}
+                      onChange={(e) => setCropBox((prev) => ({ ...prev, x: parseInt(e.target.value) || 0 }))}
+                      className="w-full accent-indigo-600"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                      <span>Vertical Position</span>
+                      <span className="font-mono text-[11px]">{cropBox.y} px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max={imgElement ? Math.max(0, imgElement.naturalHeight - cropBox.h) : 100}
+                      value={cropBox.y}
+                      onChange={(e) => setCropBox((prev) => ({ ...prev, y: parseInt(e.target.value) || 0 }))}
+                      className="w-full accent-indigo-600"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -377,19 +515,67 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
 
           {/* Previews Column */}
           <div className="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-center min-h-[440px]">
-            <div className="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between w-full">
-              <span>Result Preview</span>
-              {result && (
-                <span className="text-[11px] text-slate-400">
-                  {result.width} × {result.height} px
+            {mode === 'crop' && (
+              <div className="flex items-center justify-between w-full mb-3">
+                <span className="text-xs font-bold text-slate-700">
+                  {cropViewMode === 'interactive' ? 'Drag frame to adjust crop area' : 'Result Preview'}
                 </span>
-              )}
-            </div>
+                <div className="inline-flex p-0.5 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+                  <button
+                    onClick={() => setCropViewMode('interactive')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                      cropViewMode === 'interactive'
+                        ? 'bg-white text-indigo-700 shadow-2xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <Move className="w-3 h-3" />
+                    <span>Interactive Frame</span>
+                  </button>
+                  <button
+                    onClick={() => setCropViewMode('preview')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                      cropViewMode === 'preview'
+                        ? 'bg-white text-indigo-700 shadow-2xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>Final Result</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {mode !== 'crop' && (
+              <div className="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between w-full">
+                <span>Result Preview</span>
+                {result && (
+                  <span className="text-[11px] text-slate-400">
+                    {result.width} × {result.height} px
+                  </span>
+                )}
+              </div>
+            )}
 
             {isProcessing ? (
               <div className="flex flex-col items-center gap-3 py-16">
                 <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
                 <span className="text-xs font-bold text-slate-600">Rendering crop...</span>
+              </div>
+            ) : mode === 'crop' && cropViewMode === 'interactive' ? (
+              <div className="relative max-h-[420px] max-w-full flex items-center justify-center overflow-auto rounded-2xl bg-slate-900 border border-slate-800 p-2">
+                <canvas
+                  ref={cropCanvasRef}
+                  onMouseDown={handlePointerDown}
+                  onMouseMove={handlePointerMove}
+                  onMouseUp={handlePointerUp}
+                  onTouchStart={handlePointerDown}
+                  onTouchMove={handlePointerMove}
+                  onTouchEnd={handlePointerUp}
+                  style={{ touchAction: 'none' }}
+                  className="max-h-[390px] max-w-full object-contain cursor-move select-none"
+                />
               </div>
             ) : result ? (
               <div className="w-full flex flex-col items-center">

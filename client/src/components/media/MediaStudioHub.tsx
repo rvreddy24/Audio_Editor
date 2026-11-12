@@ -23,7 +23,7 @@ import {
 
 interface MediaStudioHubProps {
   onSelectVideo: () => void;
-  onSelectAudio: () => void;
+  onSelectAudio: (tab?: string) => void;
   onBackToHome: () => void;
 }
 
@@ -145,7 +145,7 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
 
           {/* CARD 2: AUDIO EDITOR & TOOLS */}
           <div
-            onClick={onSelectAudio}
+            onClick={() => onSelectAudio()}
             className="group relative bg-white rounded-3xl border-2 border-slate-200/90 hover:border-indigo-600 p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-200 cursor-pointer overflow-hidden"
           >
             <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 rounded-full bg-indigo-100/50 blur-3xl group-hover:bg-indigo-200/60 transition-colors pointer-events-none" />
@@ -176,30 +176,72 @@ export const MediaStudioHub: React.FC<MediaStudioHubProps> = ({
 
               {/* Feature Highlights Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
-                <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700 font-medium">
-                  <Scissors className="w-4 h-4 text-indigo-500 shrink-0" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectAudio('trim');
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/70 hover:border-indigo-300 text-xs text-slate-700 hover:text-indigo-900 font-medium text-left transition-all group/item"
+                >
+                  <Scissors className="w-4 h-4 text-indigo-500 group-hover/item:scale-110 transition-transform shrink-0" />
                   <span>Visual Waveform Trimmer</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700 font-medium">
-                  <RefreshCw className="w-4 h-4 text-indigo-500 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectAudio('convert');
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/70 hover:border-indigo-300 text-xs text-slate-700 hover:text-indigo-900 font-medium text-left transition-all group/item"
+                >
+                  <RefreshCw className="w-4 h-4 text-indigo-500 group-hover/item:scale-110 transition-transform shrink-0" />
                   <span>MP3 / WAV / FLAC 320k Scaler</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700 font-medium">
-                  <Film className="w-4 h-4 text-indigo-500 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectAudio('video');
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/70 hover:border-indigo-300 text-xs text-slate-700 hover:text-indigo-900 font-medium text-left transition-all group/item"
+                >
+                  <Film className="w-4 h-4 text-indigo-500 group-hover/item:scale-110 transition-transform shrink-0" />
                   <span>Video Soundtrack Extractor</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700 font-medium">
-                  <Sliders className="w-4 h-4 text-indigo-500 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectAudio('effects');
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/70 hover:border-indigo-300 text-xs text-slate-700 hover:text-indigo-900 font-medium text-left transition-all group/item"
+                >
+                  <Sliders className="w-4 h-4 text-indigo-500 group-hover/item:scale-110 transition-transform shrink-0" />
                   <span>Pitch, Tempo & 8D Spatial Audio</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700 font-medium">
-                  <Layers className="w-4 h-4 text-indigo-500 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectAudio('merge');
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/70 hover:border-indigo-300 text-xs text-slate-700 hover:text-indigo-900 font-medium text-left transition-all group/item"
+                >
+                  <Layers className="w-4 h-4 text-indigo-500 group-hover/item:scale-110 transition-transform shrink-0" />
                   <span>Multi-Track Sequence Merger</span>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700 font-medium">
-                  <Tag className="w-4 h-4 text-indigo-500 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectAudio('tags');
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/70 hover:border-indigo-300 text-xs text-slate-700 hover:text-indigo-900 font-medium text-left transition-all group/item"
+                >
+                  <Tag className="w-4 h-4 text-indigo-500 group-hover/item:scale-110 transition-transform shrink-0" />
                   <span>ID3 Tag Editor & Voice Recorder</span>
-                </div>
+                </button>
               </div>
             </div>
 

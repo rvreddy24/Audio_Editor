@@ -96,17 +96,24 @@ export async function compressToTargetKb(
   const minQuality = mimeType === 'image/webp' ? 0.58 : targetKb < 60 ? 0.60 : 0.65;
   const maxQuality = 0.92;
 
-  // Estimate ideal initial dimensions to avoid trying full resolution at 5% quality
+  // Clamp massive images to max 4096 px initial working size to prevent browser canvas OOM
   let curW = srcW;
   let curH = srcH;
+  if (curW > 4096 || curH > 4096) {
+    const scale = 4096 / Math.max(curW, curH);
+    curW = Math.max(30, Math.round(curW * scale));
+    curH = Math.max(30, Math.round(curH * scale));
+  }
 
+  // Estimate ideal initial dimensions to avoid trying full resolution at 5% quality
   if (targetKb < 80) {
     const bytesPerPixel = mimeType === 'image/webp' ? 0.08 : 0.11;
     const estPixels = targetBytes / bytesPerPixel;
-    const idealW = Math.round(Math.sqrt(estPixels * (srcW / srcH)));
-    if (idealW < srcW) {
-      curW = Math.min(srcW, Math.max(260, Math.round(idealW * 1.18)));
-      curH = Math.max(260, Math.round((curW / srcW) * srcH));
+    const aspect = srcW / srcH;
+    const idealW = Math.round(Math.sqrt(estPixels * aspect));
+    if (idealW < curW) {
+      curW = Math.min(curW, Math.max(40, Math.round(idealW * 1.15)));
+      curH = Math.max(30, Math.round((curW / srcW) * srcH));
     }
   }
 
@@ -169,9 +176,9 @@ export async function compressToTargetKb(
     const testMinBlob = await canvasToBlob(canvas, mimeType, minQuality);
     if (testMinBlob.size > targetBytes) {
       // Need to scale dimensions down proportionally to guarantee targetBytes with high quality
-      const scaleRatio = Math.max(0.65, Math.min(0.92, Math.sqrt(targetBytes / testMinBlob.size) * 0.98));
-      curW = Math.max(80, Math.round(curW * scaleRatio));
-      curH = Math.max(80, Math.round(curH * scaleRatio));
+      const scaleRatio = Math.max(0.60, Math.min(0.92, Math.sqrt(targetBytes / testMinBlob.size) * 0.98));
+      curW = Math.max(30, Math.round(curW * scaleRatio));
+      curH = Math.max(30, Math.round((curW / srcW) * srcH));
     } else {
       if (!bestBlob) {
         bestBlob = testMinBlob;
@@ -182,26 +189,36 @@ export async function compressToTargetKb(
     }
   }
 
-  // Safety fallback if image has high entropy
-  if (!bestBlob) {
-    const fallbackCanvas = document.createElement('canvas');
-    fallbackCanvas.width = 320;
-    fallbackCanvas.height = Math.max(40, Math.round((320 / srcW) * srcH));
-    const fCtx = fallbackCanvas.getContext('2d');
-    if (fCtx) {
+  // Safety fallback: guaranteed strictly <= targetBytes while preserving sharpness
+  if (!bestBlob || bestBlob.size > targetBytes) {
+    let fW = Math.min(curW, 300);
+    for (let fPass = 0; fPass < 8; fPass++) {
+      const fCanvas = document.createElement('canvas');
+      fCanvas.width = Math.max(20, Math.round(fW));
+      fCanvas.height = Math.max(20, Math.round((fW / srcW) * srcH));
+      const fCtx = fCanvas.getContext('2d');
+      if (!fCtx) break;
       fCtx.imageSmoothingEnabled = true;
       fCtx.imageSmoothingQuality = 'high';
       if (mimeType === 'image/jpeg') {
         fCtx.fillStyle = '#FFFFFF';
-        fCtx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+        fCtx.fillRect(0, 0, fCanvas.width, fCanvas.height);
       }
-      fCtx.drawImage(source, 0, 0, fallbackCanvas.width, fallbackCanvas.height);
-      bestBlob = await canvasToBlob(fallbackCanvas, mimeType, minQuality);
-      bestW = fallbackCanvas.width;
-      bestH = fallbackCanvas.height;
-    } else {
-      throw new Error('Image compression failed to meet target constraints');
+      fCtx.drawImage(source, 0, 0, fCanvas.width, fCanvas.height);
+      applyCanvasSharpen(fCtx, fCanvas.width, fCanvas.height, 0.25);
+      const b = await canvasToBlob(fCanvas, mimeType, minQuality);
+      bestBlob = b;
+      bestW = fCanvas.width;
+      bestH = fCanvas.height;
+      if (b.size <= targetBytes) {
+        break;
+      }
+      fW = Math.max(20, Math.round(fW * 0.78));
     }
+  }
+
+  if (!bestBlob) {
+    throw new Error('Image compression failed to meet target constraints');
   }
 
   const dataUrl = await blobToDataUrl(bestBlob);
@@ -268,8 +285,9 @@ function padJpegWithComments(originalBytes: ArrayBuffer, targetBytes: number): U
     const com = new Uint8Array(segLen);
     com[0] = 0xff;
     com[1] = 0xfe;
-    com[2] = (segLen >> 8) & 0xff;
-    com[3] = segLen & 0xff;
+    const paramLen = segLen - 2;
+    com[2] = (paramLen >> 8) & 0xff;
+    com[3] = paramLen & 0xff;
     com.fill(0x20, 4);
     chunks.push(com);
     remaining -= segLen;
@@ -466,7 +484,7 @@ export async function resizeImageDimensions(
  * Background Replacement/Tinting, and Face Framing.
  */
 export interface PassportPhotoOptions {
-  country: 'india' | 'us' | 'uk' | 'eu' | 'canada' | 'custom';
+  country: 'india' | 'us' | 'uk' | 'eu' | 'australia' | 'canada' | 'custom';
   widthMm?: number;
   heightMm?: number;
   bgColor?: string; // e.g. '#FFFFFF', '#E0F2FE' (light blue), '#FEE2E2' (light red), '#F3F4F6' (light grey)
@@ -476,6 +494,8 @@ export interface PassportPhotoOptions {
   panX?: number;
   panY?: number;
   rotation?: number; // rotation in degrees (-45 to +45)
+  candidateName?: string;
+  dateOfPhoto?: string;
 }
 
 export const PASSPORT_SPECS = {
@@ -483,6 +503,7 @@ export const PASSPORT_SPECS = {
   us: { name: 'United States (Visa / Passport 2x2 in)', widthMm: 50.8, heightMm: 50.8, dpi: 300 },
   uk: { name: 'United Kingdom (Standard 35x45 mm)', widthMm: 35, heightMm: 45, dpi: 300 },
   eu: { name: 'Schengen / European Union (35x45 mm)', widthMm: 35, heightMm: 45, dpi: 300 },
+  australia: { name: 'Australia (Passport 35x45 mm)', widthMm: 35, heightMm: 45, dpi: 300 },
   canada: { name: 'Canada (Passport 50x70 mm)', widthMm: 50, heightMm: 70, dpi: 300 },
   custom: { name: 'Custom Dimensions', widthMm: 35, heightMm: 45, dpi: 300 },
 };
@@ -571,6 +592,41 @@ export async function createPassportPhoto(
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, wPx, hPx);
   }
 
+  // Draw Candidate Name & Date of Photo banner if specified
+  if (options.candidateName?.trim() || options.dateOfPhoto?.trim()) {
+    const bannerH = Math.max(36, Math.round(hPx * 0.16));
+    const bannerY = hPx - bannerH;
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, bannerY, wPx, bannerH);
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, bannerY);
+    ctx.lineTo(wPx, bannerY);
+    ctx.stroke();
+
+    ctx.fillStyle = '#0F172A';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const fontSize = Math.max(11, Math.round(bannerH * 0.32));
+    ctx.font = `bold ${fontSize}px sans-serif`;
+
+    const name = options.candidateName?.trim().toUpperCase();
+    const dop = options.dateOfPhoto?.trim();
+
+    if (name && dop) {
+      ctx.fillText(name, wPx / 2, bannerY + bannerH * 0.35);
+      ctx.font = `${Math.max(10, fontSize - 1)}px sans-serif`;
+      ctx.fillStyle = '#475569';
+      ctx.fillText(`DoP: ${dop}`, wPx / 2, bannerY + bannerH * 0.72);
+    } else if (name) {
+      ctx.fillText(name, wPx / 2, bannerY + bannerH * 0.5);
+    } else if (dop) {
+      ctx.fillText(`DoP: ${dop}`, wPx / 2, bannerY + bannerH * 0.5);
+    }
+  }
+
   let finalBlob = await canvasToBlob(canvas, 'image/jpeg', 0.95);
   finalBlob = await injectJpegDpi(finalBlob, dpi);
   const dataUrl = await blobToDataUrl(finalBlob);
@@ -618,13 +674,24 @@ export async function generatePrintableSheet(
     rows = 3;
   }
 
-  const pWidth = Math.round((35 / 25.4) * dpi); // ~413 px
-  const pHeight = Math.round((45 / 25.4) * dpi); // ~531 px
+  const photoAspect = (photoImg.naturalWidth || 35) / (photoImg.naturalHeight || 45);
+  // Base height standard ~45mm (531 px at 300 DPI)
+  let pHeight = Math.round((45 / 25.4) * dpi);
+  let pWidth = Math.round(pHeight * photoAspect);
+
+  // If grid cells would exceed sheet bounds, scale down gracefully to fit paper with margins
+  const maxCellW = Math.floor((sheetW - (cols + 1) * 20) / cols);
+  const maxCellH = Math.floor((sheetH - (rows + 1) * 20) / rows);
+  if (pWidth > maxCellW || pHeight > maxCellH) {
+    const scale = Math.min(maxCellW / pWidth, maxCellH / pHeight);
+    pWidth = Math.round(pWidth * scale);
+    pHeight = Math.round(pHeight * scale);
+  }
 
   const totalGridW = cols * pWidth;
   const totalGridH = rows * pHeight;
-  const gapX = Math.max(20, Math.floor((sheetW - totalGridW) / (cols + 1)));
-  const gapY = Math.max(20, Math.floor((sheetH - totalGridH) / (rows + 1)));
+  const gapX = Math.max(15, Math.floor((sheetW - totalGridW) / (cols + 1)));
+  const gapY = Math.max(15, Math.floor((sheetH - totalGridH) / (rows + 1)));
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -727,12 +794,12 @@ export async function processSignature(
   // Compress to target KB (<= 20KB for portals)
   const result = await compressToTargetKb(canvas, targetKb, 'image/jpeg');
 
-  // If a minKb constraint is specified or defaults for recruitment portals (>= 10KB),
-  // safely pad with standard JPEG COM markers so the file meets portal minimum constraints.
-  const minKb = options.minKb !== undefined ? options.minKb : (targetKb <= 25 ? 10 : 0);
-  if (minKb > 0 && result.blob.size < minKb * 1024) {
+  // If a minKb constraint is specified (e.g. portals requiring min 10KB),
+  // safely pad with standard JPEG COM markers up to minKb without exceeding targetKb.
+  const minKb = options.minKb !== undefined ? options.minKb : 0;
+  if (minKb > 0 && minKb < targetKb && result.blob.size < minKb * 1024) {
     const origBuffer = await result.blob.arrayBuffer();
-    const safeTargetBytes = Math.round(minKb * 1024 * 1.15); // e.g. ~11.5 KB
+    const safeTargetBytes = Math.min(targetKb * 1024, Math.round(minKb * 1024 * 1.05));
     const padded = padJpegWithComments(origBuffer, safeTargetBytes);
     const safeBlob = new Blob([padded as BlobPart], { type: 'image/jpeg' });
     return {
@@ -794,14 +861,19 @@ export async function addNameAndDateStamp(
   const baseFontSize = Math.max(14, Math.round(boxHeight * 0.32));
   ctx.font = `bold ${baseFontSize}px sans-serif`;
 
-  const line1Y = boxY + boxHeight * 0.35;
-  const line2Y = boxY + boxHeight * 0.72;
+  const hasName = Boolean(name.trim());
+  const hasDate = Boolean(dateStr.trim());
 
-  if (name.trim()) {
+  if (hasName && hasDate) {
+    const line1Y = boxY + boxHeight * 0.35;
+    const line2Y = boxY + boxHeight * 0.72;
     ctx.fillText(name.trim().toUpperCase(), w / 2, line1Y);
-  }
-  if (dateStr.trim()) {
+    ctx.font = `${Math.max(12, baseFontSize - 2)}px sans-serif`;
     ctx.fillText(`DoP: ${dateStr.trim()}`, w / 2, line2Y);
+  } else if (hasName) {
+    ctx.fillText(name.trim().toUpperCase(), w / 2, boxY + boxHeight * 0.5);
+  } else if (hasDate) {
+    ctx.fillText(`DoP: ${dateStr.trim()}`, w / 2, boxY + boxHeight * 0.5);
   }
 
   const finalBlob = await canvasToBlob(canvas, 'image/jpeg', 0.94);
@@ -840,10 +912,18 @@ export async function joinImages(
       return acc + scaledW;
     }, 0) + (images.length - 1) * gap;
 
+    // Scale down proportionally if exceeding canvas limits
+    if (totalW > 16384 || totalH > 16384) {
+      const s = 16384 / Math.max(totalW, totalH);
+      totalW = Math.round(totalW * s);
+      totalH = Math.round(totalH * s);
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = totalW;
     canvas.height = totalH;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Failed to create canvas context for joined images');
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, totalW, totalH);
 
@@ -865,10 +945,18 @@ export async function joinImages(
       return acc + scaledH;
     }, 0) + (images.length - 1) * gap;
 
+    // Scale down proportionally if exceeding canvas limits
+    if (totalW > 16384 || totalH > 16384) {
+      const s = 16384 / Math.max(totalW, totalH);
+      totalW = Math.round(totalW * s);
+      totalH = Math.round(totalH * s);
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = totalW;
     canvas.height = totalH;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Failed to create canvas context for joined images');
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, totalW, totalH);
 
@@ -952,6 +1040,44 @@ export async function injectPngDpi(blob: Blob, dpi: number): Promise<Blob> {
 
   // Pixels per meter (1 inch = 0.0254 meters)
   const ppm = Math.round(dpi / 0.0254);
+
+  // Scan for existing pHYs chunk
+  let pos = 8; // skip 8-byte signature
+  let physPos = -1;
+  while (pos + 12 <= bytes.length) {
+    const chunkLen = (bytes[pos] << 24) | (bytes[pos + 1] << 16) | (bytes[pos + 2] << 8) | bytes[pos + 3];
+    const isPhys =
+      bytes[pos + 4] === 0x70 &&
+      bytes[pos + 5] === 0x48 &&
+      bytes[pos + 6] === 0x59 &&
+      bytes[pos + 7] === 0x73;
+    if (isPhys && chunkLen === 9) {
+      physPos = pos;
+      break;
+    }
+    pos += 12 + chunkLen;
+  }
+
+  if (physPos !== -1) {
+    // Update existing pHYs chunk in-place
+    const out = new Uint8Array(bytes);
+    out[physPos + 8] = (ppm >> 24) & 0xff;
+    out[physPos + 9] = (ppm >> 16) & 0xff;
+    out[physPos + 10] = (ppm >> 8) & 0xff;
+    out[physPos + 11] = ppm & 0xff;
+    out[physPos + 12] = (ppm >> 24) & 0xff;
+    out[physPos + 13] = (ppm >> 16) & 0xff;
+    out[physPos + 14] = (ppm >> 8) & 0xff;
+    out[physPos + 15] = ppm & 0xff;
+    out[physPos + 16] = 1;
+    const crc = calcPngCrc32(out.subarray(physPos + 4, physPos + 17));
+    out[physPos + 17] = (crc >> 24) & 0xff;
+    out[physPos + 18] = (crc >> 16) & 0xff;
+    out[physPos + 19] = (crc >> 8) & 0xff;
+    out[physPos + 20] = crc & 0xff;
+    return new Blob([out], { type: 'image/png' });
+  }
+
   const physChunk = new Uint8Array(21);
   // Length: 9 (4 bytes)
   physChunk[0] = 0;
@@ -1025,7 +1151,7 @@ export function downloadImageBlob(blob: Blob, filename: string): void {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 // -------------------------------------------------------------
@@ -1283,7 +1409,9 @@ export async function applyPhotoEffects(
  * 15. WATERMARK & TEXT STAMP
  */
 export interface WatermarkOptions {
-  text: string;
+  text?: string;
+  logoImg?: HTMLImageElement;
+  logoScale?: number; // e.g. 0.20 (20% of image width)
   fontSize?: number;
   color?: string;
   opacity?: number;
@@ -1305,17 +1433,71 @@ export async function addWatermarkToImage(
 
   ctx.drawImage(img, 0, 0, w, h);
 
-  const fontSize = options.fontSize || Math.max(18, Math.round(w / 25));
-  ctx.font = `bold ${fontSize}px sans-serif`;
-  ctx.fillStyle = options.color || '#FFFFFF';
-  ctx.globalAlpha = options.opacity !== undefined ? options.opacity : 0.6;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  const opacity = options.opacity !== undefined ? options.opacity : 0.6;
+  ctx.globalAlpha = opacity;
 
   const position = options.position || 'center';
-  const text = (options.text !== undefined ? options.text : 'rajvarshith.com').trim();
 
+  // 1. Image Logo Watermark
+  if (options.logoImg) {
+    const logo = options.logoImg;
+    const lAspect = (logo.naturalWidth || 1) / (logo.naturalHeight || 1);
+    const scale = Math.max(0.05, Math.min(0.8, options.logoScale || 0.22));
+    const lw = Math.round(w * scale);
+    const lh = Math.round(lw / lAspect);
+    const pad = Math.max(15, Math.round(w * 0.04));
+
+    if (position === 'tile') {
+      const angle = ((options.rotation || -25) * Math.PI) / 180;
+      const stepX = Math.max(lw * 1.5, 120);
+      const stepY = Math.max(lh * 1.5, 100);
+
+      for (let y = -h; y < h * 2; y += stepY) {
+        for (let x = -w; x < w * 2; x += stepX) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          ctx.drawImage(logo, -lw / 2, -lh / 2, lw, lh);
+          ctx.restore();
+        }
+      }
+    } else {
+      let tx = w / 2;
+      let ty = h / 2;
+
+      if (position === 'top-left') {
+        tx = pad + lw / 2;
+        ty = pad + lh / 2;
+      } else if (position === 'top-right') {
+        tx = w - pad - lw / 2;
+        ty = pad + lh / 2;
+      } else if (position === 'bottom-left') {
+        tx = pad + lw / 2;
+        ty = h - pad - lh / 2;
+      } else if (position === 'bottom-right') {
+        tx = w - pad - lw / 2;
+        ty = h - pad - lh / 2;
+      }
+
+      ctx.save();
+      ctx.translate(tx, ty);
+      if (options.rotation) {
+        ctx.rotate((options.rotation * Math.PI) / 180);
+      }
+      ctx.drawImage(logo, -lw / 2, -lh / 2, lw, lh);
+      ctx.restore();
+    }
+  }
+
+  // 2. Text Watermark
+  const text = (options.text !== undefined ? options.text : '').trim();
   if (text.length > 0) {
+    const fontSize = options.fontSize || Math.max(18, Math.round(w / 25));
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.fillStyle = options.color || '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
     if (position === 'tile') {
       const angle = ((options.rotation || -30) * Math.PI) / 180;
       // Guard stepX and stepY to prevent infinite loop or browser freeze
@@ -1433,6 +1615,95 @@ export async function mergePhotoAndSignature(
 ): Promise<{ blob: Blob; dataUrl: string; actualKb: number }> {
   const name = options.candidateName?.trim().toUpperCase();
   const dop = options.dop?.trim();
+
+  if (options.layout === 'horizontal') {
+    const cardW = 680;
+    const cardH = 340;
+    const canvas = document.createElement('canvas');
+    canvas.width = cardW;
+    canvas.height = cardH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas context failed');
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, cardW, cardH);
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, cardW - 2, cardH - 2);
+
+    // Left: Photo (270 x 320)
+    const photoBoxW = 270;
+    const photoBoxH = cardH - 20;
+    const pw = photoImg.naturalWidth;
+    const ph = photoImg.naturalHeight;
+    const pAspect = pw / ph;
+    const boxAspect = photoBoxW / photoBoxH;
+    let cropSx = 0, cropSy = 0, cropSW = pw, cropSH = ph;
+    if (pAspect > boxAspect) {
+      cropSW = ph * boxAspect;
+      cropSx = (pw - cropSW) / 2;
+    } else {
+      cropSH = pw / boxAspect;
+      cropSy = (ph - cropSH) / 2;
+    }
+    ctx.drawImage(photoImg, cropSx, cropSy, cropSW, cropSH, 10, 10, photoBoxW, photoBoxH);
+
+    // Vertical Divider
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(290, 10);
+    ctx.lineTo(290, cardH - 10);
+    ctx.stroke();
+
+    // Right side: Info and Signature
+    const rightX = 300;
+    const rightW = cardW - rightX - 10;
+    let curY = 15;
+
+    if (name || dop) {
+      ctx.fillStyle = '#0F172A';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (name) {
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText(name, rightX + rightW / 2, curY + 20);
+        curY += 38;
+      }
+      if (dop) {
+        ctx.font = '13px sans-serif';
+        ctx.fillStyle = '#475569';
+        ctx.fillText(`DoP: ${dop}`, rightX + rightW / 2, curY + (name ? 10 : 20));
+        curY += 28;
+      }
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.beginPath();
+      ctx.moveTo(rightX + 10, curY);
+      ctx.lineTo(cardW - 20, curY);
+      ctx.stroke();
+      curY += 10;
+    }
+
+    // Signature on right
+    const sigPad = 10;
+    const sigBoxW = rightW - sigPad * 2;
+    const sigBoxH = cardH - curY - sigPad * 2;
+    const sRatio = signImg.naturalWidth / signImg.naturalHeight;
+    let sw = sigBoxW;
+    let sh = sigBoxH;
+    if (sw / sh > sRatio) {
+      sw = sh * sRatio;
+    } else {
+      sh = sw / sRatio;
+    }
+    const sigX = rightX + (rightW - sw) / 2;
+    const sigY = curY + (sigBoxH - sh) / 2;
+    ctx.drawImage(signImg, sigX, sigY, sw, sh);
+
+    const targetKb = options.targetKb || 50;
+    const comp = await compressToTargetKb(canvas, targetKb, 'image/jpeg');
+    return { blob: comp.blob, dataUrl: comp.dataUrl, actualKb: comp.actualKb };
+  }
 
   const cardW = 420;
   const photoH = 360;
@@ -1623,28 +1894,26 @@ export function processBackgroundRemoval(
     if (options.seedPoint) {
       const sx = Math.max(0, Math.min(w - 1, options.seedPoint.x));
       const sy = Math.max(0, Math.min(h - 1, options.seedPoint.y));
-      const pIdx = sy * w + sx;
-      isBg[pIdx] = 1;
-      queue[qTail++] = pIdx;
-    } else {
-      // Smart perimeter seeding:
-      // Always seed top border (background is almost always at top of image)
-      for (let x = 0; x < w; x++) {
-        pushBorder(x, 0);
-      }
-      // Seed sides down to 70% height (avoids torso/clothes touching lower borders)
-      const maxSideY = Math.floor(h * 0.7);
-      for (let y = 1; y < maxSideY; y++) {
-        pushBorder(0, y);
-        pushBorder(w - 1, y);
-      }
-      // Only seed bottom border pixels if they match target color with strict tolerance
-      for (let x = 0; x < w; x++) {
-        const pIdx = (h - 1) * w + x;
-        const dIdx = pIdx * 4;
-        if (calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]) <= tolerance * 0.75) {
-          pushBorder(x, h - 1);
-        }
+      pushBorder(sx, sy);
+    }
+
+    // Smart perimeter seeding:
+    // Always seed top border (background is almost always at top of image)
+    for (let x = 0; x < w; x++) {
+      pushBorder(x, 0);
+    }
+    // Seed sides down to 70% height (avoids torso/clothes touching lower borders)
+    const maxSideY = Math.floor(h * 0.7);
+    for (let y = 1; y < maxSideY; y++) {
+      pushBorder(0, y);
+      pushBorder(w - 1, y);
+    }
+    // Only seed bottom border pixels if they match target color with strict tolerance
+    for (let x = 0; x < w; x++) {
+      const pIdx = (h - 1) * w + x;
+      const dIdx = pIdx * 4;
+      if (calcDist(data[dIdx], data[dIdx + 1], data[dIdx + 2]) <= tolerance * 0.75) {
+        pushBorder(x, h - 1);
       }
     }
 

@@ -25,7 +25,7 @@ export const PageNumbersWorkspace: React.FC<PageNumbersWorkspaceProps> = ({ onBa
   const [file, setFile] = useState<PdfFileInfo | null>(null);
   const [format, setFormat] = useState<'1' | '1 of n' | 'Page 1' | 'Page 1 of n'>('1 of n');
   const [position, setPosition] = useState<
-    'bottom-center' | 'bottom-right' | 'bottom-left' | 'top-center' | 'top-right'
+    'bottom-center' | 'bottom-right' | 'bottom-left' | 'top-center' | 'top-right' | 'top-left'
   >('bottom-center');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -167,28 +167,28 @@ export const PageNumbersWorkspace: React.FC<PageNumbersWorkspaceProps> = ({ onBa
               </div>
 
               <div className="space-y-1.5 pt-2">
-                <label className="text-xs font-semibold text-slate-700">Position</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setPosition('bottom-center')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-all ${
-                      position === 'bottom-center'
-                        ? 'bg-red-50 text-[#e5322d] border-red-200'
-                        : 'bg-white text-slate-600 border-slate-200'
-                    }`}
-                  >
-                    Bottom Center
-                  </button>
-                  <button
-                    onClick={() => setPosition('bottom-right')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-all ${
-                      position === 'bottom-right'
-                        ? 'bg-red-50 text-[#e5322d] border-red-200'
-                        : 'bg-white text-slate-600 border-slate-200'
-                    }`}
-                  >
-                    Bottom Right
-                  </button>
+                <label className="text-xs font-semibold text-slate-700">Position (Header / Footer)</label>
+                <div className="grid grid-cols-3 gap-1.5 text-center">
+                  {[
+                    { key: 'top-left', label: 'Top Left' },
+                    { key: 'top-center', label: 'Top Center' },
+                    { key: 'top-right', label: 'Top Right' },
+                    { key: 'bottom-left', label: 'Bottom Left' },
+                    { key: 'bottom-center', label: 'Bottom Center' },
+                    { key: 'bottom-right', label: 'Bottom Right' },
+                  ].map((pos) => (
+                    <button
+                      key={pos.key}
+                      onClick={() => setPosition(pos.key as any)}
+                      className={`py-2 px-1 rounded-xl text-[11px] font-bold border transition-all ${
+                        position === pos.key
+                          ? 'bg-red-50 text-[#e5322d] border-red-200'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {pos.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

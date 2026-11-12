@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   CheckCircle2,
@@ -17,11 +17,24 @@ interface ResizeImageWorkspaceProps {
 
 export const ResizeImageWorkspace: React.FC<ResizeImageWorkspaceProps> = ({ onBack }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [origDimensions, setOrigDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
   const [targetWidth, setTargetWidth] = useState(800);
   const [targetHeight, setTargetHeight] = useState(600);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl('');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [file]);
 
   const handleFilesSelected = async (files: File[]) => {
     if (files.length > 0) {
@@ -104,7 +117,7 @@ export const ResizeImageWorkspace: React.FC<ResizeImageWorkspaceProps> = ({ onBa
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center">
             <div className="w-64 h-64 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center p-2 shadow-xs">
               <img
-                src={URL.createObjectURL(file)}
+                src={previewUrl}
                 alt="Preview"
                 className="max-h-full object-contain"
               />

@@ -2,11 +2,26 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+function parseFps(fpsStr) {
+  if (!fpsStr || fpsStr === '0/0') return 30;
+  if (typeof fpsStr === 'string' && fpsStr.includes('/')) {
+    const parts = fpsStr.split('/');
+    const num = parseFloat(parts[0]);
+    const den = parseFloat(parts[1]);
+    if (!isNaN(num) && !isNaN(den) && den > 0) {
+      return parseFloat((num / den).toFixed(2));
+    }
+  }
+  const parsed = parseFloat(fpsStr);
+  return !isNaN(parsed) && parsed > 0 ? parseFloat(parsed.toFixed(2)) : 30;
+}
+
 /**
  * Executes an ffprobe command and returns parsed JSON
  */
-function probeFile(filePath) {
+function probeFile(filePath, options = {}) {
   return new Promise((resolve, reject) => {
+    const timeoutMs = options.timeoutMs || 30000;
     const args = [
       '-v', 'quiet',
       '-print_format', 'json',
@@ -18,6 +33,14 @@ function probeFile(filePath) {
     const proc = spawn('ffprobe', args);
     let stdout = '';
     let stderr = '';
+    let isSettled = false;
+
+    const timer = setTimeout(() => {
+      if (isSettled) return;
+      isSettled = true;
+      try { proc.kill('SIGKILL'); } catch (e) {}
+      reject(new Error(`ffprobe timed out after ${timeoutMs}ms on ${path.basename(filePath)}`));
+    }, timeoutMs);
 
     proc.stdout.on('data', data => {
       stdout += data.toString();
@@ -28,8 +51,12 @@ function probeFile(filePath) {
     });
 
     proc.on('close', code => {
+      if (isSettled) return;
+      isSettled = true;
+      clearTimeout(timer);
+
       if (code !== 0) {
-        return reject(new Error(`ffprobe failed with code ${code}: ${stderr}`));
+        return reject(new Error(`ffprobe failed with code ${code}: ${stderr.trim() || 'Unrecognized media format'}`));
       }
       try {
         const info = JSON.parse(stdout);
@@ -41,7 +68,7 @@ function probeFile(filePath) {
         const bitRate = parseInt(format.bit_rate || (audioStream && audioStream.bit_rate) || '0', 10);
 
         resolve({
-          duration,
+          duration: isNaN(duration) ? 0 : duration,
           bitRate: bitRate ? Math.round(bitRate / 1000) : 0, // in kbps
           formatName: format.format_name,
           formatLongName: format.format_long_name,
@@ -61,7 +88,7 @@ function probeFile(filePath) {
             codec: videoStream.codec_name,
             width: videoStream.width,
             height: videoStream.height,
-            fps: eval(videoStream.r_frame_rate || '0')
+            fps: parseFps(videoStream.r_frame_rate || videoStream.avg_frame_rate || '30')
           } : null
         });
       } catch (err) {
@@ -69,18 +96,54 @@ function probeFile(filePath) {
       }
     });
 
-    proc.on('error', reject);
+    proc.on('error', err => {
+      if (isSettled) return;
+      isSettled = true;
+      clearTimeout(timer);
+      reject(err);
+    });
   });
 }
 
 /**
- * Runs ffmpeg with progress tracking
+ * Runs ffmpeg with progress tracking and abort/cancellation support
  */
-function runFFmpeg(args, onProgress) {
+function runFFmpeg(args, onProgress, options = {}) {
   return new Promise((resolve, reject) => {
+    const timeoutMs = options.timeoutMs || 300000; // 5 minute default timeout guard
+    let isSettled = false;
+
     // Add progress pipe to args
     const fullArgs = [...args, '-progress', 'pipe:1'];
     const proc = spawn('ffmpeg', fullArgs);
+
+    const timer = setTimeout(() => {
+      if (isSettled) return;
+      isSettled = true;
+      try { proc.kill('SIGKILL'); } catch (e) {}
+      const summaryArgs = args.slice(0, 10).join(' ');
+      reject(new Error(`FFmpeg operation timed out after ${timeoutMs}ms (args: ${summaryArgs})`));
+    }, timeoutMs);
+
+    if (options.onSpawn && typeof options.onSpawn === 'function') {
+      options.onSpawn(proc);
+    }
+
+    if (options.signal) {
+      if (options.signal.aborted) {
+        isSettled = true;
+        clearTimeout(timer);
+        try { proc.kill('SIGKILL'); } catch (e) {}
+        return reject(new Error('FFmpeg process aborted by caller'));
+      }
+      options.signal.addEventListener('abort', () => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(timer);
+        try { proc.kill('SIGKILL'); } catch (e) {}
+        reject(new Error('FFmpeg process aborted by caller'));
+      });
+    }
 
     let stderr = '';
 
@@ -105,14 +168,26 @@ function runFFmpeg(args, onProgress) {
     });
 
     proc.on('close', code => {
+      if (isSettled) return;
+      isSettled = true;
+      clearTimeout(timer);
+
       if (code === 0) {
         resolve();
       } else {
-        reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-500)}`));
+        const errSnippet = stderr.slice(-1000).trim();
+        console.error(`[FFmpeg Error Code ${code}] Args: ${args.join(' ')}\nStderr: ${errSnippet}`);
+        reject(new Error(`FFmpeg exited with code ${code}: ${errSnippet}`));
       }
     });
 
-    proc.on('error', reject);
+    proc.on('error', err => {
+      if (isSettled) return;
+      isSettled = true;
+      clearTimeout(timer);
+      console.error('[FFmpeg Spawn Error]', err);
+      reject(err);
+    });
   });
 }
 

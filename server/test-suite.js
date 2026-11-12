@@ -10,8 +10,17 @@ async function runTests() {
   const health = await healthRes.json();
   console.log('1. Health check:', health);
 
-  // 2. Upload test_sample.mp3
+  // 2. Upload test_sample.mp3 (auto-generate if missing)
   const filePath = path.join(__dirname, '../test_sample.mp3');
+  if (!fs.existsSync(filePath)) {
+    const { spawnSync } = require('child_process');
+    spawnSync('ffmpeg', ['-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=5', '-c:a', 'libmp3lame', '-b:a', '192k', filePath]);
+  }
+  const videoPath = path.join(__dirname, '../test_video.mp4');
+  if (!fs.existsSync(videoPath)) {
+    const { spawnSync } = require('child_process');
+    spawnSync('ffmpeg', ['-y', '-f', 'lavfi', '-i', 'testsrc=duration=3:size=320x240:rate=24', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=3', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', videoPath]);
+  }
   const fileBuffer = fs.readFileSync(filePath);
   const blob = new Blob([fileBuffer], { type: 'audio/mpeg' });
   const form = new FormData();
@@ -110,7 +119,6 @@ async function runTests() {
 
   // 7. Test Video to Audio Extraction
   // Upload test_video.mp4
-  const videoPath = path.join(__dirname, '../test_video.mp4');
   if (fs.existsSync(videoPath)) {
     const videoBuffer = fs.readFileSync(videoPath);
     const videoBlob = new Blob([videoBuffer], { type: 'video/mp4' });

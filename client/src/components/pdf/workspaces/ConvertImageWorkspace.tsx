@@ -17,9 +17,22 @@ interface ConvertImageWorkspaceProps {
 
 export const ConvertImageWorkspace: React.FC<ConvertImageWorkspaceProps> = ({ onBack }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [targetMime, setTargetMime] = useState<'image/jpeg' | 'image/png' | 'image/webp'>('image/png');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+
+  React.useEffect(() => {
+    if (!file) {
+      setPreviewUrl('');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [file]);
 
   const handleFilesSelected = (files: File[]) => {
     if (files.length > 0) {
@@ -94,11 +107,13 @@ export const ConvertImageWorkspace: React.FC<ConvertImageWorkspaceProps> = ({ on
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center justify-center">
             <div className="w-64 h-64 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center p-2 shadow-xs">
-              <img
-                src={URL.createObjectURL(file)}
-                alt="Preview"
-                className="max-h-full object-contain"
-              />
+              {previewUrl && (
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="max-h-full object-contain"
+                />
+              )}
             </div>
             <h3 className="mt-4 font-bold text-slate-900 text-sm truncate max-w-sm">{file.name}</h3>
             <div className="text-xs text-slate-400 mt-1">{formatFileSize(file.size)}</div>

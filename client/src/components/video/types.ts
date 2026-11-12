@@ -6,7 +6,11 @@ export type VideoFilterType = 'none' | 'grayscale' | 'sepia' | 'vintage' | 'inve
 
 export type OutputFormat = 'mp4' | 'webm' | 'gif' | 'mov' | 'mkv' | 'mp3' | 'wav';
 
-export type QualityPreset = 'high' | 'medium' | 'low';
+export type QualityPreset = 'high' | 'medium' | 'low' | 'max_compression';
+
+export type CutMode = 'precise' | 'fast';
+
+export type GifDither = 'bayer' | 'floyd_steinberg' | 'sierra2_4a' | 'none';
 
 export type ResolutionPreset = 'original' | '1080p' | '720p' | '480p' | '360p';
 
@@ -28,6 +32,7 @@ export interface VideoEditOptions {
   // Trim
   trimStart: number;
   trimEnd: number;
+  cutMode?: CutMode;
 
   // Aspect ratio / Crop
   aspectRatio: AspectRatioPreset;
@@ -70,6 +75,10 @@ export interface VideoEditOptions {
   outputFormat: OutputFormat;
   resolution: ResolutionPreset;
   quality: QualityPreset;
+  targetSizeMB?: number;
+  gifFps?: number;
+  gifWidth?: number;
+  gifDither?: GifDither;
 }
 
 export const ASPECT_RATIOS: { key: AspectRatioPreset; label: string; desc: string; ratio: number | null }[] = [

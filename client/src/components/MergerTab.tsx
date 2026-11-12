@@ -39,6 +39,18 @@ export const MergerTab: React.FC<MergerTabProps> = ({ currentFile, onProcessed }
 
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
   const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
+  const objectUrlsRef = React.useRef<Map<string, string>>(new Map());
+
+  // Clean up object URLs on unmount
+  React.useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch (e) {}
+      });
+      objectUrlsRef.current.clear();
+      if (audioEl) audioEl.pause();
+    };
+  }, [audioEl]);
 
   const handleAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -63,6 +75,18 @@ export const MergerTab: React.FC<MergerTabProps> = ({ currentFile, onProcessed }
   };
 
   const removeTrack = (index: number) => {
+    const trackToRemove = tracks[index];
+    if (trackToRemove && objectUrlsRef.current.has(trackToRemove.id)) {
+      const url = objectUrlsRef.current.get(trackToRemove.id);
+      if (url) {
+        try { URL.revokeObjectURL(url); } catch (e) {}
+      }
+      objectUrlsRef.current.delete(trackToRemove.id);
+    }
+    if (playingTrackId === trackToRemove?.id && audioEl) {
+      audioEl.pause();
+      setPlayingTrackId(null);
+    }
     setTracks(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -72,11 +96,20 @@ export const MergerTab: React.FC<MergerTabProps> = ({ currentFile, onProcessed }
       setPlayingTrackId(null);
     } else {
       if (audioEl) audioEl.pause();
-      const url = track.streamUrl || (track.file ? URL.createObjectURL(track.file) : null);
+      let url = track.streamUrl;
+      if (!url && track.file) {
+        if (!objectUrlsRef.current.has(track.id)) {
+          objectUrlsRef.current.set(track.id, URL.createObjectURL(track.file));
+        }
+        url = objectUrlsRef.current.get(track.id);
+      }
       if (!url) return;
       const audio = new Audio(url);
       audio.onended = () => setPlayingTrackId(null);
-      audio.play();
+      audio.play().catch(err => {
+        console.warn('Playback error:', err);
+        setPlayingTrackId(null);
+      });
       setAudioEl(audio);
       setPlayingTrackId(track.id);
     }

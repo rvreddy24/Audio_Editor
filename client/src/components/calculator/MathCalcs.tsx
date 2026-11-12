@@ -120,6 +120,26 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
   const minVal = count > 0 ? Math.min(...numbers) : 0;
   const maxVal = count > 0 ? Math.max(...numbers) : 0;
 
+  // Mode Calculation
+  const freqMap = new Map<number, number>();
+  let maxFreq = 0;
+  for (const n of numbers) {
+    const f = (freqMap.get(n) || 0) + 1;
+    freqMap.set(n, f);
+    if (f > maxFreq) maxFreq = f;
+  }
+  let modeStr = 'N/A';
+  if (count > 0 && maxFreq > 1) {
+    const modes: number[] = [];
+    freqMap.forEach((freq, val) => {
+      if (freq === maxFreq) modes.push(val);
+    });
+    modes.sort((a, b) => a - b);
+    modeStr = modes.join(', ');
+  } else if (count > 0) {
+    modeStr = 'No unique mode (all appear once)';
+  }
+
   // Random generation
   const handleGenerateRandom = () => {
     const minVal = Number(randMin) || 0;
@@ -460,6 +480,12 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 <div className="flex justify-between text-slate-300">
                   <span>Median:</span>
                   <span className="font-mono font-bold text-white">{count > 0 ? median.toFixed(2) : 'N/A'}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Mode:</span>
+                  <span className="font-mono font-bold text-white text-right max-w-[200px] truncate" title={modeStr}>
+                    {modeStr}
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Sample Variance (s²):</span>

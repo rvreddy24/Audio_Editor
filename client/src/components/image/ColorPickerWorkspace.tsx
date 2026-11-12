@@ -24,6 +24,7 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
 
   const [hoverColor, setHoverColor] = useState<string>('#3B82F6');
   const [history, setHistory] = useState<string[]>([]);
+  const [palette, setPalette] = useState<string[]>([]);
   const [copiedFormat, setCopiedFormat] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -45,6 +46,33 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
     ctx.drawImage(imgElement, 0, 0);
+
+    // Extract dominant palette
+    try {
+      const thumb = document.createElement('canvas');
+      thumb.width = 64;
+      thumb.height = 64;
+      const tCtx = thumb.getContext('2d');
+      if (tCtx) {
+        tCtx.drawImage(imgElement, 0, 0, 64, 64);
+        const data = tCtx.getImageData(0, 0, 64, 64).data;
+        const colorCounts: Record<string, number> = {};
+        for (let i = 0; i < data.length; i += 4) {
+          const r = Math.round(data[i] / 16) * 16;
+          const g = Math.round(data[i + 1] / 16) * 16;
+          const b = Math.round(data[i + 2] / 16) * 16;
+          const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+          colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+        }
+        const sorted = Object.entries(colorCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([hex]) => hex)
+          .slice(0, 8);
+        setPalette(sorted);
+      }
+    } catch (e) {
+      console.warn('Failed to extract palette:', e);
+    }
   }, [imgElement]);
 
   const rgbToHsl = (r: number, g: number, b: number) => {
@@ -87,18 +115,18 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
     };
   };
 
-  const getColorAtPixel = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getColorAtCoords = (clientX: number, clientY: number) => {
     if (!canvasRef.current) return null;
     const rect = canvasRef.current.getBoundingClientRect();
     const scaleX = canvasRef.current.width / rect.width;
     const scaleY = canvasRef.current.height / rect.height;
     const x = Math.min(
       canvasRef.current.width - 1,
-      Math.max(0, Math.floor((e.clientX - rect.left) * scaleX))
+      Math.max(0, Math.floor((clientX - rect.left) * scaleX))
     );
     const y = Math.min(
       canvasRef.current.height - 1,
-      Math.max(0, Math.floor((e.clientY - rect.top) * scaleY))
+      Math.max(0, Math.floor((clientY - rect.top) * scaleY))
     );
 
     const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true });
@@ -111,15 +139,26 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const col = getColorAtPixel(e);
+    const col = getColorAtCoords(e.clientX, e.clientY);
     if (col) setHoverColor(col.hex);
   };
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const col = getColorAtPixel(e);
+    const col = getColorAtCoords(e.clientX, e.clientY);
     if (col) {
       setPickedColor(col);
       setHistory((prev) => Array.from(new Set([col.hex, ...prev])).slice(0, 16));
+    }
+  };
+
+  const handleTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length > 0) {
+      const col = getColorAtCoords(e.touches[0].clientX, e.touches[0].clientY);
+      if (col) {
+        setHoverColor(col.hex);
+        setPickedColor(col);
+        setHistory((prev) => Array.from(new Set([col.hex, ...prev])).slice(0, 16));
+      }
     }
   };
 
@@ -219,6 +258,35 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
               ))}
             </div>
 
+            {/* Dominant Image Palette */}
+            {palette.length > 0 && (
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
+                  Dominant Color Palette
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {palette.map((hex) => (
+                    <button
+                      key={hex}
+                      onClick={() => {
+                        const rgbObj = hexToRgb(hex);
+                        const rgbStr = `rgb(${rgbObj.r}, ${rgbObj.g}, ${rgbObj.b})`;
+                        const hslStr = rgbToHsl(rgbObj.r, rgbObj.g, rgbObj.b);
+                        setPickedColor({
+                          hex,
+                          rgb: rgbStr,
+                          hsl: hslStr,
+                        });
+                      }}
+                      title={`Select ${hex}`}
+                      className="w-8 h-8 rounded-lg border border-slate-300 shadow-2xs hover:scale-110 transition-transform"
+                      style={{ backgroundColor: hex }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Palette History */}
             {history.length > 0 && (
               <div>
@@ -257,7 +325,7 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
           {/* Right Column: Interactive Canvas */}
           <div className="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col items-center">
             <div className="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between w-full">
-              <span>Click any pixel to pick color</span>
+              <span>Click or touch any pixel to pick color</span>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-slate-400">Hovering:</span>
                 <span
@@ -273,6 +341,9 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
                 ref={canvasRef}
                 onMouseMove={handleMouseMove}
                 onClick={handleClick}
+                onTouchStart={handleTouch}
+                onTouchMove={handleTouch}
+                style={{ touchAction: 'none' }}
                 className="max-h-[480px] max-w-full h-auto w-auto object-contain cursor-crosshair shadow-xs select-none"
               />
             </div>
