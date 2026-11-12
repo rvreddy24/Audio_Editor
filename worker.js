@@ -9,7 +9,7 @@ export default {
 
     // Route /api/* calls to backend (Render container running FFmpeg & QPDF)
     if (url.pathname.startsWith('/api/')) {
-      const backendBase = (env.BACKEND_URL || 'https://rajvarshith.com').replace(/\/$/, '');
+      const backendBase = (env.BACKEND_URL || 'https://audio-editor-pufy.onrender.com').replace(/\/$/, '');
       const backendUrl = new URL(url.pathname + url.search, backendBase);
 
       const headers = new Headers(request.headers);
