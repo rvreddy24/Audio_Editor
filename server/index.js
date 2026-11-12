@@ -2247,6 +2247,14 @@ if (fs.existsSync(CLIENT_DIST)) {
     }
     next();
   });
+} else {
+  app.get('/', (req, res) => {
+    res.json({
+      service: 'SoundCraft Studio API',
+      status: 'online',
+      health: '/api/health'
+    });
+  });
 }
 
 if (require.main === module) {
