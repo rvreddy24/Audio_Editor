@@ -92,8 +92,10 @@ export async function compressToTargetKb(
   const srcW = 'naturalWidth' in source ? (source.naturalWidth || source.width) : source.width;
   const srcH = 'naturalHeight' in source ? (source.naturalHeight || source.height) : source.height;
 
-  // Minimum quality floor: NEVER drop below 0.60 for JPEG or 0.58 for WebP (prevents blurry 8x8 block artifacts)
-  const minQuality = mimeType === 'image/webp' ? 0.58 : targetKb < 60 ? 0.60 : 0.65;
+  // Minimum quality floor: adapts for ultra-low target sizes (1KB, 2KB, 5KB) while preventing blurry block artifacts
+  const minQuality = mimeType === 'image/webp'
+    ? (targetKb <= 2 ? 0.45 : targetKb <= 5 ? 0.52 : 0.58)
+    : (targetKb <= 2 ? 0.45 : targetKb <= 5 ? 0.52 : targetKb < 60 ? 0.60 : 0.65);
   const maxQuality = 0.92;
 
   // Clamp massive images to max 4096 px initial working size to prevent browser canvas OOM
@@ -111,9 +113,10 @@ export async function compressToTargetKb(
     const estPixels = targetBytes / bytesPerPixel;
     const aspect = srcW / srcH;
     const idealW = Math.round(Math.sqrt(estPixels * aspect));
+    const minDim = targetKb <= 2 ? 16 : targetKb <= 5 ? 24 : 40;
     if (idealW < curW) {
-      curW = Math.min(curW, Math.max(40, Math.round(idealW * 1.15)));
-      curH = Math.max(30, Math.round((curW / srcW) * srcH));
+      curW = Math.min(curW, Math.max(minDim, Math.round(idealW * 1.15)));
+      curH = Math.max(minDim, Math.round((curW / srcW) * srcH));
     }
   }
 
@@ -122,9 +125,10 @@ export async function compressToTargetKb(
   let bestH = curH;
 
   for (let pass = 0; pass < 8; pass++) {
+    const minCanvasDim = targetKb <= 2 ? 14 : targetKb <= 5 ? 18 : 20;
     const canvas = document.createElement('canvas');
-    canvas.width = Math.max(20, Math.round(curW));
-    canvas.height = Math.max(20, Math.round(curH));
+    canvas.width = Math.max(minCanvasDim, Math.round(curW));
+    canvas.height = Math.max(minCanvasDim, Math.round(curH));
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Could not create canvas context');
 
@@ -176,9 +180,10 @@ export async function compressToTargetKb(
     const testMinBlob = await canvasToBlob(canvas, mimeType, minQuality);
     if (testMinBlob.size > targetBytes) {
       // Need to scale dimensions down proportionally to guarantee targetBytes with high quality
-      const scaleRatio = Math.max(0.60, Math.min(0.92, Math.sqrt(targetBytes / testMinBlob.size) * 0.98));
-      curW = Math.max(30, Math.round(curW * scaleRatio));
-      curH = Math.max(30, Math.round((curW / srcW) * srcH));
+      const scaleRatio = Math.max(0.40, Math.min(0.92, Math.sqrt(targetBytes / testMinBlob.size) * 0.98));
+      const minClamp = targetKb <= 2 ? 14 : targetKb <= 5 ? 18 : 24;
+      curW = Math.max(minClamp, Math.round(curW * scaleRatio));
+      curH = Math.max(minClamp, Math.round((curW / srcW) * srcH));
     } else {
       if (!bestBlob) {
         bestBlob = testMinBlob;
@@ -192,10 +197,11 @@ export async function compressToTargetKb(
   // Safety fallback: guaranteed strictly <= targetBytes while preserving sharpness
   if (!bestBlob || bestBlob.size > targetBytes) {
     let fW = Math.min(curW, 300);
+    const minFinal = targetKb <= 2 ? 10 : targetKb <= 5 ? 16 : 20;
     for (let fPass = 0; fPass < 8; fPass++) {
       const fCanvas = document.createElement('canvas');
-      fCanvas.width = Math.max(20, Math.round(fW));
-      fCanvas.height = Math.max(20, Math.round((fW / srcW) * srcH));
+      fCanvas.width = Math.max(minFinal, Math.round(fW));
+      fCanvas.height = Math.max(minFinal, Math.round((fW / srcW) * srcH));
       const fCtx = fCanvas.getContext('2d');
       if (!fCtx) break;
       fCtx.imageSmoothingEnabled = true;
@@ -213,7 +219,7 @@ export async function compressToTargetKb(
       if (b.size <= targetBytes) {
         break;
       }
-      fW = Math.max(20, Math.round(fW * 0.78));
+      fW = Math.max(minFinal, Math.round(fW * 0.75));
     }
   }
 
@@ -222,7 +228,7 @@ export async function compressToTargetKb(
   }
 
   const dataUrl = await blobToDataUrl(bestBlob);
-  const actualKb = Math.round((bestBlob.size / 1024) * 10) / 10;
+  const actualKb = Math.round((bestBlob.size / 1024) * 100) / 100;
   return {
     blob: bestBlob,
     dataUrl,

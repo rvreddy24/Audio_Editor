@@ -40,7 +40,7 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
 
   const presets =
     mode === 'compress'
-      ? [10, 20, 50, 100, 200, 500, 1000, 2000]
+      ? [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]
       : [50, 100, 200, 500, 1000, 2000, 3000];
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-xl mx-auto">
           {mode === 'compress'
-            ? 'Reduce photo or document size strictly under portal limits (20KB, 50KB, 100KB, 200KB) with zero quality loss.'
+            ? 'Reduce photo or document size strictly under portal limits (1KB, 2KB, 5KB, 20KB, 50KB, 100KB, 200KB) with zero quality loss.'
             : 'Increase file size to meet strict minimum requirements for government applications and admission forms.'}
         </p>
       </div>
@@ -154,10 +154,10 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  min="5"
+                  min="1"
                   max="10000"
                   value={targetKb}
-                  onChange={(e) => setTargetKb(Math.max(5, parseInt(e.target.value) || 20))}
+                  onChange={(e) => setTargetKb(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-full text-base font-bold text-slate-900 border border-slate-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <span className="text-sm font-bold text-slate-500 px-2">KB</span>
@@ -180,7 +180,7 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                     }`}
                   >
-                    {kb} KB
+                    {kb >= 1000 ? `${kb / 1000} MB` : `${kb} KB`}
                   </button>
                 ))}
               </div>
