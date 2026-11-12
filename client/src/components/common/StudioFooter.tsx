@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PdfToolKey } from '../pdf/types';
 import { CalculatorKey } from '../calculator/types';
 import { ImageToolKey } from '../image/types';
+import { X } from 'lucide-react';
 
 interface StudioFooterProps {
   onSelectPdfTool: (tool: PdfToolKey) => void;
@@ -22,6 +23,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
   onOpenMedia,
   onNavigateHome,
 }) => {
+  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | null>(null);
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -258,7 +260,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
           </div>
         </div>
 
-        {/* Bottom copyright */}
+        {/* Bottom copyright & legal */}
         <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div className="flex items-center gap-2">
             <button
@@ -270,12 +272,135 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             </button>
             <span>© {new Date().getFullYear()} rajvarshith.com. All rights reserved.</span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <span>Client-side Private Processing</span>
-            <span>No File Logging</span>
+            <span>No Permanent File Storage</span>
+            <button
+              type="button"
+              onClick={() => setActiveModal('privacy')}
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+            >
+              Privacy Policy
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveModal('terms')}
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+            >
+              Terms of Service
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Legal Modal (Privacy Policy & Terms of Service for Google AdSense compliance) */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl text-slate-300">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <h3 className="text-base font-bold text-white">
+                {activeModal === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-4 text-xs leading-relaxed text-slate-300">
+              {activeModal === 'privacy' ? (
+                <>
+                  <p className="text-slate-400">
+                    Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                  <h4 className="text-white font-semibold text-sm">1. Commitment to Privacy</h4>
+                  <p>
+                    At <strong className="text-white">rajvarshith.com</strong>, we are committed to user privacy. The majority of our PDF, image, audio, video, and calculation tools execute 100% locally in your web browser using modern WebAssembly and client-side JavaScript APIs.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm">2. Server File Handling</h4>
+                  <p>
+                    For complex media operations (such as high-definition video conversions or advanced audio processing), files are temporarily processed via an isolated, encrypted server container. Files are never viewed by humans, never sold, and are automatically deleted immediately after completion or within 2 hours maximum.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm">3. Advertising Partners & Cookies (Google AdSense)</h4>
+                  <p>
+                    We use third-party advertising companies, including Google AdSense, to serve ads when you visit our website. Google uses cookies (including the DoubleClick cookie) to serve ads based on prior visits to our website or other sites on the Internet.
+                  </p>
+                  <p>
+                    You may opt out of personalized advertising by visiting{' '}
+                    <a
+                      href="https://adssettings.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-400 hover:underline"
+                    >
+                      Google Ads Settings
+                    </a>{' '}
+                    or via{' '}
+                    <a
+                      href="https://www.aboutads.info/choices/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-400 hover:underline"
+                    >
+                      aboutads.info
+                    </a>.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm">4. Contact Information</h4>
+                  <p>
+                    If you have questions regarding this privacy policy or our data practices, contact us at{' '}
+                    <span className="text-indigo-400 font-mono">rajvarshithreddy@gmail.com</span>.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-slate-400">
+                    Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                  <h4 className="text-white font-semibold text-sm">1. Terms of Use</h4>
+                  <p>
+                    By accessing and using <strong className="text-white">rajvarshith.com</strong>, you agree to comply with and be bound by these Terms of Service. If you do not agree, please do not use our services.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm">2. Permitted Use</h4>
+                  <p>
+                    You may use our platform for personal, professional, and commercial file manipulation and calculations. You agree not to upload malicious software, viruses, or content that violates intellectual property or applicable laws.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm">3. Disclaimer of Warranties</h4>
+                  <p>
+                    All services, calculations, and conversions are provided &quot;as is&quot; without warranties of any kind. While we strive for maximum accuracy, always verify critical financial and tax calculations independently.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm">4. Limitation of Liability</h4>
+                  <p>
+                    In no event shall <strong className="text-white">rajvarshith.com</strong> or its operators be liable for any damages arising out of the use or inability to use the tools or loss of data.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 border-t border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };
