@@ -85,6 +85,214 @@ html.dark .clean-card {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
 }
 
+/* Base Calculator Input */
+.calc-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  background-color: #ffffff;
+  outline: none;
+  transition: all 0.15s ease;
+}
+.calc-input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+/* ========================================================
+   UNIVERSAL DARK MODE THEMING FOR INSIDE CARDS & WORKSTATIONS
+   (Dropzones, Uploaders, Calculation Panels & Result Boxes)
+   ======================================================== */
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Inside Cards & Control Containers */
+html.dark .bg-white:not(.keep-white) {
+  background-color: #0f172a !important;
+  color: #f8fafc;
+}
+
+html.dark .rounded-3xl.bg-white,
+html.dark .rounded-2xl.bg-white,
+html.dark .rounded-xl.bg-white {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+html.dark .border-slate-200,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/70,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-300,
+html.dark .border-slate-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+  border-color: #1e293b !important;
+}
+
+/* Inner Summary Boxes, Metric Cards & Well Panels */
+html.dark .bg-slate-50:not(.keep-light),
+html.dark .bg-slate-100:not(.keep-light),
+html.dark .bg-gray-50:not(.keep-light),
+html.dark .bg-gray-100:not(.keep-light) {
+  background-color: #020617 !important;
+  border-color: #1e293b !important;
+  color: #f1f5f9;
+}
+
+/* High-contrast Typography for Dark Mode */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+  color: #f8fafc;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600,
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: #cbd5e1;
+}
+
+html.dark .text-slate-500,
+html.dark .text-gray-500 {
+  color: #94a3b8;
+}
+
+/* Universal Upload Dropzone Dark Styling */
+html.dark .border-dashed {
+  background-color: #0b1120 !important;
+  border-color: #334155 !important;
+}
+
+html.dark .border-dashed:hover {
+  background-color: #0f172a !important;
+  border-color: #64748b !important;
+}
+
+/* Form Inputs, Number Fields, Selects, & Textareas in Calculators & Workspaces */
+html.dark input[type='text']:not(.keep-light),
+html.dark input[type='number']:not(.keep-light),
+html.dark input[type='date']:not(.keep-light),
+html.dark input[type='time']:not(.keep-light),
+html.dark input[type='email']:not(.keep-light),
+html.dark input[type='password']:not(.keep-light),
+html.dark select:not(.keep-light),
+html.dark textarea:not(.keep-light),
+html.dark .calc-input {
+  background-color: #020617 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus,
+html.dark .calc-input:focus {
+  border-color: #f97316 !important;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25) !important;
+}
+
+html.dark select option {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* Inner Tables & Amortization Schedules */
+html.dark table {
+  color: #f1f5f9;
+}
+html.dark th {
+  background-color: #0b1120 !important;
+  color: #94a3b8 !important;
+  border-color: #1e293b !important;
+}
+html.dark td {
+  border-color: #1e293b !important;
+  color: #e2e8f0;
+}
+html.dark tr:hover {
+  background-color: rgba(30, 41, 59, 0.4) !important;
+}
+
+/* Inner Toggle Buttons (US/Metric, Annual/Hourly, Tabs) */
+html.dark .bg-slate-100 button.bg-white,
+html.dark .bg-slate-200 button.bg-white {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+html.dark .bg-slate-100 button:not(.bg-white),
+html.dark .bg-slate-200 button:not(.bg-white) {
+  color: #94a3b8;
+}
+
+/* Dividers */
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+
+/* Soft Badge & Indicator Tints */
+html.dark .bg-orange-50 {
+  background-color: rgba(124, 45, 18, 0.3) !important;
+  color: #fdba74 !important;
+  border-color: rgba(234, 88, 12, 0.4) !important;
+}
+html.dark .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.3) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(220, 38, 38, 0.4) !important;
+}
+html.dark .bg-emerald-50 {
+  background-color: rgba(6, 78, 59, 0.3) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(5, 150, 105, 0.4) !important;
+}
+html.dark .bg-purple-50 {
+  background-color: rgba(88, 28, 135, 0.3) !important;
+  color: #d8b4fe !important;
+  border-color: rgba(147, 51, 234, 0.4) !important;
+}
+html.dark .bg-indigo-50 {
+  background-color: rgba(49, 46, 129, 0.3) !important;
+  color: #a5b4fc !important;
+  border-color: rgba(79, 70, 229, 0.4) !important;
+}
+html.dark .bg-rose-50 {
+  background-color: rgba(136, 19, 55, 0.3) !important;
+  color: #fda4af !important;
+  border-color: rgba(225, 29, 72, 0.4) !important;
+}
+html.dark .bg-blue-50 {
+  background-color: rgba(30, 58, 138, 0.3) !important;
+  color: #93c5fd !important;
+  border-color: rgba(37, 99, 235, 0.4) !important;
+}
+html.dark .bg-sky-50 {
+  background-color: rgba(12, 74, 110, 0.3) !important;
+  color: #7dd3fc !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+}
+html.dark .bg-amber-50 {
+  background-color: rgba(120, 53, 15, 0.3) !important;
+  color: #fcd34d !important;
+  border-color: rgba(217, 119, 6, 0.4) !important;
+}
+
 @layer components {
   .calc-fn-btn {
     @apply bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white p-2 sm:p-3 rounded-xl transition-all font-mono text-center flex items-center justify-center text-[11px] sm:text-xs select-none;

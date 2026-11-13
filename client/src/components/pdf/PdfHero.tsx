@@ -4,7 +4,8 @@ export const PdfHero: React.FC = () => {
   return (
     <section className="pt-8 pb-5 px-4 sm:px-6 lg:px-8 text-center max-w-4xl mx-auto">
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold mb-3 shadow-2xs border border-slate-200 dark:border-slate-800">
-        <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain" />
+        <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain dark:hidden" />
+        <img src="/rv-logo-dark.png" alt="logo" className="w-4 h-4 object-contain hidden dark:block" />
         <span>rajvarshith<span className="text-orange-500 font-bold">.com</span> Toolkit</span>
       </div>
       <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">

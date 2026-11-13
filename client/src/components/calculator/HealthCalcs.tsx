@@ -225,7 +225,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
 
       {/* ---------------- 1. BMI CALCULATOR ---------------- */}
       {toolKey === 'bmi' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
@@ -404,7 +404,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
 
       {/* ---------------- 2. CALORIE & TDEE CALCULATOR ---------------- */}
       {toolKey === 'calorie' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold">
               <Flame className="w-5 h-5" />
@@ -530,7 +530,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
 
       {/* ---------------- 3. BODY FAT % CALCULATOR ---------------- */}
       {toolKey === 'body-fat' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 flex items-center justify-center font-bold">
               <HeartPulse className="w-5 h-5" />
@@ -662,7 +662,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
 
       {/* ---------------- 4. BMR CALCULATOR ---------------- */}
       {toolKey === 'bmr' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-600 flex items-center justify-center font-bold">
               <Activity className="w-5 h-5" />
@@ -768,7 +768,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
 
       {/* ---------------- 5. IDEAL BODY WEIGHT ---------------- */}
       {toolKey === 'ideal-weight' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center font-bold">
               <Award className="w-5 h-5" />
@@ -846,7 +846,7 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
 
       {/* ---------------- 6. PACE CALCULATOR ---------------- */}
       {toolKey === 'pace' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold">
               <Activity className="w-5 h-5" />

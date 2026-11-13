@@ -102,7 +102,12 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
                 <img
                   src="/rv-logo.png"
                   alt="rajvarshith.com logo"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain dark:hidden"
+                />
+                <img
+                  src="/rv-logo-dark.png"
+                  alt="rajvarshith.com logo"
+                  className="w-full h-full object-contain hidden dark:block"
                 />
               </div>
               <div className="flex items-baseline">

@@ -242,10 +242,10 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
               <button
                 type="button"
                 onClick={onNavigateHome}
-                className="bg-white rounded-xl p-2 inline-block shadow-xs hover:opacity-90 transition-opacity cursor-pointer focus:outline-none"
+                className="inline-block hover:opacity-90 transition-opacity cursor-pointer focus:outline-none"
               >
                 <img
-                  src="/rv-banner.png"
+                  src="/rv-banner-dark.png"
                   alt="rajvarshith.com"
                   className="h-8 w-auto object-contain"
                 />
@@ -266,9 +266,9 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             <button
               type="button"
               onClick={onNavigateHome}
-              className="w-5 h-5 bg-white rounded-md p-0.5 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer focus:outline-none"
+              className="w-6 h-6 flex items-center justify-center hover:scale-105 transition-transform cursor-pointer focus:outline-none"
             >
-              <img src="/rv-logo.png" alt="logo" className="w-full h-full object-contain" />
+              <img src="/rv-logo-dark.png" alt="logo" className="w-full h-full object-contain" />
             </button>
             <span>© {new Date().getFullYear()} rajvarshith.com. All rights reserved.</span>
           </div>

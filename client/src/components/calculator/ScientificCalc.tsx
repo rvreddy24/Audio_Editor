@@ -543,7 +543,7 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
         </div>
 
         {/* Calculation History Panel & Shortcuts */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl p-6 border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">

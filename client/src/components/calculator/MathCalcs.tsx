@@ -200,7 +200,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
 
       {/* ---------------- 1. PERCENTAGE CALCULATOR ---------------- */}
       {toolKey === 'percentage' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold">
               <Percent className="w-5 h-5" />
@@ -319,7 +319,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
 
       {/* ---------------- 2. FRACTION CALCULATOR ---------------- */}
       {toolKey === 'fraction' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold">
               <Hash className="w-5 h-5" />
@@ -432,7 +432,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
 
       {/* ---------------- 3. STATISTICS CALCULATOR ---------------- */}
       {toolKey === 'statistics' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold">
               <Hash className="w-5 h-5" />
@@ -515,7 +515,7 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
 
       {/* ---------------- 4. RANDOM NUMBER GENERATOR ---------------- */}
       {toolKey === 'random' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
               <Hash className="w-5 h-5" />

@@ -247,7 +247,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
       {/* ---------------- 1. AGE CALCULATOR ---------------- */}
       {toolKey === 'age' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center font-bold">
               <Calendar className="w-5 h-5" />
@@ -340,7 +340,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
       {/* ---------------- 2. DATE CALCULATOR ---------------- */}
       {toolKey === 'date' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold">
               <Calendar className="w-5 h-5" />
@@ -451,7 +451,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
       {/* ---------------- 3. WORK HOURS CALCULATOR ---------------- */}
       {toolKey === 'hours' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center font-bold">
               <Clock className="w-5 h-5" />
@@ -544,7 +544,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
       {/* ---------------- 4. TIP CALCULATOR ---------------- */}
       {toolKey === 'tip' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
               <DollarSign className="w-5 h-5" />
@@ -652,7 +652,7 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
 
       {/* ---------------- 5. UNIT CONVERTER ---------------- */}
       {toolKey === 'unit-converter' && (
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+        <div className="bg-white dark:bg-slate-900/95 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center font-bold">
               <Scale className="w-5 h-5" />

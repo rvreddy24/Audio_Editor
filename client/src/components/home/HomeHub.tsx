@@ -48,7 +48,12 @@ export const HomeHub: React.FC<HomeHubProps> = ({
           <img
             src="/rv-banner.png"
             alt="rajvarshith.com Official Studio Banner"
-            className="w-full h-auto max-h-28 sm:max-h-36 object-contain hover:scale-[1.01] transition-transform duration-300"
+            className="w-full h-auto max-h-28 sm:max-h-36 object-contain hover:scale-[1.01] transition-transform duration-300 dark:hidden"
+          />
+          <img
+            src="/rv-banner-dark.png"
+            alt="rajvarshith.com Official Studio Banner"
+            className="w-full h-auto max-h-28 sm:max-h-36 object-contain hover:scale-[1.01] transition-transform duration-300 hidden dark:block"
           />
         </div>
       </div>
@@ -56,7 +61,8 @@ export const HomeHub: React.FC<HomeHubProps> = ({
       {/* Hero Header */}
       <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/80 text-orange-800 dark:text-orange-300 text-xs font-semibold mb-3 shadow-2xs">
-          <img src="/rv-logo.png" alt="logo" className="w-3.5 h-3.5 object-contain" />
+          <img src="/rv-logo.png" alt="logo" className="w-3.5 h-3.5 object-contain dark:hidden" />
+          <img src="/rv-logo-dark.png" alt="logo" className="w-3.5 h-3.5 object-contain hidden dark:block" />
           <span>Professional Web Workstation Suite</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">

@@ -48,14 +48,14 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative rounded-3xl border-2 border-dashed p-12 sm:p-20 text-center transition-all flex flex-col items-center justify-center gap-6 bg-white max-w-3xl mx-auto ${
+      className={`relative rounded-3xl border-2 border-dashed p-12 sm:p-20 text-center transition-all flex flex-col items-center justify-center gap-6 bg-white dark:bg-slate-900/90 dark:border-slate-800 max-w-3xl mx-auto shadow-sm ${
         isDragging
-          ? 'border-[#e5322d] bg-red-50/40 shadow-lg scale-[1.01]'
-          : 'border-slate-300 hover:border-red-400 hover:bg-slate-50/50 shadow-xs'
+          ? 'border-[#e5322d] bg-red-50/40 dark:bg-red-950/40 dark:border-red-500 shadow-lg scale-[1.01]'
+          : 'border-slate-300 hover:border-red-400 hover:bg-slate-50/50 dark:hover:border-red-500/80 dark:hover:bg-slate-800/50'
       }`}
     >
       {/* Icon */}
-      <div className="w-20 h-20 rounded-2xl bg-red-50 text-[#e5322d] flex items-center justify-center border border-red-100 shadow-xs">
+      <div className="w-20 h-20 rounded-2xl bg-red-50 dark:bg-red-950/60 text-[#e5322d] dark:text-red-400 flex items-center justify-center border border-red-100 dark:border-red-900/60 shadow-xs">
         <FileText className="w-10 h-10" />
       </div>
 
@@ -71,7 +71,7 @@ export const PdfDropzone: React.FC<PdfDropzoneProps> = ({
             onChange={handleChange}
           />
         </label>
-        <span className="text-xs font-semibold text-slate-400 mt-2">{subtitle}</span>
+        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-2">{subtitle}</span>
       </div>
     </div>
   );
