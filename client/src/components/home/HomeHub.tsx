@@ -42,21 +42,23 @@ export const HomeHub: React.FC<HomeHubProps> = ({
 }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      {/* Official Brand Banner (Transparent PNG) */}
+      {/* Official Brand Banner (With Clean Card Container as used in the Footer) */}
       <div className="flex justify-center mb-6 sm:mb-8">
-        <div className="max-w-md sm:max-w-lg w-full flex items-center justify-center">
+        <div className="bg-white rounded-2xl px-6 py-4 sm:px-8 sm:py-5 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-center max-w-md sm:max-w-lg w-auto hover:shadow-md transition-all">
           <img
             src="/rv-banner.png"
             alt="rajvarshith.com Official Studio Banner"
-            className="w-full h-auto max-h-28 sm:max-h-36 object-contain hover:scale-[1.01] transition-transform duration-300"
+            className="w-full h-auto max-h-16 sm:max-h-20 object-contain hover:scale-[1.01] transition-transform duration-300"
           />
         </div>
       </div>
 
       {/* Hero Header */}
       <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/80 text-orange-800 dark:text-orange-300 text-xs font-semibold mb-3 shadow-2xs">
-          <img src="/rv-logo.png" alt="logo" className="w-3.5 h-3.5 object-contain" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/80 text-orange-800 dark:text-orange-300 text-xs font-semibold mb-3 shadow-2xs">
+          <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0 p-0.5 shadow-2xs">
+            <img src="/rv-logo.png" alt="logo" className="w-full h-full object-contain" />
+          </div>
           <span>Professional Web Workstation Suite</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">

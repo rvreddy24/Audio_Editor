@@ -212,17 +212,19 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Studio Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-slate-800 text-xs font-semibold mb-3 shadow-2xs border border-slate-200">
-          <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold mb-3 shadow-2xs border border-slate-200 dark:border-slate-800">
+          <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0 p-0.5 shadow-2xs">
+            <img src="/rv-logo.png" alt="logo" className="w-full h-full object-contain" />
+          </div>
           <span>
             rajvarshith<span className="text-orange-500 font-bold">.com</span> Image Studio
           </span>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
           Complete Image & Document Photo Suite
         </h1>
-        <p className="mt-3 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
           Compress photos to exact KB limits, resize signatures, create passport photos with printable sheets, crop shapes, apply filters, and censor private info. 100% private in-browser processing with zero server uploads.
         </p>
 
