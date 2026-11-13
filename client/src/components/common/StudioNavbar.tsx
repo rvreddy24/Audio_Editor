@@ -98,7 +98,7 @@ export const StudioNavbar: React.FC<StudioNavbarProps> = ({
               }}
               className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer text-left focus:outline-none shrink-0"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-xl p-1 flex items-center justify-center shrink-0 shadow-2xs border border-slate-200/80 dark:border-slate-700/80 group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <img
                   src="/rv-logo.png"
                   alt="rajvarshith.com logo"

@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         {/* Brand Logo & Name */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-xl p-1 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
             <img src="/rv-logo.png" alt="rajvarshith.com logo" className="w-full h-full object-contain" />
           </div>
 

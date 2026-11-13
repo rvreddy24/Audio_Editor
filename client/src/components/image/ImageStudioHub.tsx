@@ -213,9 +213,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
       {/* Studio Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold mb-3 shadow-2xs border border-slate-200 dark:border-slate-800">
-          <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0 p-0.5 shadow-2xs">
-            <img src="/rv-logo.png" alt="logo" className="w-full h-full object-contain" />
-          </div>
+          <img src="/rv-logo.png" alt="logo" className="w-4 h-4 object-contain" />
           <span>
             rajvarshith<span className="text-orange-500 font-bold">.com</span> Image Studio
           </span>
