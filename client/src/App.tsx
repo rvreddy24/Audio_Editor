@@ -271,7 +271,7 @@ export function App() {
   const currentImageToolMeta = IMAGE_TOOLS.find((t) => t.key === activeImageTool);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-150">
       {/* Universal Studio Navigation */}
       <StudioNavbar
         currentView={viewMode}
@@ -316,16 +316,16 @@ export function App() {
       {viewMode === 'pdf' && (
         <main className="flex-1">
           {/* PDF Section Subheader */}
-          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
               onClick={handleOpenHome}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-red-600 transition-colors"
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Home Dashboard</span>
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-red-700 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+              <span className="text-xs font-bold text-red-700 bg-red-50 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800 px-3 py-1 rounded-full border border-red-200">
                 PDF Toolkit
               </span>
             </div>
@@ -478,26 +478,26 @@ export function App() {
       {viewMode === 'audio' && (
         <div className="flex-1 flex flex-col">
           {/* Audio Section Subheader */}
-          <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
             <button
               onClick={handleOpenMedia}
-              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors shrink-0"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back<span className="hidden sm:inline"> to Media Studio</span></span>
             </button>
 
             {/* Media Studio Dual Switcher */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => handleOpenVideo()}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-white/60 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white/60 dark:hover:bg-slate-700 transition-all"
               >
                 <Film className="w-3.5 h-3.5 text-rose-500" />
                 <span>Video Editor</span>
               </button>
               <button
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-white text-indigo-600 shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs"
               >
                 <Music className="w-3.5 h-3.5 text-indigo-500" />
                 <span>Audio Editor</span>
@@ -505,7 +505,7 @@ export function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200 hidden sm:inline-block">
+              <span className="text-xs font-bold text-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 px-2.5 py-1 rounded-full border border-indigo-200 hidden sm:inline-block">
                 Studio Audio Suite
               </span>
             </div>
@@ -535,38 +535,38 @@ export function App() {
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                  <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
                       <RefreshCw className="w-4 h-4" />
                     </div>
-                    <h4 className="text-sm font-semibold text-slate-900">
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
                       Universal Format Converter
                     </h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       Convert between MP3, WAV, FLAC, AAC, OPUS, OGG, and M4A with precision 32k - 320k kbps scaling.
                     </p>
                   </div>
 
-                  <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
                       <Scissors className="w-4 h-4" />
                     </div>
-                    <h4 className="text-sm font-semibold text-slate-900">
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
                       Precision Waveform Trimmer
                     </h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       Interactive visual waveform editor with dual region markers, millisecond zoom, and fade in/out.
                     </p>
                   </div>
 
-                  <div className="bg-white border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 transition-colors">
-                    <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center font-bold">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl flex flex-col gap-2 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold">
                       <Film className="w-4 h-4" />
                     </div>
-                    <h4 className="text-sm font-semibold text-slate-900">
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
                       Video Soundtrack Extractor
                     </h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       Drop MP4, MKV, MOV, or WebM video to isolate and extract pristine audio directly.
                     </p>
                   </div>
@@ -574,21 +574,21 @@ export function App() {
               </div>
             ) : (
               <div className="flex flex-col gap-6">
-                <div className="bg-white rounded-2xl border border-slate-200/80 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100/60">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100/60 dark:border-indigo-800/60">
                       <FileAudio className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-bold text-slate-900 truncate" title={currentFile.originalName}>
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-white truncate" title={currentFile.originalName}>
                           {currentFile.originalName}
                         </h2>
-                        <span className="text-[10px] font-mono uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold shrink-0">
+                        <span className="text-[10px] font-mono uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-md font-semibold shrink-0">
                           {currentFile.probe.formatName || 'AUDIO'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 font-mono mt-0.5">
+                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                         <span>{formatFileSize(currentFile.size)}</span>
                         <span>•</span>
                         <span>{formatTime(currentFile.probe.duration)}</span>
@@ -599,7 +599,7 @@ export function App() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors">
+                    <label className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors">
                       Replace File
                       <input
                         type="file"
@@ -627,7 +627,7 @@ export function App() {
                   onPlayStateChange={setIsPlaying}
                 />
 
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 no-scrollbar scrollbar-none">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 dark:border-slate-800 no-scrollbar scrollbar-none">
                   {audioTabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -640,11 +640,11 @@ export function App() {
                         }}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs whitespace-nowrap transition-all ${
                           isActive
-                            ? 'bg-white text-indigo-600 shadow-xs border border-slate-200/90 font-bold'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                            ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200/90 dark:border-slate-700 font-bold'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60'
                         }`}
                       >
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-500'}`} />
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`} />
                         <span>{tab.label}</span>
                       </button>
                     );
@@ -723,19 +723,19 @@ export function App() {
       {viewMode === 'calc' && (
         <main className="flex-1">
           {/* Calculator Subheader Bar */}
-          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
               onClick={() => {
                 if (activeCalc !== 'home') handleOpenCalc('home');
                 else handleOpenHome();
               }}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-orange-600 transition-colors"
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{activeCalc !== 'home' ? 'Back to All Calculators' : 'Back to Home Dashboard'}</span>
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-orange-700 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
+              <span className="text-xs font-bold text-orange-700 bg-orange-50 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800 px-3 py-1 rounded-full border border-orange-200">
                 Calculator Studio
               </span>
             </div>
@@ -752,19 +752,19 @@ export function App() {
       {viewMode === 'image' && (
         <main className="flex-1">
           {/* Image Subheader Bar */}
-          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
               onClick={() => {
                 if (activeImageTool) handleOpenImage(undefined);
                 else handleOpenHome();
               }}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-emerald-600 transition-colors"
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{activeImageTool ? 'Back to All Image Tools' : 'Back to Home Dashboard'}</span>
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 px-3 py-1 rounded-full border border-emerald-200">
                 Image Studio
               </span>
             </div>
@@ -782,26 +782,26 @@ export function App() {
       {viewMode === 'video' && (
         <main className="flex-1">
           {/* Video Subheader Bar */}
-          <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-2.5 flex items-center justify-between">
             <button
               onClick={handleOpenMedia}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Media Studio</span>
             </button>
 
             {/* Media Studio Dual Switcher */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
               <button
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-white text-rose-600 shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs"
               >
                 <Film className="w-3.5 h-3.5 text-rose-500" />
                 <span>Video Editor</span>
               </button>
               <button
                 onClick={() => handleOpenAudio()}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-white/60 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white/60 dark:hover:bg-slate-700 transition-all"
               >
                 <Music className="w-3.5 h-3.5 text-indigo-500" />
                 <span>Audio Editor</span>
@@ -809,7 +809,7 @@ export function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 hidden sm:inline-block">
+              <span className="text-xs font-bold text-rose-700 bg-rose-50 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 px-2.5 py-1 rounded-full border border-rose-200 hidden sm:inline-block">
                 Pro Video Suite
               </span>
             </div>
