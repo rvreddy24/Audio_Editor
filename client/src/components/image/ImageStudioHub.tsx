@@ -246,7 +246,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
 
         {/* Global Search Bar */}
         <div className="mt-8 max-w-lg mx-auto relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
             <Search className="w-4 h-4" />
           </div>
           <input
@@ -254,7 +254,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search any image tool... (e.g. 20KB, Passport, Signature, Crop, Blur, Watermark)"
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 rounded-2xl text-xs sm:text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
           />
         </div>
       </div>
@@ -267,8 +267,8 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
             onClick={() => setSelectedCategory(cat.id)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
               selectedCategory === cat.id
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+                ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs'
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
             }`}
           >
             {cat.label}
@@ -282,29 +282,31 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
           <div
             key={tool.key}
             onClick={() => handleSelectTool(tool.key)}
-            className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-emerald-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
+            className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-5 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
           >
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-emerald-100/40 dark:bg-emerald-950/20 blur-2xl group-hover:bg-emerald-200/50 dark:group-hover:bg-emerald-900/30 transition-colors pointer-events-none" />
+
             <div>
               <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/80 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
                   {getToolIcon(tool.icon)}
                 </div>
                 {tool.badge && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 px-2 py-0.5 rounded-full shrink-0">
                     {tool.badge}
                   </span>
                 )}
               </div>
 
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                 {tool.title}
               </h3>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
                 {tool.shortDesc}
               </p>
             </div>
 
-            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600 group-hover:text-emerald-700">
+            <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
               <span>Launch Tool</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>

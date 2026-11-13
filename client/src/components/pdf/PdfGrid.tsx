@@ -105,12 +105,12 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
             placeholder="Search any PDF, office, or image tool..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all shadow-xs"
+            className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all shadow-xs"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-1.5 py-0.5 rounded-md transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-1.5 py-0.5 rounded-md transition-colors"
             >
               Clear
             </button>
@@ -126,8 +126,8 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
             onClick={() => setSelectedCategory(cat.key)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
               selectedCategory === cat.key
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+                ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs font-bold'
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
             }`}
           >
             {cat.label}
@@ -144,11 +144,14 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
             <div
               key={tool.key}
               onClick={() => onSelectTool(tool.key)}
-              className="group relative bg-white rounded-2xl border border-slate-200/90 p-6 flex flex-col justify-between hover:shadow-lg hover:border-slate-300 hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
+              className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:border-red-500 dark:hover:border-red-500 hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden"
             >
+              {/* Subtle radial glow */}
+              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-red-100/40 dark:bg-red-950/20 blur-2xl group-hover:bg-red-200/50 dark:group-hover:bg-red-900/30 transition-colors pointer-events-none" />
+
               {/* Popular indicator */}
               {tool.popular && (
-                <div className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <div className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/80 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                   <Sparkles className="w-2.5 h-2.5 fill-current" />
                   Popular
                 </div>
@@ -157,24 +160,24 @@ export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {
               <div>
                 {/* Icon */}
                 <div
-                  className={`w-12 h-12 rounded-xl ${tool.badgeColor} text-white flex items-center justify-center shadow-xs mb-4 group-hover:scale-105 transition-transform duration-200`}
+                  className={`w-12 h-12 rounded-xl ${tool.badgeColor} text-white flex items-center justify-center shadow-xs mb-4 group-hover:scale-105 transition-transform duration-200 shrink-0`}
                 >
                   <IconComponent className="w-6 h-6" />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-600 transition-colors flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors flex items-center justify-between">
                   {tool.title}
                 </h3>
 
                 {/* Description */}
-                <p className="mt-2 text-xs text-slate-500 leading-relaxed">
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {tool.shortDesc}
                 </p>
               </div>
 
               {/* Bottom Action Hint */}
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center text-xs font-semibold text-slate-400 group-hover:text-red-600 transition-colors">
+              <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 transition-colors">
                 <span>Open tool</span>
                 <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
               </div>
