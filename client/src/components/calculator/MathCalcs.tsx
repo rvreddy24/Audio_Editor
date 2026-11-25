@@ -399,18 +399,24 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
                 ) : (
                   <>
                     <div className="flex items-center justify-center gap-3 my-4">
-                      {isNegative && <span className="text-3xl font-black text-purple-400 font-mono">−</span>}
-                      {wholePart > 0 && (
-                        <span className="text-3xl font-black text-slate-300 font-mono">{wholePart}</span>
-                      )}
-                      {!(wholePart > 0 && remainderNum === 0) && (
-                        <div className="flex flex-col items-center">
-                          <span className="text-2xl font-black text-purple-400 font-mono">
-                            {wholePart > 0 ? remainderNum : absNum}
-                          </span>
-                          <div className="w-12 h-0.5 bg-slate-600 my-1" />
-                          <span className="text-2xl font-black text-purple-400 font-mono">{absDen}</span>
-                        </div>
+                      {absNum === 0 ? (
+                        <span className="text-4xl font-black text-purple-400 font-mono">0</span>
+                      ) : (
+                        <>
+                          {isNegative && <span className="text-3xl font-black text-purple-400 font-mono">−</span>}
+                          {wholePart > 0 && (
+                            <span className="text-3xl font-black text-slate-300 font-mono">{wholePart}</span>
+                          )}
+                          {!(wholePart > 0 && remainderNum === 0) && (
+                            <div className="flex flex-col items-center">
+                              <span className="text-2xl font-black text-purple-400 font-mono">
+                                {wholePart > 0 ? remainderNum : absNum}
+                              </span>
+                              <div className="w-12 h-0.5 bg-slate-600 my-1" />
+                              <span className="text-2xl font-black text-purple-400 font-mono">{absDen}</span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 
@@ -650,6 +656,14 @@ export const MathCalcs: React.FC<MathCalcsProps> = ({ toolKey, onBack }) => {
         .calc-input:focus {
           border-color: #f97316;
           box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+        }
+        .dark .calc-input {
+          background-color: #0f172a;
+          color: #f8fafc;
+          border-color: #334155;
+        }
+        .dark .calc-input:focus {
+          border-color: #f97316;
         }
       `}</style>
     </div>

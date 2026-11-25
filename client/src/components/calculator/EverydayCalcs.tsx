@@ -10,6 +10,7 @@ interface EverydayCalcsProps {
 export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack }) => {
   // Helper to construct local date without UTC ISO parse shifts
   const parseLocalDate = (dStr: string) => {
+    if (!dStr) return new Date();
     const [y, m, d] = dStr.split('-').map(Number);
     return new Date(y, (m || 1) - 1, d || 1);
   };
@@ -520,6 +521,13 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
                   {workHours}h {workRemainderMins}m
                 </div>
 
+                {isBreakExceedingShift && (
+                  <div className="mt-3 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 text-xs border border-amber-500/30">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Unpaid break exceeds total clock-in duration.</span>
+                  </div>
+                )}
+
                 <div className="mt-6 space-y-3 text-xs border-t border-slate-800 pt-4">
                   <div className="flex justify-between text-slate-300">
                     <span>Decimal Hours:</span>
@@ -781,6 +789,14 @@ export const EverydayCalcs: React.FC<EverydayCalcsProps> = ({ toolKey, onBack })
         .calc-input:focus {
           border-color: #f97316;
           box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+        }
+        .dark .calc-input {
+          background-color: #0f172a;
+          color: #f8fafc;
+          border-color: #334155;
+        }
+        .dark .calc-input:focus {
+          border-color: #f97316;
         }
       `}</style>
     </div>

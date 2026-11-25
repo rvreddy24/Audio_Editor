@@ -8,11 +8,9 @@ import {
   CheckCircle2,
   Loader2,
   ArrowLeft,
-  FileImage,
 } from 'lucide-react';
 import { PdfDropzone } from '../PdfDropzone';
 import { convertImagesToPdf, downloadBytes } from '../../../utils/pdfOperations';
-import { formatFileSize } from '../../../utils/formatters';
 
 interface ImageItem {
   id: string;

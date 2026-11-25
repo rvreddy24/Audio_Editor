@@ -23,6 +23,7 @@ export const ResizeImageWorkspace: React.FC<ResizeImageWorkspaceProps> = ({ onBa
   const [targetHeight, setTargetHeight] = useState(600);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -54,6 +55,7 @@ export const ResizeImageWorkspace: React.FC<ResizeImageWorkspaceProps> = ({ onBa
     setIsProcessing(true);
     try {
       const res = await resizeImage(file, targetWidth, targetHeight, file.type || 'image/jpeg');
+      setResultBlob(res.blob);
       downloadBlob(res.blob, `resized_${targetWidth}x${targetHeight}_${file.name}`);
       setIsDone(true);
     } catch (err: any) {
@@ -102,10 +104,20 @@ export const ResizeImageWorkspace: React.FC<ResizeImageWorkspaceProps> = ({ onBa
             <h2 className="text-2xl font-bold text-slate-900">Image Resized!</h2>
             <p className="text-xs text-slate-500 mt-1">Resized to {targetWidth} × {targetHeight} pixels.</p>
           </div>
+          {resultBlob && (
+            <button
+              onClick={() => downloadBlob(resultBlob, `resized_${targetWidth}x${targetHeight}_${file.name}`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download resized image again</span>
+            </button>
+          )}
           <button
             onClick={() => {
               setFile(null);
               setIsDone(false);
+              setResultBlob(null);
             }}
             className="text-xs font-semibold text-slate-500 hover:text-slate-900"
           >

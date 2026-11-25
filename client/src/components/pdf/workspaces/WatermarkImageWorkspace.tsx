@@ -23,6 +23,7 @@ export const WatermarkImageWorkspace: React.FC<WatermarkImageWorkspaceProps> = (
   const [fontSize, setFontSize] = useState(48);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -47,6 +48,7 @@ export const WatermarkImageWorkspace: React.FC<WatermarkImageWorkspaceProps> = (
     setIsProcessing(true);
     try {
       const res = await watermarkImage(file, text, opacity, fontSize);
+      setResultBlob(res.blob);
       downloadBlob(res.blob, `watermarked_${file.name}`);
       setIsDone(true);
     } catch (err: any) {
@@ -95,10 +97,20 @@ export const WatermarkImageWorkspace: React.FC<WatermarkImageWorkspaceProps> = (
             <h2 className="text-2xl font-bold text-slate-900">Image Watermarked!</h2>
             <p className="text-xs text-slate-500 mt-1">Your stamped image has been downloaded.</p>
           </div>
+          {resultBlob && (
+            <button
+              onClick={() => downloadBlob(resultBlob, `watermarked_${file.name}`)}
+              className="bg-[#e5322d] hover:bg-[#d02824] text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download again</span>
+            </button>
+          )}
           <button
             onClick={() => {
               setFile(null);
               setIsDone(false);
+              setResultBlob(null);
             }}
             className="text-xs font-semibold text-slate-500 hover:text-slate-900"
           >

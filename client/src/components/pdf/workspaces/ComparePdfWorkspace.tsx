@@ -22,19 +22,35 @@ export const ComparePdfWorkspace: React.FC<ComparePdfWorkspaceProps> = ({ onBack
   const [thumbB, setThumbB] = useState('');
   const [isLoadingPage, setIsLoadingPage] = useState(false);
 
-  const handleUploadA = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const parsed = await parsePdfFile(e.target.files[0]);
+  const handleFileA = async (file: File) => {
+    try {
+      const parsed = await parsePdfFile(file);
       setDocA(parsed);
       loadPageComparison(1, parsed, docB);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to read Document A');
+    }
+  };
+
+  const handleFileB = async (file: File) => {
+    try {
+      const parsed = await parsePdfFile(file);
+      setDocB(parsed);
+      loadPageComparison(1, docA, parsed);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to read Document B');
+    }
+  };
+
+  const handleUploadA = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      await handleFileA(e.target.files[0]);
     }
   };
 
   const handleUploadB = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const parsed = await parsePdfFile(e.target.files[0]);
-      setDocB(parsed);
-      loadPageComparison(1, docA, parsed);
+      await handleFileB(e.target.files[0]);
     }
   };
 
@@ -90,14 +106,23 @@ export const ComparePdfWorkspace: React.FC<ComparePdfWorkspaceProps> = ({ onBack
       {!docA || !docB ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Slot A */}
-          <div className="bg-white rounded-3xl border-2 border-dashed border-slate-300 p-8 text-center flex flex-col items-center justify-center gap-4">
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFileA(e.dataTransfer.files[0]);
+              }
+            }}
+            className="bg-white rounded-3xl border-2 border-dashed border-slate-300 p-8 text-center flex flex-col items-center justify-center gap-4 hover:border-indigo-400 transition-colors"
+          >
             <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <FileText className="w-8 h-8" />
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-sm">Document A (Original)</h3>
               <p className="text-xs text-slate-400 mt-1">
-                {docA ? `${docA.name} (${docA.pageCount} pgs)` : 'Select the baseline PDF'}
+                {docA ? `${docA.name} (${docA.pageCount} pgs)` : 'Select or drop the baseline PDF'}
               </p>
             </div>
             <label className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs cursor-pointer shadow-xs">
@@ -107,14 +132,23 @@ export const ComparePdfWorkspace: React.FC<ComparePdfWorkspaceProps> = ({ onBack
           </div>
 
           {/* Slot B */}
-          <div className="bg-white rounded-3xl border-2 border-dashed border-slate-300 p-8 text-center flex flex-col items-center justify-center gap-4">
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFileB(e.dataTransfer.files[0]);
+              }
+            }}
+            className="bg-white rounded-3xl border-2 border-dashed border-slate-300 p-8 text-center flex flex-col items-center justify-center gap-4 hover:border-rose-400 transition-colors"
+          >
             <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <FileText className="w-8 h-8" />
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-sm">Document B (Modified)</h3>
               <p className="text-xs text-slate-400 mt-1">
-                {docB ? `${docB.name} (${docB.pageCount} pgs)` : 'Select the revised PDF'}
+                {docB ? `${docB.name} (${docB.pageCount} pgs)` : 'Select or drop the revised PDF'}
               </p>
             </div>
             <label className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs cursor-pointer shadow-xs">

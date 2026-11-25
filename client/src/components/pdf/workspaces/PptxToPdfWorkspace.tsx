@@ -19,10 +19,12 @@ export const PptxToPdfWorkspace: React.FC<PptxToPdfWorkspaceProps> = ({ onBack }
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [resultBytes, setResultBytes] = useState<Uint8Array | null>(null);
 
   const handleFilesSelected = (files: File[]) => {
     if (files.length > 0) {
       setFile(files[0]);
+      setResultBytes(null);
     }
   };
 
@@ -31,6 +33,7 @@ export const PptxToPdfWorkspace: React.FC<PptxToPdfWorkspaceProps> = ({ onBack }
     setIsProcessing(true);
     try {
       const pdfBytes = await convertPptxToPdf(file);
+      setResultBytes(pdfBytes);
       downloadBytes(pdfBytes, `${file.name.replace(/\.pptx?$/i, '')}.pdf`);
       setIsDone(true);
     } catch (err: any) {
@@ -79,10 +82,20 @@ export const PptxToPdfWorkspace: React.FC<PptxToPdfWorkspaceProps> = ({ onBack }
             <h2 className="text-2xl font-bold text-slate-900">Presentation converted to PDF!</h2>
             <p className="text-xs text-slate-500 mt-1">Your PDF slideshow has been downloaded.</p>
           </div>
+          {resultBytes && (
+            <button
+              onClick={() => downloadBytes(resultBytes, `${file.name.replace(/\.pptx?$/i, '')}.pdf`)}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow-md flex items-center gap-2.5 transition-all hover:scale-102"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download PDF again</span>
+            </button>
+          )}
           <button
             onClick={() => {
               setFile(null);
               setIsDone(false);
+              setResultBytes(null);
             }}
             className="text-xs font-semibold text-slate-500 hover:text-slate-900"
           >

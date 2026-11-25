@@ -110,8 +110,17 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     if (!audio) return;
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      if (onCurrentTimeChange) onCurrentTimeChange(audio.currentTime);
+      const t = audio.currentTime;
+      setCurrentTime(t);
+      if (onCurrentTimeChange) onCurrentTimeChange(t);
+
+      // Loop or stop cleanly when reaching the end of selected region
+      if (endTime > startTime && t >= endTime) {
+        audio.pause();
+        audio.currentTime = startTime;
+        setInternalPlaying(false);
+        if (onPlayStateChange) onPlayStateChange(false);
+      }
     };
 
     const handleEnded = () => {
@@ -417,8 +426,25 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     }
   };
 
+  // Keyboard transport controls (Spacebar toggle)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay]);
+
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
       <audio ref={audioRef} src={audioUrl} preload="auto" />
 
       {/* Top Waveform Header Bar */}

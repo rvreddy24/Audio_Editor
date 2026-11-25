@@ -133,7 +133,7 @@ export async function convertPdfToExcelXlsx(buffer: ArrayBuffer): Promise<Blob> 
 /**
  * 3. PDF TO POWERPOINT (.pptx)
  */
-export async function convertPdfToPptx(buffer: ArrayBuffer, filename: string): Promise<Blob> {
+export async function convertPdfToPptx(buffer: ArrayBuffer, _filename?: string): Promise<Blob> {
   const images = await renderAllPagesToImages(buffer, 1.8);
   const pptx = new (PptxGenJS as any)();
   pptx.layout = 'LAYOUT_16x9';

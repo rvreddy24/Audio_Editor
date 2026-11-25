@@ -41,7 +41,7 @@ export const ScientificCalc: React.FC<ScientificCalcProps> = ({ onBack }) => {
 
     // Handle nth root syntax if present
     if (sanitized.includes('ʸ√')) {
-      sanitized = sanitized.replace(/(\d+(?:\.\d+)?)\s*ʸ√\s*(\d+(?:\.\d+)?)/g, 'safeNthRoot($1, $2)');
+      sanitized = sanitized.replace(/(-?\d+(?:\.\d+)?)\s*ʸ√\s*(\d+(?:\.\d+)?)/g, 'safeNthRoot($1, $2)');
     }
 
     return sanitized;

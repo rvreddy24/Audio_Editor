@@ -5,7 +5,6 @@ import {
   PenTool,
   Eraser,
   Square,
-  Circle,
   CheckSquare,
   XSquare,
   Image as ImageIcon,
@@ -19,22 +18,19 @@ import {
   Plus,
   ArrowLeft,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
   Move,
   Copy,
   Sparkles,
-  Maximize2,
-  FileText,
   Highlighter,
   X,
 } from 'lucide-react';
 import { PdfFileInfo, parsePdfFile, downloadBytes, getBufferFromFile } from '../../../utils/pdfOperations';
 import { getPdfDocument } from '../../../utils/pdfRenderer';
 import { formatFileSize } from '../../../utils/formatters';
-import { EditorItem, DrawingStroke, EditorTool, SavedSignature, FontFamily, ShapeType } from './types';
+import { EditorItem, DrawingStroke, EditorTool, SavedSignature } from './types';
 import { SignatureModal } from './SignatureModal';
 import { burnEditsIntoPdf } from './pdfBurner';
+import { PdfDropzone } from '../PdfDropzone';
 
 interface PdfCanvasEditorProps {
   initialFile?: PdfFileInfo | null;
@@ -914,36 +910,23 @@ export const PdfCanvasEditor: React.FC<PdfCanvasEditorProps> = ({
           </p>
         </div>
 
-        {/* Upload Box */}
-        <div className="max-w-2xl mx-auto bg-white rounded-3xl border-2 border-dashed border-slate-300 hover:border-red-500 p-10 text-center transition-all shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-8 h-8" />
-          </div>
-
-          <h3 className="text-base font-bold text-slate-900 mb-1">
-            Choose a PDF file to edit
-          </h3>
-          <p className="text-xs text-slate-500 mb-6">
-            Upload any document, ticket, or application form to edit and sign directly
-          </p>
-
-          <div className="flex items-center justify-center">
-            <label className="bg-[#e5322d] hover:bg-[#d02824] text-white font-bold px-8 py-3.5 rounded-2xl text-xs shadow-md hover:scale-102 transition-all cursor-pointer">
-              <span>Select PDF File</span>
-              <input
-                type="file"
-                accept=".pdf,application/pdf"
-                className="hidden"
-                onChange={async (e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    const parsed = await parsePdfFile(e.target.files[0]);
-                    setFile(parsed);
-                  }
-                }}
-              />
-            </label>
-          </div>
-        </div>
+        {/* Upload Dropzone */}
+        <PdfDropzone
+          onFilesSelected={async (files) => {
+            if (files.length > 0) {
+              try {
+                const parsed = await parsePdfFile(files[0]);
+                setFile(parsed);
+              } catch (err: any) {
+                alert(err?.message || 'Failed to open PDF document.');
+              }
+            }
+          }}
+          multiple={false}
+          title={mode === 'sign' ? 'Select PDF to Sign' : mode === 'redact' ? 'Select PDF to Redact' : 'Select PDF to Edit'}
+          subtitle="or drop PDF document here"
+          buttonLabel="Select PDF File"
+        />
       </div>
     );
   }

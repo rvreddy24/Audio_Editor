@@ -3,7 +3,6 @@ import {
   Download,
   Loader2,
   ArrowLeft,
-  Sheet,
   Copy,
   Check,
 } from 'lucide-react';

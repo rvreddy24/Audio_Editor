@@ -31,6 +31,7 @@ import {
   ChevronRight,
   Check,
   XCircle,
+  Camera,
 } from 'lucide-react';
 import {
   VideoFileInfo,
@@ -233,6 +234,52 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
       bgVideoRef.current?.play().catch(() => {});
       setIsPlaying(true);
     }
+  };
+
+  // Keyboard transport controls (Spacebar toggle)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay]);
+
+  // Video Frame Grabber (Canvas snapshot)
+  const handleCaptureFrame = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1920;
+    canvas.height = video.videoHeight || 1080;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.filter = getCssFilter();
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const timeStr = formatTimeStr(currentTime).replace(/:/g, '_').replace('.', '-');
+    const baseName = videoInfo?.name ? videoInfo.name.replace(/\.[^/.]+$/, '') : 'frame';
+    const filename = `${baseName}_frame_${timeStr}.png`;
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
   };
 
   const seek = (time: number) => {
@@ -766,6 +813,16 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Frame Snapshot Tool */}
+                  <button
+                    onClick={handleCaptureFrame}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-2xs"
+                    title="Capture current video frame as high-resolution PNG"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Snapshot</span>
+                  </button>
+
                   {/* Loop Trimmed Range Button */}
                   <button
                     onClick={() => setIsLoopingRange(!isLoopingRange)}

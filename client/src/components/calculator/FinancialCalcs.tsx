@@ -1183,6 +1183,14 @@ export const FinancialCalcs: React.FC<FinancialCalcsProps> = ({ toolKey, onBack 
           border-color: #f97316;
           box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
         }
+        .dark .calc-input {
+          background-color: #0f172a;
+          color: #f8fafc;
+          border-color: #334155;
+        }
+        .dark .calc-input:focus {
+          border-color: #f97316;
+        }
       `}</style>
     </div>
   );

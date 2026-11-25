@@ -239,7 +239,7 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>20 Professional Image Tools</span>
+            <span>22 Professional Image Tools</span>
           </div>
         </div>
 

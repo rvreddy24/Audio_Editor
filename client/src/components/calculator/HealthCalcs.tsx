@@ -30,9 +30,9 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
     }
     const safeCm = Math.max(0, cm);
     setHeightCm(safeCm);
-    const totalIn = safeCm / 2.54;
+    const totalIn = Math.round(safeCm / 2.54);
     setHeightFeet(Math.floor(totalIn / 12));
-    setHeightInches(Math.round(totalIn % 12));
+    setHeightInches(totalIn % 12);
   };
 
   const updateUsHeight = (ft: number | '', inc: number | '') => {
@@ -991,6 +991,14 @@ export const HealthCalcs: React.FC<HealthCalcsProps> = ({ toolKey, onBack }) => 
         .calc-input:focus {
           border-color: #f97316;
           box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+        }
+        .dark .calc-input {
+          background-color: #0f172a;
+          color: #f8fafc;
+          border-color: #334155;
+        }
+        .dark .calc-input:focus {
+          border-color: #f97316;
         }
       `}</style>
     </div>

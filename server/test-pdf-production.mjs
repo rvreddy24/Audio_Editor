@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-const { PDFDocument, degrees, rgb, StandardFonts } = require('./node_modules/pdf-lib');
+const { PDFDocument, degrees, rgb, StandardFonts } = require('pdf-lib');
 const JSZip = (await import('../client/node_modules/jszip/dist/jszip.min.js')).default;
 
 const __filename = fileURLToPath(import.meta.url);
