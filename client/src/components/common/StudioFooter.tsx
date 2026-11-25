@@ -276,35 +276,35 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             <button
               type="button"
               onClick={() => setActiveModal('about')}
-              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               About Us
             </button>
             <button
               type="button"
               onClick={() => setActiveModal('contact')}
-              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               Contact Us
             </button>
             <button
               type="button"
               onClick={() => setActiveModal('privacy')}
-              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               Privacy Policy
             </button>
             <button
               type="button"
               onClick={() => setActiveModal('terms')}
-              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               Terms of Service
             </button>
             <button
               type="button"
               onClick={() => setActiveModal('security')}
-              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               Security
             </button>
