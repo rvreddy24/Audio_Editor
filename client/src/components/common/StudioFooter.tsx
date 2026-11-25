@@ -356,9 +356,8 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
                     We welcome feedback, suggestions for new workstation tools, collaboration inquiries, and bug reports from users around the world.
                   </p>
                   <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                    <p className="text-white font-semibold">Engineering & Support Email:</p>
-                    <p className="text-orange-400 font-mono text-sm">support@rajvarshith.com</p>
-                    <p className="text-slate-400">Direct Inquiries: <span className="text-slate-200 font-mono">rajvarshithreddy@gmail.com</span></p>
+                    <p className="text-white font-semibold">Engineering & Official Contact Email:</p>
+                    <p className="text-orange-400 font-mono text-sm">rajvarshithreddy@gmail.com</p>
                   </div>
                   <h4 className="text-white font-semibold text-sm">Response Time</h4>
                   <p>

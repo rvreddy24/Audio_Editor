@@ -57,7 +57,7 @@ export const EditorialContent: React.FC = () => {
     },
     {
       q: 'How can I report a bug or request a new tool?',
-      a: 'We welcome feedback, tool requests, and bug reports from our global community. You can reach out directly to our engineering team at support@rajvarshith.com or through our contact form. We continuously deploy improvements and new utilities based on user suggestions.',
+      a: 'We welcome feedback, tool requests, and bug reports from our global community. You can reach out directly to our engineering team at rajvarshithreddy@gmail.com or through our contact form. We continuously deploy improvements and new utilities based on user suggestions.',
     },
   ];
 
@@ -299,12 +299,11 @@ export const EditorialContent: React.FC = () => {
 
               <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
-                  <span className="font-bold text-slate-900 dark:text-white block">Engineering & Support Contact:</span>
-                  <span className="text-orange-500 font-mono font-semibold">support@rajvarshith.com</span>
-                  <span className="text-slate-400 block mt-0.5">Direct Developer Inquiries: rajvarshithreddy@gmail.com</span>
+                  <span className="font-bold text-slate-900 dark:text-white block">Engineering & Official Contact:</span>
+                  <span className="text-orange-500 font-mono font-semibold">rajvarshithreddy@gmail.com</span>
                 </div>
                 <a
-                  href="mailto:support@rajvarshith.com"
+                  href="mailto:rajvarshithreddy@gmail.com"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors shrink-0 text-center justify-center"
                 >
                   <Mail className="w-3.5 h-3.5" />
