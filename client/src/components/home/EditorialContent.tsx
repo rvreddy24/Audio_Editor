@@ -14,12 +14,11 @@ import {
   Cpu,
   Mail,
   Info,
-  Layers,
+  ArrowRight,
   Sparkles,
 } from 'lucide-react';
 
 export const EditorialContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'guides' | 'privacy' | 'faq' | 'about'>('guides');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
@@ -62,256 +61,318 @@ export const EditorialContent: React.FC = () => {
   ];
 
   return (
-    <section className="mt-12 sm:mt-16 pt-8 border-t border-slate-200 dark:border-slate-800">
-      {/* SINGLE COMPACT UNIFIED CARD CONTAINER */}
-      <div className="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden">
-        {/* Card Header & Navigation Bar */}
-        <div className="p-5 sm:p-7 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+    <section className="mt-14 sm:mt-20 pt-10 border-t border-slate-200 dark:border-slate-800 space-y-12 sm:space-y-16">
+      {/* 1. WHY PROFESSIONALS CHOOSE RAJVARSHITH.COM (With Same Hover Animation & Corner Glow) */}
+      <div>
+        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/80 text-orange-700 dark:text-orange-300 text-xs font-semibold mb-3">
+            <Cpu className="w-3.5 h-3.5 text-orange-500" />
+            <span>Modern Browser Architecture</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Why Professionals Choose rajvarshith.com
+          </h2>
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+            A privacy-first workstation combining desktop-grade performance with seamless web accessibility.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+          {/* Card 1: Privacy (Emerald) */}
+          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+            {/* Corner Radial Glow */}
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-emerald-100/50 dark:bg-emerald-950/30 blur-2xl group-hover:bg-emerald-200/50 dark:group-hover:bg-emerald-900/40 transition-colors pointer-events-none" />
+
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/80 text-orange-700 dark:text-orange-300 text-[11px] font-semibold mb-1.5">
-                <Sparkles className="w-3 h-3 text-orange-500" />
-                <span>Workstation Information & Help</span>
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0 mb-4">
+                <ShieldCheck className="w-5 h-5" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                Platform Guide & Documentation
-              </h2>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight mb-2">
+                100% Client-Side Privacy
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                Your sensitive PDFs, contracts, and images never upload to external servers. Computation happens strictly inside your device’s sandbox via WebAssembly and HTML5 client APIs.
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
-              Discover tool workflows, client-side privacy architecture, and answers to common questions.
-            </p>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Zero Server Storage</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
 
-          {/* Interactive Navigation Tabs */}
-          <div className="flex flex-wrap gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('guides')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'guides'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Tool Suites & Features</span>
-            </button>
+          {/* Card 2: Speed (Orange) */}
+          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+            {/* Corner Radial Glow */}
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-orange-100/50 dark:bg-orange-950/30 blur-2xl group-hover:bg-orange-200/50 dark:group-hover:bg-orange-900/40 transition-colors pointer-events-none" />
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('privacy')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'privacy'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>100% Privacy Guarantee</span>
-            </button>
+            <div>
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0 mb-4">
+                <Zap className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-tight mb-2">
+                Instant Processing Speed
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                Bypasses sluggish cloud upload and download queues. Our utilities leverage multi-core local hardware acceleration to compress, slice waveforms, and convert in milliseconds.
+              </p>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('faq')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'faq'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
-              }`}
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>Frequently Asked Questions</span>
-            </button>
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-orange-600 dark:text-orange-400">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Hardware Accelerated</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('about')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === 'about'
-                  ? 'bg-orange-500 text-white shadow-xs'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
-              }`}
-            >
-              <Info className="w-3.5 h-3.5" />
-              <span>About & Contact</span>
-            </button>
+          {/* Card 3: Free & Open (Indigo) */}
+          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+            {/* Corner Radial Glow */}
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-indigo-100/50 dark:bg-indigo-950/30 blur-2xl group-hover:bg-indigo-200/50 dark:group-hover:bg-indigo-900/40 transition-colors pointer-events-none" />
+
+            <div>
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0 mb-4">
+                <Globe2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight mb-2">
+                Completely Free & Open
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                No sign-ups, no monthly subscriptions, and no paywalls. Every utility—from OCR text extraction to passport photo formatting and amortization tables—is free for everyone.
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> No Account Required</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. SUITE CAPABILITIES GRID (With Same Hover Animation & Corner Glow) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+        {/* PDF Suite Card */}
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-red-500 dark:hover:border-red-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-red-100/50 dark:bg-red-950/30 blur-2xl group-hover:bg-red-200/50 dark:group-hover:bg-red-900/40 transition-colors pointer-events-none" />
+
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors leading-tight">
+                  PDF & Office Capabilities
+                </h3>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border border-red-200/80 dark:border-red-800/80 px-2 py-0.5 rounded-full shrink-0">
+                25+ Tools
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+              Merge reports, split multi-page files, compress PDF size with lossless clarity, convert Word/Excel/PowerPoint documents, and extract text with OCR.
+            </p>
+
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Merge', 'Split', 'Lossless Compress', 'Word⇄PDF', 'OCR Scan', 'AES Protect'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-red-600 dark:text-red-400">
+            <span>Client-side PDF Engine</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
-        {/* Tab Content Panels */}
-        <div className="p-6 sm:p-8">
-          {/* TAB 1: TOOL SUITES & GUIDES */}
-          {activeTab === 'guides' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-                {/* PDF Suite */}
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2.5 mb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center font-bold">
-                      <FileText className="w-4 h-4" />
-                    </div>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">PDF & Office Workstation</h3>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
-                    Merge multiple PDFs into a single report, extract or split pages, compress file size with lossless algorithms, convert Word/Excel/PowerPoint documents, and extract text via Optical Character Recognition (OCR).
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Merge & Split</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Lossless Compress</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Office to PDF</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">OCR Scanner</span>
-                  </div>
-                </div>
+        {/* Image Studio Card */}
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-emerald-100/50 dark:bg-emerald-950/30 blur-2xl group-hover:bg-emerald-200/50 dark:group-hover:bg-emerald-900/40 transition-colors pointer-events-none" />
 
-                {/* Image Studio */}
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2.5 mb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                      <Camera className="w-4 h-4" />
-                    </div>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">Image Studio & Document Prep</h3>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
-                    Target KB compression for government exam and visa portals (e.g., 20KB, 50KB), official biometric passport photo cropping, AI background removal, transparent PNG generation, and applicant photo & signature joining.
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Exact Target KB</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Passport Photo</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Background Removal</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Photo+Sign Join</span>
-                  </div>
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <Camera className="w-5 h-5" />
                 </div>
-
-                {/* Audio & Video */}
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2.5 mb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                      <Film className="w-4 h-4" />
-                    </div>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">Audio & Video Suite</h3>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
-                    Visual waveform scrubbing and millisecond cutting, 320 kbps high-bitrate audio export (MP3, WAV, FLAC, AAC, OGG), audio extraction from video files, video clip trimmer, and vertical 9:16 Shorts/Reels reframing.
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Waveform Cutter</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">320k High Bitrate</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Extract from Video</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">9:16 Shorts</span>
-                  </div>
-                </div>
-
-                {/* Calculators */}
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2.5 mb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
-                      <Calculator className="w-4 h-4" />
-                    </div>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">Financial, Health & Math Suite</h3>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
-                    Mortgage payment breakdowns with complete year-by-year amortization schedules, compound interest wealth modeling, auto loan EMIs, clinically validated BMI and calorie metrics, and scientific dual-line computing.
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Mortgage & Taxes</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Compound Wealth</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">BMI & Calories</span>
-                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Scientific LCD</span>
-                  </div>
-                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight">
+                  Image & Document Prep
+                </h3>
               </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 px-2 py-0.5 rounded-full shrink-0">
+                22 Tools
+              </span>
             </div>
-          )}
 
-          {/* TAB 2: PRIVACY & SECURITY GUARANTEE */}
-          {activeTab === 'privacy' && (
-            <div className="space-y-5 animate-in fade-in duration-200">
-              <div className="flex items-start gap-4 p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200">
-                <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                <div className="space-y-1.5 text-xs sm:text-sm leading-relaxed">
-                  <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">100% Client-Side In-Memory Execution</h4>
-                  <p className="text-slate-600 dark:text-slate-300">
-                    Unlike standard web tools that upload your private documents, legal contracts, or biometric images to remote cloud servers, <strong>rajvarshith.com</strong> executes transformations entirely in your web browser memory.
-                  </p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+              Compress images to exact KB sizes (20KB, 50KB) for exam portals, create biometric passport photos, remove backgrounds, and join photos with signatures.
+            </p>
+
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Exact Target KB', 'Passport Photo', 'Remove BG', 'Photo+Sign Merge', 'PNG Maker', 'Censor'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <span>Client-side Graphic Tools</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
+
+        {/* Audio & Video Card */}
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-indigo-100/50 dark:bg-indigo-950/30 blur-2xl group-hover:bg-indigo-200/50 dark:group-hover:bg-indigo-900/40 transition-colors pointer-events-none" />
+
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <Film className="w-5 h-5" />
                 </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
+                  Audio & Video Production
+                </h3>
               </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/80 px-2 py-0.5 rounded-full shrink-0">
+                Media Suite
+              </span>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
-                  <div className="font-bold text-slate-900 dark:text-white mb-1">Zero Cloud Uploads</div>
-                  <p className="text-slate-500 dark:text-slate-400">PDFs, images, and audio tracks are processed in a local WebAssembly sandbox.</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+              Scrub audio waveforms with visual precision, export at 320 kbps high bitrates, extract audio from videos, trim clips, and reframe for vertical 9:16 Shorts.
+            </p>
+
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Waveform Cutter', '320k MP3', 'Extract Audio', 'Video Trimmer', '9:16 Shorts', 'EQ Effects'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+            <span>High-Bitrate DSP Engine</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
+
+        {/* Calculators Card */}
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-orange-100/50 dark:bg-orange-950/30 blur-2xl group-hover:bg-orange-200/50 dark:group-hover:bg-orange-900/40 transition-colors pointer-events-none" />
+
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <Calculator className="w-5 h-5" />
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
-                  <div className="font-bold text-slate-900 dark:text-white mb-1">No Data Retention</div>
-                  <p className="text-slate-500 dark:text-slate-400">Files are cleared from memory as soon as you close or refresh the browser tab.</p>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
-                  <div className="font-bold text-slate-900 dark:text-white mb-1">AdSense & GDPR Safe</div>
-                  <p className="text-slate-500 dark:text-slate-400">Full cookie disclosures, opt-out mechanisms, and strict privacy transparency.</p>
-                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-tight">
+                  Financial & Scientific Calculators
+                </h3>
               </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/60 border border-orange-200/80 dark:border-orange-800/80 px-2 py-0.5 rounded-full shrink-0">
+                22+ Tools
+              </span>
             </div>
-          )}
 
-          {/* TAB 3: FREQUENTLY ASKED QUESTIONS */}
-          {activeTab === 'faq' && (
-            <div className="space-y-3 animate-in fade-in duration-200">
-              {faqs.map((faq, idx) => {
-                const isOpen = openFaq === idx;
-                return (
-                  <div
-                    key={idx}
-                    className="rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-950/40"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleFaq(idx)}
-                      className="w-full text-left px-5 py-3.5 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 dark:text-white hover:text-orange-500 dark:hover:text-orange-400 transition-colors cursor-pointer"
-                    >
-                      <span>{faq.q}</span>
-                      <ChevronDown
-                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${
-                          isOpen ? 'rotate-180 text-orange-500' : ''
-                        }`}
-                      />
-                    </button>
-                    {isOpen && (
-                      <div className="px-5 pb-4 pt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-200/60 dark:border-slate-800/60">
-                        {faq.a}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+              Mortgage breakdown with full year-by-year amortization schedules, compound interest wealth simulator, auto loan EMIs, BMI metrics, and dual-line scientific math.
+            </p>
+
+            <div className="flex flex-wrap gap-1 mb-4">
+              {['Mortgage Breakdown', 'Amortization', 'Compound Wealth', 'BMI & Calorie', 'Auto Loan', 'Scientific LCD'].map((t) => (
+                <span key={t} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium">
+                  {t}
+                </span>
+              ))}
             </div>
-          )}
+          </div>
 
-          {/* TAB 4: ABOUT & CONTACT */}
-          {activeTab === 'about' && (
-            <div className="space-y-4 animate-in fade-in duration-200 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              <h4 className="font-bold text-slate-900 dark:text-white text-base">Ethical Software Developed by Raj Varshith</h4>
-              <p>
-                <strong>rajvarshith.com</strong> was developed to solve a frustrating reality on the web: predatory subscriptions, paywalled conversions, and the constant security risk of uploading sensitive personal documents to third-party databases.
-              </p>
-              <p>
-                By utilizing client-side WebAssembly, HTML5 Canvas, and Web Audio APIs, this platform provides desktop-class utility completely free and private in the browser.
-              </p>
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-orange-600 dark:text-orange-400">
+            <span>Actuarial Calculation Engines</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
+      </div>
 
-              <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div>
-                  <span className="font-bold text-slate-900 dark:text-white block">Engineering & Official Contact:</span>
-                  <span className="text-orange-500 font-mono font-semibold">rajvarshithreddy@gmail.com</span>
-                </div>
-                <a
-                  href="mailto:rajvarshithreddy@gmail.com"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors shrink-0 text-center justify-center"
+      {/* 3. FREQUENTLY ASKED QUESTIONS (Compact & Interactive) */}
+      <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
+            <HelpCircle className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Frequently Asked Questions</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Clear answers to platform features, privacy, and file security.</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div
+                key={idx}
+                className="rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-950/40 transition-colors"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(idx)}
+                  className="w-full text-left px-4 sm:px-5 py-3.5 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 dark:text-white hover:text-orange-500 dark:hover:text-orange-400 transition-colors cursor-pointer"
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Send Email</span>
-                </a>
+                  <span>{faq.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${
+                      isOpen ? 'rotate-180 text-orange-500' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-4 sm:px-5 pb-4 pt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-200/60 dark:border-slate-800/60">
+                    {faq.a}
+                  </div>
+                )}
               </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. ABOUT & OFFICIAL CONTACT CARD */}
+      <div className="group relative bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 border border-slate-800 overflow-hidden shadow-md hover:border-orange-500/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-44 h-44 rounded-full bg-orange-500/10 blur-3xl group-hover:bg-orange-500/20 transition-colors pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 border border-white/20 text-orange-400 text-[11px] font-semibold">
+              <Info className="w-3 h-3" />
+              <span>About rajvarshith.com</span>
             </div>
-          )}
+            <h4 className="text-lg font-bold text-white">Ethical Engineering Dedicated to User Privacy</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Developed by independent engineer <strong>Raj Varshith</strong> to eliminate predatory subscriptions, paywalls, and privacy risks. All tools execute locally in your browser memory via WebAssembly and HTML5 APIs.
+            </p>
+          </div>
+
+          <div className="shrink-0 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <a
+              href="mailto:rajvarshithreddy@gmail.com"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-colors shadow-sm"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Contact Engineering Support</span>
+            </a>
+            <span className="text-[11px] text-slate-400 font-mono">rajvarshithreddy@gmail.com</span>
+          </div>
         </div>
       </div>
     </section>
