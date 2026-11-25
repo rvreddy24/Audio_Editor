@@ -42,6 +42,14 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
   // Dragging states
   const [dragTarget, setDragTarget] = useState<'start' | 'end' | 'playhead' | null>(null);
 
+  // Refs for fresh boundary values inside long-lived audio event listeners
+  const startTimeRef = useRef(startTime);
+  const endTimeRef = useRef(endTime);
+  useEffect(() => {
+    startTimeRef.current = startTime;
+    endTimeRef.current = endTime;
+  }, [startTime, endTime]);
+
   // Load and decode audio buffer
   useEffect(() => {
     let isCancelled = false;
@@ -115,9 +123,11 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
       if (onCurrentTimeChange) onCurrentTimeChange(t);
 
       // Loop or stop cleanly when reaching the end of selected region
-      if (endTime > startTime && t >= endTime) {
+      const curStart = startTimeRef.current;
+      const curEnd = endTimeRef.current;
+      if (curEnd > curStart && t >= curEnd) {
         audio.pause();
-        audio.currentTime = startTime;
+        audio.currentTime = curStart;
         setInternalPlaying(false);
         if (onPlayStateChange) onPlayStateChange(false);
       }
@@ -188,12 +198,13 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // Clean pearl background
-    ctx.fillStyle = '#ffffff';
+    // Clean theme-aware background
+    const isDark = document.documentElement.classList.contains('dark');
+    ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
     // Subtle center axis
-    ctx.strokeStyle = '#f1f5f9';
+    ctx.strokeStyle = isDark ? '#1e293b' : '#f1f5f9';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, height / 2);
@@ -426,6 +437,9 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
     }
   };
 
+  const togglePlayRef = useRef(togglePlay);
+  togglePlayRef.current = togglePlay;
+
   // Keyboard transport controls (Spacebar toggle)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -435,13 +449,13 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
       }
       if (e.code === 'Space') {
         e.preventDefault();
-        togglePlay();
+        togglePlayRef.current();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay]);
+  }, []);
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col gap-3.5">
@@ -483,9 +497,9 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
         {/* Selected Region Pill */}
         <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs">
           <span className="text-slate-500 font-medium">Selected:</span>
-          <span className="font-mono font-semibold text-emerald-700">{formatTime(startTime)}</span>
+          <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-400">{formatTime(startTime)}</span>
           <span className="text-slate-400">→</span>
-          <span className="font-mono font-semibold text-rose-700">{formatTime(endTime)}</span>
+          <span className="font-mono font-semibold text-rose-700 dark:text-rose-400">{formatTime(endTime)}</span>
           <span className="font-mono text-slate-600 font-medium bg-slate-200/60 px-1.5 py-0.5 rounded">
             {(endTime - startTime).toFixed(2)}s
           </span>
@@ -548,7 +562,7 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({
         className="w-full overflow-x-auto relative rounded-xl border border-slate-200 bg-white cursor-crosshair select-none shadow-2xs"
       >
         {isLoadingAudio && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 backdrop-blur-xs">
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs">
             <div className="flex items-center gap-2.5 text-indigo-600 text-xs font-medium">
               <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
               Loading audio waveform...

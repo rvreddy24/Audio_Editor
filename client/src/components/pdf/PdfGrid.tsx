@@ -32,6 +32,7 @@ import {
   Presentation,
   Scaling,
   Image as ImageIcon,
+  RefreshCw,
 } from 'lucide-react';
 import { PDF_TOOLS, PdfToolKey, ToolMeta } from './types';
 
@@ -69,6 +70,7 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   Presentation,
   Scaling,
   ImageIcon,
+  RefreshCw,
 };
 
 export const PdfGrid: React.FC<PdfGridProps> = ({ onSelectTool }) => {

@@ -919,10 +919,11 @@ export async function joinImages(
     }, 0) + (images.length - 1) * gap;
 
     // Scale down proportionally if exceeding canvas limits
+    let scale = 1;
     if (totalW > 16384 || totalH > 16384) {
-      const s = 16384 / Math.max(totalW, totalH);
-      totalW = Math.round(totalW * s);
-      totalH = Math.round(totalH * s);
+      scale = 16384 / Math.max(totalW, totalH);
+      totalW = Math.round(totalW * scale);
+      totalH = Math.round(totalH * scale);
     }
 
     const canvas = document.createElement('canvas');
@@ -933,11 +934,13 @@ export async function joinImages(
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, totalW, totalH);
 
+    const drawH = Math.round(maxHeight * scale);
+    const drawGap = Math.round(gap * scale);
     let currentX = 0;
     images.forEach((img) => {
-      const scaledW = Math.round((maxHeight / img.naturalHeight) * img.naturalWidth);
-      ctx.drawImage(img, currentX, 0, scaledW, maxHeight);
-      currentX += scaledW + gap;
+      const scaledW = Math.round((maxHeight / img.naturalHeight) * img.naturalWidth * scale);
+      ctx.drawImage(img, currentX, 0, scaledW, drawH);
+      currentX += scaledW + drawGap;
     });
 
     const b = await canvasToBlob(canvas, 'image/jpeg', 0.95);
@@ -952,10 +955,11 @@ export async function joinImages(
     }, 0) + (images.length - 1) * gap;
 
     // Scale down proportionally if exceeding canvas limits
+    let scale = 1;
     if (totalW > 16384 || totalH > 16384) {
-      const s = 16384 / Math.max(totalW, totalH);
-      totalW = Math.round(totalW * s);
-      totalH = Math.round(totalH * s);
+      scale = 16384 / Math.max(totalW, totalH);
+      totalW = Math.round(totalW * scale);
+      totalH = Math.round(totalH * scale);
     }
 
     const canvas = document.createElement('canvas');
@@ -966,11 +970,13 @@ export async function joinImages(
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, totalW, totalH);
 
+    const drawW = Math.round(maxWidth * scale);
+    const drawGap = Math.round(gap * scale);
     let currentY = 0;
     images.forEach((img) => {
-      const scaledH = Math.round((maxWidth / img.naturalWidth) * img.naturalHeight);
-      ctx.drawImage(img, 0, currentY, maxWidth, scaledH);
-      currentY += scaledH + gap;
+      const scaledH = Math.round((maxWidth / img.naturalWidth) * img.naturalHeight * scale);
+      ctx.drawImage(img, 0, currentY, drawW, scaledH);
+      currentY += scaledH + drawGap;
     });
 
     const b = await canvasToBlob(canvas, 'image/jpeg', 0.95);

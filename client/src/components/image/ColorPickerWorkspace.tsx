@@ -58,9 +58,9 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
         const data = tCtx.getImageData(0, 0, 64, 64).data;
         const colorCounts: Record<string, number> = {};
         for (let i = 0; i < data.length; i += 4) {
-          const r = Math.round(data[i] / 16) * 16;
-          const g = Math.round(data[i + 1] / 16) * 16;
-          const b = Math.round(data[i + 2] / 16) * 16;
+          const r = Math.min(255, Math.round(data[i] / 16) * 16);
+          const g = Math.min(255, Math.round(data[i + 1] / 16) * 16);
+          const b = Math.min(255, Math.round(data[i + 2] / 16) * 16);
           const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
           colorCounts[hex] = (colorCounts[hex] || 0) + 1;
         }
@@ -163,7 +163,7 @@ export const ColorPickerWorkspace: React.FC<ColorPickerWorkspaceProps> = ({ onBa
   };
 
   const handleCopy = (text: string, format: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard?.writeText(text).catch(() => {});
     setCopiedFormat(format);
     setTimeout(() => setCopiedFormat(null), 2000);
   };

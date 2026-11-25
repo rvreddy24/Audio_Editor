@@ -35,7 +35,7 @@ type ToolMode = 'auto' | 'eyedropper' | 'eraser' | 'restore';
 
 const PRESET_BACKGROUNDS = [
   { label: 'Transparent', value: 'transparent', previewClass: 'bg-checkerboard border-slate-300' },
-  { label: 'White', value: '#FFFFFF', previewClass: 'bg-white border-slate-200' },
+  { label: 'White', value: '#FFFFFF', previewClass: 'bg-white keep-white border-slate-200' },
   { label: 'Sky Blue (Passport)', value: '#93C5FD', previewClass: 'bg-blue-300 border-blue-400' },
   { label: 'Studio Grey', value: '#E2E8F0', previewClass: 'bg-slate-200 border-slate-300' },
   { label: 'Navy Blue', value: '#1E3A8A', previewClass: 'bg-blue-900 border-blue-950' },
@@ -244,6 +244,8 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
           octx.drawImage(imgElement, 0, 0);
           const pixel = octx.getImageData(x, y, 1, 1).data;
           setTargetColor({ r: pixel[0], g: pixel[1], b: pixel[2] });
+          setSeedPoint({ x, y });
+          setToolMode('auto');
         }
       } else if (toolMode === 'eraser' || toolMode === 'restore') {
         if (brushMask) {
@@ -279,6 +281,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
     setBrushMask(new Uint8Array(imgElement.naturalWidth * imgElement.naturalHeight));
     setMaskHistory([]);
     setTargetColor(null);
+    setSeedPoint(null);
   };
 
   // Export Download
@@ -288,6 +291,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
     try {
       const options: BgRemovalOptions = {
         targetColor: targetColor || undefined,
+        seedPoint: seedPoint || undefined,
         tolerance,
         feather,
         contiguous,
@@ -687,6 +691,7 @@ export const BackgroundRemoverWorkspace: React.FC<BackgroundRemoverWorkspaceProp
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}

@@ -321,6 +321,7 @@ export const BlurCensorWorkspace: React.FC<BlurCensorWorkspaceProps> = ({ onBack
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleMouseUp}

@@ -570,6 +570,7 @@ export const CropShapeWorkspace: React.FC<CropShapeWorkspaceProps> = ({
                   onMouseDown={handlePointerDown}
                   onMouseMove={handlePointerMove}
                   onMouseUp={handlePointerUp}
+                  onMouseLeave={handlePointerUp}
                   onTouchStart={handlePointerDown}
                   onTouchMove={handlePointerMove}
                   onTouchEnd={handlePointerUp}

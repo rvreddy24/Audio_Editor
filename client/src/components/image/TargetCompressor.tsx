@@ -87,7 +87,7 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
     if (selectedFile) {
       handleProcess();
     }
-  }, [selectedFile, targetKb, format]);
+  }, [selectedFile, targetKb, format, mode]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -323,7 +323,9 @@ export const TargetCompressor: React.FC<TargetCompressorProps> = ({ mode, onBack
 
                 <div className="mt-4 text-center">
                   <p className="text-xs font-bold text-slate-800">
-                    Image compressed to {result.actualKb} KB (Under {targetKb} KB limit)
+                    {mode === 'compress'
+                      ? `Image compressed to ${result.actualKb} KB (Under ${targetKb} KB limit)`
+                      : `Image size adjusted to ${result.actualKb} KB (Target: ${targetKb} KB)`}
                   </p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     100% compliant with government application form limits

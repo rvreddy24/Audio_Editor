@@ -286,10 +286,26 @@ html.dark .bg-sky-50 {
   color: #7dd3fc !important;
   border-color: rgba(2, 132, 199, 0.4) !important;
 }
-html.dark .bg-amber-50 {
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/70 {
   background-color: rgba(120, 53, 15, 0.3) !important;
   color: #fcd34d !important;
   border-color: rgba(217, 119, 6, 0.4) !important;
+}
+html.dark .bg-teal-50 {
+  background-color: rgba(19, 78, 74, 0.35) !important;
+  color: #5eead4 !important;
+  border-color: rgba(13, 148, 136, 0.4) !important;
+}
+html.dark .bg-purple-50\/50 {
+  background-color: rgba(88, 28, 135, 0.3) !important;
+  color: #d8b4fe !important;
+  border-color: rgba(147, 51, 234, 0.4) !important;
+}
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover {
+  background-color: #1e293b !important;
 }
 
 @layer components {

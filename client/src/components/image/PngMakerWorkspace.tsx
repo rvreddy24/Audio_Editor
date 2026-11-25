@@ -32,7 +32,7 @@ type PngMode = 'white' | 'black' | 'signature' | 'custom';
 const PREVIEW_BACKDROPS = [
   { id: 'checker', label: 'Checkerboard', class: 'bg-checkerboard' },
   { id: 'dark', label: 'Dark Mode', class: 'bg-slate-900' },
-  { id: 'light', label: 'Light Mode', class: 'bg-white' },
+  { id: 'light', label: 'Light Mode', class: 'bg-white keep-white' },
   { id: 'yellow', label: 'Yellow Contrast', class: 'bg-amber-400' },
   { id: 'green', label: 'Chroma Green', class: 'bg-emerald-500' },
 ];
@@ -171,6 +171,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
       const options: PngMakerOptions = {
         mode,
         customColor,
+        seedPoint: seedPoint || undefined,
         tolerance,
         feather,
         contiguous,
@@ -274,6 +275,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
                 <button
                   onClick={() => {
                     setMode('white');
+                    setSeedPoint(null);
                     setIsEyedropperActive(false);
                   }}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left text-xs font-semibold transition-all ${
@@ -282,7 +284,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
                       : 'border-slate-200 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  <span className="w-6 h-6 rounded-lg border border-slate-300 bg-white shrink-0 shadow-2xs" />
+                  <span className="w-6 h-6 rounded-lg border border-slate-300 bg-white keep-white shrink-0 shadow-2xs" />
                   <div className="min-w-0">
                     <div>Remove White Background</div>
                     <div className="text-[10px] text-slate-400 font-normal">For logos, products & paper docs</div>
@@ -292,6 +294,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
                 <button
                   onClick={() => {
                     setMode('black');
+                    setSeedPoint(null);
                     setIsEyedropperActive(false);
                   }}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left text-xs font-semibold transition-all ${
@@ -310,6 +313,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
                 <button
                   onClick={() => {
                     setMode('signature');
+                    setSeedPoint(null);
                     setIsEyedropperActive(false);
                   }}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left text-xs font-semibold transition-all ${
@@ -516,7 +520,7 @@ export const PngMakerWorkspace: React.FC<PngMakerWorkspaceProps> = ({ onBack }) 
                   backdrop === 'dark'
                     ? 'bg-slate-900'
                     : backdrop === 'light'
-                    ? 'bg-white'
+                    ? 'bg-white keep-white'
                     : backdrop === 'yellow'
                     ? 'bg-amber-400'
                     : backdrop === 'green'

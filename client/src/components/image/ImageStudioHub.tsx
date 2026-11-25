@@ -141,16 +141,16 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
 
   // If a tool is currently open, render its workspace
   if (activeTool === 'compress-kb') {
-    return <TargetCompressor mode="compress" onBack={() => handleSelectTool(null)} />;
+    return <TargetCompressor key="compress" mode="compress" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'increase-kb') {
-    return <TargetCompressor mode="increase" onBack={() => handleSelectTool(null)} />;
+    return <TargetCompressor key="increase" mode="increase" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'resize-dimensions') {
-    return <DimensionResizer onBack={() => handleSelectTool(null)} />;
+    return <DimensionResizer key="resize" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'dpi-converter') {
-    return <DimensionResizer defaultDpiMode onBack={() => handleSelectTool(null)} />;
+    return <DimensionResizer key="dpi" defaultDpiMode onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'passport-photo') {
     return <PassportPhotoMaker onBack={() => handleSelectTool(null)} />;
@@ -165,13 +165,13 @@ export const ImageStudioHub: React.FC<ImageStudioHubProps> = ({
     return <PhotoSignatureMergeWorkspace onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'crop-shape') {
-    return <CropShapeWorkspace initialMode="crop" onBack={() => handleSelectTool(null)} />;
+    return <CropShapeWorkspace key="crop" initialMode="crop" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'circle-crop') {
-    return <CropShapeWorkspace initialMode="circle" onBack={() => handleSelectTool(null)} />;
+    return <CropShapeWorkspace key="circle" initialMode="circle" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'round-corners') {
-    return <CropShapeWorkspace initialMode="round" onBack={() => handleSelectTool(null)} />;
+    return <CropShapeWorkspace key="round" initialMode="round" onBack={() => handleSelectTool(null)} />;
   }
   if (activeTool === 'image-splitter') {
     return <ImageSplitterWorkspace onBack={() => handleSelectTool(null)} />;

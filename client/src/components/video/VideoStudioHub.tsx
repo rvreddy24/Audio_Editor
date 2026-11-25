@@ -230,28 +230,32 @@ export const VideoStudioHub: React.FC<VideoStudioHubProps> = ({ onBack }) => {
         videoRef.current.currentTime = trimStart;
         if (bgVideoRef.current) bgVideoRef.current.currentTime = trimStart;
       }
-      videoRef.current.play();
+      videoRef.current.play().catch(() => {});
       bgVideoRef.current?.play().catch(() => {});
       setIsPlaying(true);
     }
   };
 
-  // Keyboard transport controls (Spacebar toggle)
+  const togglePlayRef = useRef(togglePlay);
+  togglePlayRef.current = togglePlay;
+
+  // Keyboard transport controls (Spacebar toggle when video is loaded)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!videoRef.current) return;
       const activeEl = document.activeElement;
       if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
         return;
       }
       if (e.code === 'Space') {
         e.preventDefault();
-        togglePlay();
+        togglePlayRef.current();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay]);
+  }, []);
 
   // Video Frame Grabber (Canvas snapshot)
   const handleCaptureFrame = () => {
