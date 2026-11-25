@@ -358,15 +358,22 @@ export const EditorialContent: React.FC = () => {
 
           <div className="shrink-0 flex flex-col sm:flex-row items-start sm:items-center gap-3.5">
             <a
-              href="mailto:rajvarshithreddy@gmail.com"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-colors shadow-sm"
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=rajvarshithreddy@gmail.com&su=Engineering%20Support%20Inquiry"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
             >
               <Mail className="w-4 h-4" />
               <span>Contact Engineering Support</span>
             </a>
             <div className="text-xs text-slate-300">
               <span className="text-slate-400">Official Inquiries: </span>
-              <a href="mailto:rajvarshithreddy@gmail.com" className="text-orange-400 hover:underline font-mono font-semibold">
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=rajvarshithreddy@gmail.com&su=Official%20Inquiry"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-400 hover:underline font-mono font-semibold"
+              >
                 rajvarshithreddy@gmail.com
               </a>
             </div>
