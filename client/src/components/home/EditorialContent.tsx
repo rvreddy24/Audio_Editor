@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export const EditorialContent: React.FC = () => {
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
