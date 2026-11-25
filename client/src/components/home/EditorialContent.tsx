@@ -79,7 +79,7 @@ export const EditorialContent: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
           {/* Card 1: Privacy (Emerald) */}
-          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default overflow-hidden">
             {/* Corner Radial Glow */}
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-emerald-100/50 dark:bg-emerald-950/30 blur-2xl group-hover:bg-emerald-200/50 dark:group-hover:bg-emerald-900/40 transition-colors pointer-events-none" />
 
@@ -95,14 +95,13 @@ export const EditorialContent: React.FC = () => {
               </p>
             </div>
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Zero Server Storage</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
 
           {/* Card 2: Speed (Orange) */}
-          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default overflow-hidden">
             {/* Corner Radial Glow */}
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-orange-100/50 dark:bg-orange-950/30 blur-2xl group-hover:bg-orange-200/50 dark:group-hover:bg-orange-900/40 transition-colors pointer-events-none" />
 
@@ -118,14 +117,13 @@ export const EditorialContent: React.FC = () => {
               </p>
             </div>
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-orange-600 dark:text-orange-400">
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center text-xs font-bold text-orange-600 dark:text-orange-400">
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Hardware Accelerated</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
 
           {/* Card 3: Free & Open (Indigo) */}
-          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+          <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default overflow-hidden">
             {/* Corner Radial Glow */}
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-indigo-100/50 dark:bg-indigo-950/30 blur-2xl group-hover:bg-indigo-200/50 dark:group-hover:bg-indigo-900/40 transition-colors pointer-events-none" />
 
@@ -141,18 +139,17 @@ export const EditorialContent: React.FC = () => {
               </p>
             </div>
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center text-xs font-bold text-indigo-600 dark:text-indigo-400">
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> No Account Required</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. SUITE CAPABILITIES GRID (With Same Hover Animation & Corner Glow) */}
+      {/* 2. SUITE CAPABILITIES GRID (Informational Cards with Mouse Arrow Cursor) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
         {/* PDF Suite Card */}
-        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-red-500 dark:hover:border-red-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-red-500 dark:hover:border-red-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default overflow-hidden">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-red-100/50 dark:bg-red-950/30 blur-2xl group-hover:bg-red-200/50 dark:group-hover:bg-red-900/40 transition-colors pointer-events-none" />
 
           <div>
@@ -183,14 +180,13 @@ export const EditorialContent: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-red-600 dark:text-red-400">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center text-xs font-bold text-red-600 dark:text-red-400">
             <span>Client-side PDF Engine</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
         {/* Image Studio Card */}
-        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default overflow-hidden">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-emerald-100/50 dark:bg-emerald-950/30 blur-2xl group-hover:bg-emerald-200/50 dark:group-hover:bg-emerald-900/40 transition-colors pointer-events-none" />
 
           <div>
@@ -221,14 +217,13 @@ export const EditorialContent: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
             <span>Client-side Graphic Tools</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
         {/* Audio & Video Card */}
-        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default overflow-hidden">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-indigo-100/50 dark:bg-indigo-950/30 blur-2xl group-hover:bg-indigo-200/50 dark:group-hover:bg-indigo-900/40 transition-colors pointer-events-none" />
 
           <div>
@@ -259,14 +254,13 @@ export const EditorialContent: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center text-xs font-bold text-indigo-600 dark:text-indigo-400">
             <span>High-Bitrate DSP Engine</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
 
         {/* Calculators Card */}
-        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden">
+        <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 hover:border-orange-500 dark:hover:border-orange-500 p-6 flex flex-col justify-between shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default overflow-hidden">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-36 h-36 rounded-full bg-orange-100/50 dark:bg-orange-950/30 blur-2xl group-hover:bg-orange-200/50 dark:group-hover:bg-orange-900/40 transition-colors pointer-events-none" />
 
           <div>
@@ -297,9 +291,8 @@ export const EditorialContent: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-orange-600 dark:text-orange-400">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center text-xs font-bold text-orange-600 dark:text-orange-400">
             <span>Actuarial Calculation Engines</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
       </div>
