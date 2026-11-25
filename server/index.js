@@ -20,10 +20,21 @@ const OUTPUTS_DIR = path.join(__dirname, 'outputs');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 if (!fs.existsSync(OUTPUTS_DIR)) fs.mkdirSync(OUTPUTS_DIR, { recursive: true });
 
+function decodeUtf8Filename(name) {
+  if (!name) return 'media';
+  if (/[^\u0000-\u00ff]/.test(name)) return name;
+  try {
+    const decoded = Buffer.from(name, 'latin1').toString('utf8');
+    if (!decoded.includes('\ufffd')) return decoded;
+  } catch (e) {}
+  return name;
+}
+
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_DIR),
   filename: (req, file, cb) => {
+    file.originalname = decodeUtf8Filename(file.originalname);
     const uniqueId = uuidv4();
     const ext = path.extname(file.originalname) || '';
     cb(null, `${uniqueId}${ext}`);
