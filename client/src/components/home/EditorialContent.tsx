@@ -12,13 +12,14 @@ import {
   Film,
   Calculator,
   Cpu,
-  EyeOff,
-  Sparkles,
   Mail,
   Info,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 
 export const EditorialContent: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'guides' | 'privacy' | 'faq' | 'about'>('guides');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
@@ -61,270 +62,257 @@ export const EditorialContent: React.FC = () => {
   ];
 
   return (
-    <section className="mt-16 sm:mt-24 pt-12 border-t border-slate-200 dark:border-slate-800/80 space-y-16 sm:space-y-24">
-      {/* 1. ARCHITECTURAL PILLARS (Why rajvarshith.com) */}
-      <div>
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 text-xs font-semibold mb-3">
-            <Cpu className="w-3.5 h-3.5" />
-            <span>Modern Browser Architecture</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Why Professionals Choose rajvarshith.com
-          </h2>
-          <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            A privacy-first workstation combining desktop-grade performance with seamless web accessibility.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          {/* Pillar 1 */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+    <section className="mt-12 sm:mt-16 pt-8 border-t border-slate-200 dark:border-slate-800">
+      {/* SINGLE COMPACT UNIFIED CARD CONTAINER */}
+      <div className="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden">
+        {/* Card Header & Navigation Bar */}
+        <div className="p-5 sm:p-7 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/60 mb-5 shadow-2xs">
-                <ShieldCheck className="w-6 h-6" />
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/50 border border-orange-200/80 dark:border-orange-800/80 text-orange-700 dark:text-orange-300 text-[11px] font-semibold mb-1.5">
+                <Sparkles className="w-3 h-3 text-orange-500" />
+                <span>Workstation Information & Help</span>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                100% Client-Side Privacy
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Your sensitive PDFs, confidential legal documents, biometric photographs, and audio recordings never upload to external servers. Computation happens strictly inside your device’s sandbox via WebAssembly and HTML5 APIs.
-              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Platform Guide & Documentation
+              </h2>
             </div>
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Zero server logging or storage</span>
-            </div>
-          </div>
-
-          {/* Pillar 2 */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center border border-orange-100 dark:border-orange-900/60 mb-5 shadow-2xs">
-                <Zap className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                Instant Processing Speed
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                By bypassing sluggish upload and download queues to remote cloud servers, rajvarshith.com leverages multi-core local hardware acceleration. Heavy conversions, image resizes, and audio waveform slicing execute in milliseconds.
-              </p>
-            </div>
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-semibold text-orange-600 dark:text-orange-400">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Multi-threaded local processing</span>
-            </div>
-          </div>
-
-          {/* Pillar 3 */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/60 mb-5 shadow-2xs">
-                <Globe2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                Completely Free & Open
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                No sign-ups, no monthly subscriptions, and no paywalls. Every single tool—from OCR document text extraction to passport photo formatting and amortization schedules—is completely unrestricted and accessible to everyone worldwide.
-              </p>
-            </div>
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>No account or payment required</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. COMPREHENSIVE SUITE OVERVIEWS */}
-      <div className="space-y-8">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            An All-in-One Digital Workstation
-          </h2>
-          <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            Explore 70+ high-precision utilities organized into four specialized production environments.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {/* Suite 1: PDF */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center font-bold">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">PDF & Office Suite</h3>
-                <span className="text-xs text-red-600 dark:text-red-400 font-semibold">25+ Professional Document Tools</span>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-              A comprehensive toolkit for organizing, securing, and transforming PDF documents. Combine multiple reports into a single file with our intuitive drag-and-drop merger, split extensive multi-page documents, optimize and reduce file size with lossless PDF compression, and convert Word, Excel, and PowerPoint files to PDF with high formatting fidelity.
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+              Discover tool workflows, client-side privacy architecture, and answers to common questions.
             </p>
-            <ul className="grid grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300">
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-red-500" /> Merge & Split Pages</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-red-500" /> Lossless PDF Compression</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-red-500" /> Word / Excel / PPT to PDF</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-red-500" /> OCR Text Extraction</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-red-500" /> Password Lock & AES Unlock</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-red-500" /> Digital Sign & Watermark</li>
-            </ul>
           </div>
 
-          {/* Suite 2: Image */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                <Camera className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Image Studio & Document Prep</h3>
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">22+ Graphic & Photo Utilities</span>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-              Engineered specifically for government exam applications, job portals, biometric documents, and graphic design tasks. Compress images to exact KB sizes (such as 20KB or 50KB) with zero guesswork, remove backgrounds automatically, create transparent PNGs from logos and signatures, crop to official passport dimensions, and merge applicant photos with signatures.
-            </p>
-            <ul className="grid grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300">
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Target KB Compressor</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Biometric Passport Photo Maker</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> AI Background Remover</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Photo & Signature Joiner</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Transparent PNG Maker</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Selective Blur & Censor</li>
-            </ul>
-          </div>
-
-          {/* Suite 3: Audio & Video */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                <Film className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Audio & Video Suite</h3>
-                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">Studio Quality Media Workstation</span>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-              A comprehensive browser-based studio for podcasters, musicians, content creators, and video editors. Inspect audio waveforms with millisecond visual scrubbing, cut ringtones, normalize loudness, convert between lossless FLAC and compressed MP3/AAC, extract high-bitrate audio from video files, and trim video clips for 9:16 vertical social formats.
-            </p>
-            <ul className="grid grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300">
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" /> Precision Waveform Audio Cutter</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" /> 320 kbps High-Bitrate Export</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" /> Audio Extractor from Video</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" /> MP4/MKV/WebM Video Trimmer</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" /> 9:16 Shorts & Reels Formatter</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" /> Studio Fade, Gain & EQ Effects</li>
-            </ul>
-          </div>
-
-          {/* Suite 4: Calculators */}
-          <div className="bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
-                <Calculator className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Financial, Health & Math Suite</h3>
-                <span className="text-xs text-orange-600 dark:text-orange-400 font-semibold">22+ Scientific & Actuarial Engines</span>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-              Instant, verified calculators for real-world decision making. Plan your home purchase with our full mortgage breakdown and year-by-year amortization schedules, model long-term compound interest with monthly contributions, estimate auto loan EMIs, track body mass index (BMI) and daily caloric targets, and compute complex scientific equations with dual-line display.
-            </p>
-            <ul className="grid grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300">
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> Mortgage & Amortization Tables</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> Compound Interest & Wealth Growth</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> Loan EMI & Auto Loan Estimator</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> BMI & Caloric Maintenance (BMR)</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> Scientific Dual-Line LCD Calculator</li>
-              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-orange-500" /> Age & Date Duration Calculators</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. FREQUENTLY ASKED QUESTIONS (FAQ) */}
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold mb-3 border border-slate-200 dark:border-slate-700">
-            <HelpCircle className="w-3.5 h-3.5 text-orange-500" />
-            <span>Answers & Support</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Frequently Asked Questions
-          </h2>
-          <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            Clear information about our platform, privacy guarantees, file handling, and technical architecture.
-          </p>
-        </div>
-
-        <div className="space-y-3.5">
-          {faqs.map((faq, idx) => {
-            const isOpen = openFaq === idx;
-            return (
-              <div
-                key={idx}
-                className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleFaq(idx)}
-                  className="w-full text-left px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-slate-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer focus:outline-none"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${
-                      isOpen ? 'rotate-180 text-orange-500' : ''
-                    }`}
-                  />
-                </button>
-                {isOpen && (
-                  <div className="px-5 sm:px-6 pb-5 pt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800/80">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 4. ABOUT & ETHICAL STATEMENT */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 relative overflow-hidden shadow-lg">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 rounded-full bg-orange-500/10 blur-3xl pointer-events-none" />
-
-        <div className="max-w-3xl relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-orange-400 text-xs font-semibold">
-            <Info className="w-3.5 h-3.5" />
-            <span>About rajvarshith.com</span>
-          </div>
-
-          <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-            Ethical Engineering Dedicated to User Privacy
-          </h3>
-
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Founded by independent developer and engineer <strong>Raj Varshith</strong>, this platform was created to address a critical flaw in modern productivity software: invasive subscriptions, forced sign-ups, and the chronic security risk of uploading sensitive personal documents to third-party cloud servers.
-          </p>
-
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            By combining modern web standards including WebAssembly, Web Audio API, and HTML5 Canvas, <strong>rajvarshith.com</strong> proves that advanced document preparation, image editing, multimedia mastering, and financial analysis can occur securely, privately, and completely free on the client side.
-          </p>
-
-          <div className="pt-4 flex flex-wrap items-center gap-4 text-xs">
-            <a
-              href="mailto:support@rajvarshith.com"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors shadow-sm"
+          {/* Interactive Navigation Tabs */}
+          <div className="flex flex-wrap gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('guides')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'guides'
+                  ? 'bg-orange-500 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+              }`}
             >
-              <Mail className="w-3.5 h-3.5" />
-              <span>Contact Engineering Support</span>
-            </a>
-            <span className="text-slate-400">Official inquiries: contact@rajvarshith.com</span>
+              <FileText className="w-3.5 h-3.5" />
+              <span>Tool Suites & Features</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('privacy')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'privacy'
+                  ? 'bg-orange-500 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>100% Privacy Guarantee</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('faq')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'faq'
+                  ? 'bg-orange-500 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Frequently Asked Questions</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('about')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'about'
+                  ? 'bg-orange-500 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <Info className="w-3.5 h-3.5" />
+              <span>About & Contact</span>
+            </button>
           </div>
+        </div>
+
+        {/* Tab Content Panels */}
+        <div className="p-6 sm:p-8">
+          {/* TAB 1: TOOL SUITES & GUIDES */}
+          {activeTab === 'guides' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                {/* PDF Suite */}
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center font-bold">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">PDF & Office Workstation</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                    Merge multiple PDFs into a single report, extract or split pages, compress file size with lossless algorithms, convert Word/Excel/PowerPoint documents, and extract text via Optical Character Recognition (OCR).
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Merge & Split</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Lossless Compress</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Office to PDF</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">OCR Scanner</span>
+                  </div>
+                </div>
+
+                {/* Image Studio */}
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">Image Studio & Document Prep</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                    Target KB compression for government exam and visa portals (e.g., 20KB, 50KB), official biometric passport photo cropping, AI background removal, transparent PNG generation, and applicant photo & signature joining.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Exact Target KB</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Passport Photo</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Background Removal</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Photo+Sign Join</span>
+                  </div>
+                </div>
+
+                {/* Audio & Video */}
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                      <Film className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">Audio & Video Suite</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                    Visual waveform scrubbing and millisecond cutting, 320 kbps high-bitrate audio export (MP3, WAV, FLAC, AAC, OGG), audio extraction from video files, video clip trimmer, and vertical 9:16 Shorts/Reels reframing.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Waveform Cutter</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">320k High Bitrate</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Extract from Video</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">9:16 Shorts</span>
+                  </div>
+                </div>
+
+                {/* Calculators */}
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
+                      <Calculator className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">Financial, Health & Math Suite</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                    Mortgage payment breakdowns with complete year-by-year amortization schedules, compound interest wealth modeling, auto loan EMIs, clinically validated BMI and calorie metrics, and scientific dual-line computing.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Mortgage & Taxes</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Compound Wealth</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">BMI & Calories</span>
+                    <span className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">Scientific LCD</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: PRIVACY & SECURITY GUARANTEE */}
+          {activeTab === 'privacy' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              <div className="flex items-start gap-4 p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-200">
+                <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 text-xs sm:text-sm leading-relaxed">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">100% Client-Side In-Memory Execution</h4>
+                  <p className="text-slate-600 dark:text-slate-300">
+                    Unlike standard web tools that upload your private documents, legal contracts, or biometric images to remote cloud servers, <strong>rajvarshith.com</strong> executes transformations entirely in your web browser memory.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
+                  <div className="font-bold text-slate-900 dark:text-white mb-1">Zero Cloud Uploads</div>
+                  <p className="text-slate-500 dark:text-slate-400">PDFs, images, and audio tracks are processed in a local WebAssembly sandbox.</p>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
+                  <div className="font-bold text-slate-900 dark:text-white mb-1">No Data Retention</div>
+                  <p className="text-slate-500 dark:text-slate-400">Files are cleared from memory as soon as you close or refresh the browser tab.</p>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
+                  <div className="font-bold text-slate-900 dark:text-white mb-1">AdSense & GDPR Safe</div>
+                  <p className="text-slate-500 dark:text-slate-400">Full cookie disclosures, opt-out mechanisms, and strict privacy transparency.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: FREQUENTLY ASKED QUESTIONS */}
+          {activeTab === 'faq' && (
+            <div className="space-y-3 animate-in fade-in duration-200">
+              {faqs.map((faq, idx) => {
+                const isOpen = openFaq === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-slate-50/50 dark:bg-slate-950/40"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleFaq(idx)}
+                      className="w-full text-left px-5 py-3.5 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 dark:text-white hover:text-orange-500 dark:hover:text-orange-400 transition-colors cursor-pointer"
+                    >
+                      <span>{faq.q}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${
+                          isOpen ? 'rotate-180 text-orange-500' : ''
+                        }`}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-4 pt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-200/60 dark:border-slate-800/60">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* TAB 4: ABOUT & CONTACT */}
+          {activeTab === 'about' && (
+            <div className="space-y-4 animate-in fade-in duration-200 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <h4 className="font-bold text-slate-900 dark:text-white text-base">Ethical Software Developed by Raj Varshith</h4>
+              <p>
+                <strong>rajvarshith.com</strong> was developed to solve a frustrating reality on the web: predatory subscriptions, paywalled conversions, and the constant security risk of uploading sensitive personal documents to third-party databases.
+              </p>
+              <p>
+                By utilizing client-side WebAssembly, HTML5 Canvas, and Web Audio APIs, this platform provides desktop-class utility completely free and private in the browser.
+              </p>
+
+              <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div>
+                  <span className="font-bold text-slate-900 dark:text-white block">Engineering & Support Contact:</span>
+                  <span className="text-orange-500 font-mono font-semibold">support@rajvarshith.com</span>
+                  <span className="text-slate-400 block mt-0.5">Direct Developer Inquiries: rajvarshithreddy@gmail.com</span>
+                </div>
+                <a
+                  href="mailto:support@rajvarshith.com"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors shrink-0 text-center justify-center"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Send Email</span>
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
