@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import {
   Scissors,
   RefreshCw,
@@ -9,80 +9,93 @@ import {
   FileAudio,
   ArrowLeft,
   Music,
-  FileText,
+  Loader2,
 } from 'lucide-react';
 
-// Common Components
+// Common Components (Eagerly loaded for instant homepage mount)
 import { StudioNavbar } from './components/common/StudioNavbar';
 import { StudioFooter } from './components/common/StudioFooter';
 import { HomeHub } from './components/home/HomeHub';
 
-// Audio Studio Components
-import { Header } from './components/Header';
-import { FileDropzone } from './components/FileDropzone';
-import { WaveformEditor } from './components/WaveformEditor';
-import { TrimmerTab } from './components/TrimmerTab';
-import { ConverterTab } from './components/ConverterTab';
-import { VideoToAudioTab } from './components/VideoToAudioTab';
-import { EffectsTab } from './components/EffectsTab';
-import { MergerTab } from './components/MergerTab';
-import { TagEditorTab } from './components/TagEditorTab';
-import { RecorderModal } from './components/RecorderModal';
-import { ResultModal } from './components/ResultModal';
-
-// PDF Components
-import { PdfHero } from './components/pdf/PdfHero';
-import { PdfGrid } from './components/pdf/PdfGrid';
+// Lightweight Type & Metadata Registries
 import { PdfToolKey, PDF_TOOLS } from './components/pdf/types';
-
-// Calculator Studio
-import { CalculatorHub } from './components/calculator/CalculatorHub';
 import { CalculatorKey, ALL_CALCULATORS } from './components/calculator/types';
-
-// Image Studio
-import { ImageStudioHub } from './components/image/ImageStudioHub';
 import { ImageToolKey, IMAGE_TOOLS } from './components/image/types';
 
-// Video Studio
-import { VideoStudioHub } from './components/video/VideoStudioHub';
+function lazyNamed<P = any>(
+  loader: () => Promise<Record<string, any>>,
+  exportName: string
+) {
+  return lazy(async () => {
+    const mod = await loader();
+    return { default: mod[exportName] as React.ComponentType<P> };
+  });
+}
 
-// Media Studio (Unified Audio & Video Landing Hub)
-import { MediaStudioHub } from './components/media/MediaStudioHub';
+// Audio Studio Components (Lazy Loaded)
+const Header = lazyNamed(() => import('./components/Header'), 'Header');
+const FileDropzone = lazyNamed(() => import('./components/FileDropzone'), 'FileDropzone');
+const WaveformEditor = lazyNamed(() => import('./components/WaveformEditor'), 'WaveformEditor');
+const TrimmerTab = lazyNamed(() => import('./components/TrimmerTab'), 'TrimmerTab');
+const ConverterTab = lazyNamed(() => import('./components/ConverterTab'), 'ConverterTab');
+const VideoToAudioTab = lazyNamed(() => import('./components/VideoToAudioTab'), 'VideoToAudioTab');
+const EffectsTab = lazyNamed(() => import('./components/EffectsTab'), 'EffectsTab');
+const MergerTab = lazyNamed(() => import('./components/MergerTab'), 'MergerTab');
+const TagEditorTab = lazyNamed(() => import('./components/TagEditorTab'), 'TagEditorTab');
+const RecorderModal = lazyNamed(() => import('./components/RecorderModal'), 'RecorderModal');
+const ResultModal = lazyNamed(() => import('./components/ResultModal'), 'ResultModal');
 
-// PDF Workspaces
-import { MergeWorkspace } from './components/pdf/workspaces/MergeWorkspace';
-import { SplitWorkspace } from './components/pdf/workspaces/SplitWorkspace';
-import { CompressWorkspace } from './components/pdf/workspaces/CompressWorkspace';
-import { OrganizeWorkspace } from './components/pdf/workspaces/OrganizeWorkspace';
-import { RotateWorkspace } from './components/pdf/workspaces/RotateWorkspace';
-import { PdfToJpgWorkspace } from './components/pdf/workspaces/PdfToJpgWorkspace';
-import { JpgToPdfWorkspace } from './components/pdf/workspaces/JpgToPdfWorkspace';
-import { WatermarkWorkspace } from './components/pdf/workspaces/WatermarkWorkspace';
-import { PageNumbersWorkspace } from './components/pdf/workspaces/PageNumbersWorkspace';
-import { ProtectWorkspace } from './components/pdf/workspaces/ProtectWorkspace';
-import { UnlockWorkspace } from './components/pdf/workspaces/UnlockWorkspace';
-import { SignWorkspace } from './components/pdf/workspaces/SignWorkspace';
-import { PdfToWordWorkspace } from './components/pdf/workspaces/PdfToWordWorkspace';
-import { WordToPdfWorkspace } from './components/pdf/workspaces/WordToPdfWorkspace';
-import { CropPdfWorkspace } from './components/pdf/workspaces/CropPdfWorkspace';
-import { RedactPdfWorkspace } from './components/pdf/workspaces/RedactPdfWorkspace';
-import { ComparePdfWorkspace } from './components/pdf/workspaces/ComparePdfWorkspace';
-import { HtmlToPdfWorkspace } from './components/pdf/workspaces/HtmlToPdfWorkspace';
-import { ScanPdfWorkspace } from './components/pdf/workspaces/ScanPdfWorkspace';
-import { OcrPdfWorkspace } from './components/pdf/workspaces/OcrPdfWorkspace';
-import { PdfToMarkdownWorkspace } from './components/pdf/workspaces/PdfToMarkdownWorkspace';
-import { PdfToExcelWorkspace } from './components/pdf/workspaces/PdfToExcelWorkspace';
-import { RepairPdfWorkspace } from './components/pdf/workspaces/RepairPdfWorkspace';
-import { PdfToPdfaWorkspace } from './components/pdf/workspaces/PdfToPdfaWorkspace';
-import { EditPdfWorkspace } from './components/pdf/workspaces/EditPdfWorkspace';
-import { ExcelToPdfWorkspace } from './components/pdf/workspaces/ExcelToPdfWorkspace';
-import { PdfToExcelXlsxWorkspace } from './components/pdf/workspaces/PdfToExcelXlsxWorkspace';
-import { PptxToPdfWorkspace } from './components/pdf/workspaces/PptxToPdfWorkspace';
-import { PdfToPptxWorkspace } from './components/pdf/workspaces/PdfToPptxWorkspace';
-import { CompressImageWorkspace } from './components/pdf/workspaces/CompressImageWorkspace';
-import { ResizeImageWorkspace } from './components/pdf/workspaces/ResizeImageWorkspace';
-import { ConvertImageWorkspace } from './components/pdf/workspaces/ConvertImageWorkspace';
-import { WatermarkImageWorkspace } from './components/pdf/workspaces/WatermarkImageWorkspace';
+// PDF Landing Components (Lazy Loaded)
+const PdfHero = lazyNamed(() => import('./components/pdf/PdfHero'), 'PdfHero');
+const PdfGrid = lazyNamed(() => import('./components/pdf/PdfGrid'), 'PdfGrid');
+
+// Studio Hubs (Lazy Loaded)
+const CalculatorHub = lazyNamed(() => import('./components/calculator/CalculatorHub'), 'CalculatorHub');
+const ImageStudioHub = lazyNamed(() => import('./components/image/ImageStudioHub'), 'ImageStudioHub');
+const VideoStudioHub = lazyNamed(() => import('./components/video/VideoStudioHub'), 'VideoStudioHub');
+const MediaStudioHub = lazyNamed(() => import('./components/media/MediaStudioHub'), 'MediaStudioHub');
+
+// PDF Workspaces (Lazy Loaded per tool so heavy PDF/Office/OCR engines load on demand)
+const MergeWorkspace = lazyNamed(() => import('./components/pdf/workspaces/MergeWorkspace'), 'MergeWorkspace');
+const SplitWorkspace = lazyNamed(() => import('./components/pdf/workspaces/SplitWorkspace'), 'SplitWorkspace');
+const CompressWorkspace = lazyNamed(() => import('./components/pdf/workspaces/CompressWorkspace'), 'CompressWorkspace');
+const OrganizeWorkspace = lazyNamed(() => import('./components/pdf/workspaces/OrganizeWorkspace'), 'OrganizeWorkspace');
+const RotateWorkspace = lazyNamed(() => import('./components/pdf/workspaces/RotateWorkspace'), 'RotateWorkspace');
+const PdfToJpgWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PdfToJpgWorkspace'), 'PdfToJpgWorkspace');
+const JpgToPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/JpgToPdfWorkspace'), 'JpgToPdfWorkspace');
+const WatermarkWorkspace = lazyNamed(() => import('./components/pdf/workspaces/WatermarkWorkspace'), 'WatermarkWorkspace');
+const PageNumbersWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PageNumbersWorkspace'), 'PageNumbersWorkspace');
+const ProtectWorkspace = lazyNamed(() => import('./components/pdf/workspaces/ProtectWorkspace'), 'ProtectWorkspace');
+const UnlockWorkspace = lazyNamed(() => import('./components/pdf/workspaces/UnlockWorkspace'), 'UnlockWorkspace');
+const SignWorkspace = lazyNamed(() => import('./components/pdf/workspaces/SignWorkspace'), 'SignWorkspace');
+const PdfToWordWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PdfToWordWorkspace'), 'PdfToWordWorkspace');
+const WordToPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/WordToPdfWorkspace'), 'WordToPdfWorkspace');
+const CropPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/CropPdfWorkspace'), 'CropPdfWorkspace');
+const RedactPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/RedactPdfWorkspace'), 'RedactPdfWorkspace');
+const ComparePdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/ComparePdfWorkspace'), 'ComparePdfWorkspace');
+const HtmlToPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/HtmlToPdfWorkspace'), 'HtmlToPdfWorkspace');
+const ScanPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/ScanPdfWorkspace'), 'ScanPdfWorkspace');
+const OcrPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/OcrPdfWorkspace'), 'OcrPdfWorkspace');
+const PdfToMarkdownWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PdfToMarkdownWorkspace'), 'PdfToMarkdownWorkspace');
+const PdfToExcelWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PdfToExcelWorkspace'), 'PdfToExcelWorkspace');
+const RepairPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/RepairPdfWorkspace'), 'RepairPdfWorkspace');
+const PdfToPdfaWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PdfToPdfaWorkspace'), 'PdfToPdfaWorkspace');
+const EditPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/EditPdfWorkspace'), 'EditPdfWorkspace');
+const ExcelToPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/ExcelToPdfWorkspace'), 'ExcelToPdfWorkspace');
+const PdfToExcelXlsxWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PdfToExcelXlsxWorkspace'), 'PdfToExcelXlsxWorkspace');
+const PptxToPdfWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PptxToPdfWorkspace'), 'PptxToPdfWorkspace');
+const PdfToPptxWorkspace = lazyNamed(() => import('./components/pdf/workspaces/PdfToPptxWorkspace'), 'PdfToPptxWorkspace');
+const CompressImageWorkspace = lazyNamed(() => import('./components/pdf/workspaces/CompressImageWorkspace'), 'CompressImageWorkspace');
+const ResizeImageWorkspace = lazyNamed(() => import('./components/pdf/workspaces/ResizeImageWorkspace'), 'ResizeImageWorkspace');
+const ConvertImageWorkspace = lazyNamed(() => import('./components/pdf/workspaces/ConvertImageWorkspace'), 'ConvertImageWorkspace');
+const WatermarkImageWorkspace = lazyNamed(() => import('./components/pdf/workspaces/WatermarkImageWorkspace'), 'WatermarkImageWorkspace');
+
+const StudioLoadingFallback: React.FC = () => (
+  <div className="flex-1 flex flex-col items-center justify-center py-24 px-4 text-slate-500 dark:text-slate-400">
+    <Loader2 className="w-8 h-8 animate-spin text-orange-500 mb-3" />
+    <p className="text-xs font-semibold tracking-wide">Loading workstation...</p>
+  </div>
+);
 
 import { uploadFile, checkHealth } from './api';
 import { LoadedFile, ProcessingResult } from './types';
@@ -301,12 +314,14 @@ export function App() {
         </main>
       )}
 
-      {/* VIEW: MEDIA HUB (Unified Audio & Video Landing with Dedicated Cards) */}
-      {viewMode === 'media' && (
+      {viewMode !== 'home' && (
+        <Suspense fallback={<StudioLoadingFallback />}>
+          {/* VIEW: MEDIA HUB (Unified Audio & Video Landing with Dedicated Cards) */}
+          {viewMode === 'media' && (
         <main className="flex-1">
           <MediaStudioHub
             onSelectVideo={() => handleOpenVideo()}
-            onSelectAudio={(tab) => handleOpenAudio(tab as any)}
+            onSelectAudio={(tab: string) => handleOpenAudio(tab as any)}
             onBackToHome={handleOpenHome}
           />
         </main>
@@ -335,7 +350,7 @@ export function App() {
             <>
               <PdfHero />
               <PdfGrid
-                onSelectTool={(tool) => handleOpenPdf(tool)}
+                onSelectTool={(tool: PdfToolKey) => handleOpenPdf(tool)}
               />
             </>
           )}
@@ -743,7 +758,7 @@ export function App() {
 
           <CalculatorHub
             activeCalc={activeCalc}
-            onSelectCalc={(key) => handleOpenCalc(key)}
+            onSelectCalc={(key: CalculatorKey) => handleOpenCalc(key)}
           />
         </main>
       )}
@@ -772,7 +787,7 @@ export function App() {
 
           <ImageStudioHub
             initialTool={activeImageTool}
-            onSelectTool={(tool) => handleOpenImage(tool)}
+            onSelectTool={(tool: ImageToolKey) => handleOpenImage(tool)}
             onBackToHome={handleOpenHome}
           />
         </main>
@@ -817,6 +832,8 @@ export function App() {
 
           <VideoStudioHub onBack={handleOpenMedia} />
         </main>
+      )}
+        </Suspense>
       )}
 
       {/* Universal Studio Footer */}

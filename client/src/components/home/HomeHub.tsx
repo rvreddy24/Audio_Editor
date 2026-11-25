@@ -43,18 +43,26 @@ export const HomeHub: React.FC<HomeHubProps> = ({
 }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      {/* Official Brand Banner (Transparent PNG) */}
+      {/* Official Brand Banner (Transparent PNG with reserved height to prevent layout shift) */}
       <div className="flex justify-center mb-6 sm:mb-8">
-        <div className="max-w-md sm:max-w-lg w-full flex items-center justify-center">
+        <div className="max-w-md sm:max-w-lg w-full h-24 sm:h-32 flex items-center justify-center">
           <img
             src="/rv-banner.png"
             alt="rajvarshith.com Official Studio Banner"
-            className="w-full h-auto max-h-28 sm:max-h-36 object-contain hover:scale-[1.01] transition-transform duration-300 dark:hidden"
+            width={512}
+            height={128}
+            fetchPriority="high"
+            decoding="async"
+            className="w-full h-full object-contain hover:scale-[1.01] transition-transform duration-300 dark:hidden"
           />
           <img
             src="/rv-banner-dark.png"
             alt="rajvarshith.com Official Studio Banner"
-            className="w-full h-auto max-h-28 sm:max-h-36 object-contain hover:scale-[1.01] transition-transform duration-300 hidden dark:block"
+            width={512}
+            height={128}
+            fetchPriority="high"
+            decoding="async"
+            className="w-full h-full object-contain hover:scale-[1.01] transition-transform duration-300 hidden dark:block"
           />
         </div>
       </div>

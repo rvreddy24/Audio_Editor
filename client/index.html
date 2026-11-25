@@ -19,8 +19,11 @@
     <meta name="twitter:image" content="/rv-banner.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
-    <!-- Theme Flash Prevention -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Great+Vibes&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Great+Vibes&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+    </noscript>
+    <!-- Theme Flash Prevention & Theme-Aware Pre-render Shell Styling -->
     <script>
       (function() {
         try {
@@ -36,184 +39,140 @@
         } catch (e) {}
       })();
     </script>
+    <style>
+      .seo-shell {
+        --shell-bg: #f8fafc;
+        --shell-nav: rgba(255, 255, 255, 0.95);
+        --shell-card: #ffffff;
+        --shell-border: #e2e8f0;
+        --shell-text: #0f172a;
+        --shell-muted: #475569;
+        background-color: var(--shell-bg);
+        color: var(--shell-muted);
+        font-family: system-ui, -apple-system, sans-serif;
+        min-height: 100vh;
+      }
+      html.dark .seo-shell {
+        --shell-bg: #020617;
+        --shell-nav: rgba(15, 23, 42, 0.95);
+        --shell-card: #0f172a;
+        --shell-border: #1e293b;
+        --shell-text: #f8fafc;
+        --shell-muted: #94a3b8;
+      }
+      .seo-nav {
+        height: 64px;
+        background: var(--shell-nav);
+        border-bottom: 1px solid var(--shell-border);
+        display: flex;
+        align-items: center;
+        padding: 0 1.5rem;
+      }
+      .seo-nav-brand {
+        max-width: 1280px;
+        width: 100%;
+        margin: 0 auto;
+        font-weight: 800;
+        font-size: 1rem;
+        color: var(--shell-text);
+      }
+      .seo-card {
+        background: var(--shell-card);
+        border: 1px solid var(--shell-border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        color: var(--shell-muted);
+      }
+      .seo-heading {
+        color: var(--shell-text);
+      }
+    </style>
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9934191239980070" crossorigin="anonymous"></script>
   </head>
-  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white antialiased font-sans transition-colors duration-200">
+  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white antialiased font-sans">
     <div id="root">
-      <!-- Semantic Pre-rendered Content for Search Engines & Google AdSense Reviewers -->
-      <header style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; text-align: center;">
-        <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: #0f172a;">
-          rajvarshith.com — Professional Online Web Workstation Suite
-        </h1>
-        <p style="font-size: 1rem; color: #475569; max-width: 800px; margin: 0 auto; line-height: 1.6;">
-          Everything you need to edit, convert, and compute: PDF & Office documents, client-side image processing, high-bitrate audio editing, video timelines, and precision scientific and financial calculators. 100% free, private, and client-side in your browser.
-        </p>
-      </header>
-
-      <main style="max-width: 1200px; margin: 0 auto; padding: 1rem; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #334155;">
-        <!-- Core Suites Section -->
-        <section style="margin-bottom: 3rem;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
-            Specialized Digital Workstations
-          </h2>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-            <!-- PDF Suite -->
-            <article style="background: #ffffff; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.25rem; font-weight: 700; color: #dc2626; margin-top: 0;">1. PDF & Office Workstation</h3>
-              <p>Complete suite for managing and transforming digital documents privately without third-party cloud uploads.</p>
-              <ul>
-                <li><strong>Merge PDF:</strong> Combine multiple PDFs into a single unified report with custom page ordering.</li>
-                <li><strong>Split PDF:</strong> Extract specific pages or divide large documents into independent files.</li>
-                <li><strong>Compress PDF:</strong> Intelligent lossless file size optimization preserving vector typography.</li>
-                <li><strong>Word / Excel / PPT to PDF:</strong> Convert documents with full layout and font fidelity.</li>
-                <li><strong>OCR Text Extraction:</strong> Optical Character Recognition extracting editable text from scanned documents.</li>
-                <li><strong>Protect & Unlock:</strong> 256-bit AES password encryption and client-side password removal.</li>
-              </ul>
-            </article>
-
-            <!-- Image Studio -->
-            <article style="background: #ffffff; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.25rem; font-weight: 700; color: #059669; margin-top: 0;">2. Image Studio & Document Preparation</h3>
-              <p>Professional photographic and graphic tools designed for job applications, passports, and online submissions.</p>
-              <ul>
-                <li><strong>Target KB Compressor:</strong> Reduce image files to exact KB targets (20KB, 50KB, 100KB) for government and visa portals.</li>
-                <li><strong>Biometric Passport Photo Maker:</strong> Crop and align official passport photos with compliant dimension presets.</li>
-                <li><strong>Photo & Signature Joiner:</strong> Combine applicant photographs and signature scans side-by-side or stacked.</li>
-                <li><strong>AI Background Remover:</strong> Automatic background separation preserving fine hair and edge details.</li>
-                <li><strong>Transparent PNG Maker:</strong> Convert logos, stamps, and signatures into clean transparent assets.</li>
-                <li><strong>Censor & Blur:</strong> Selective pixelation and blur masks for privacy and confidential records.</li>
-              </ul>
-            </article>
-
-            <!-- Audio & Video -->
-            <article style="background: #ffffff; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.25rem; font-weight: 700; color: #4f46e5; margin-top: 0;">3. Audio & Video Production Suite</h3>
-              <p>Studio-quality multimedia workstation for sound engineers, podcasters, musicians, and video creators.</p>
-              <ul>
-                <li><strong>Precision Waveform Audio Cutter:</strong> Visual zoomable waveform editor with millisecond trimming accuracy.</li>
-                <li><strong>320 kbps High-Bitrate Export:</strong> Pristine audio encoding for MP3, WAV, FLAC, AAC, and OGG formats.</li>
-                <li><strong>Audio Extractor:</strong> Extract high-fidelity audio tracks directly from MP4, MKV, WebM, and AVI video files.</li>
-                <li><strong>Video Trimmer:</strong> Cut and splice video clips right inside your web browser.</li>
-                <li><strong>9:16 Shorts & Reels Formatter:</strong> Reframe horizontal media into vertical aspect ratios for mobile platforms.</li>
-                <li><strong>Studio Audio Effects:</strong> Professional fade-in, fade-out, gain amplification, and equalizer adjustments.</li>
-              </ul>
-            </article>
-
-            <!-- Calculators -->
-            <article style="background: #ffffff; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.25rem; font-weight: 700; color: #ea580c; margin-top: 0;">4. Financial, Health & Scientific Calculators</h3>
-              <p>High-precision calculation engines built strictly according to validated actuarial and mathematical formulas.</p>
-              <ul>
-                <li><strong>Mortgage Calculator:</strong> Detailed monthly payment breakdown, property taxes, insurance, and full amortization schedules.</li>
-                <li><strong>Compound Interest Simulator:</strong> Calculate wealth growth with recurring contributions and compound frequencies.</li>
-                <li><strong>Loan & Auto Loan EMI:</strong> Accurate payment estimators for personal, business, and automobile financing.</li>
-                <li><strong>BMI & Calorie (BMR) Calculator:</strong> Clinically validated body mass index and basal metabolic rate planning.</li>
-                <li><strong>Scientific Dual-Line LCD Calculator:</strong> Trigonometric functions, logarithms, exponents, and history tracking.</li>
-                <li><strong>Everyday Time & Unit Converters:</strong> Age, date duration, temperature, length, and mass unit translation.</li>
-              </ul>
-            </article>
-          </div>
-        </section>
-
-        <!-- How-to Step-by-Step Guides Section -->
-        <section style="margin-bottom: 3rem; background: #ffffff; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
-            Step-by-Step Tool User Guides
-          </h2>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-            <div>
-              <h3 style="font-size: 1.15rem; font-weight: 700; color: #dc2626; margin-top: 0;">How to Merge Multiple PDFs</h3>
-              <ol style="padding-left: 1.25rem;">
-                <li>Select the <strong>PDF & Office Studio</strong> on the homepage.</li>
-                <li>Click <strong>Merge PDF</strong> and drag your PDF documents into the dropzone.</li>
-                <li>Reorder the page thumbnails into your desired sequence.</li>
-                <li>Click <strong>Merge PDFs</strong> to combine files locally and download immediately.</li>
-              </ol>
-            </div>
-
-            <div>
-              <h3 style="font-size: 1.15rem; font-weight: 700; color: #059669; margin-top: 0;">How to Compress Images to Exact KB</h3>
-              <ol style="padding-left: 1.25rem;">
-                <li>Open <strong>Image Studio</strong> and select <strong>Target KB Compressor</strong>.</li>
-                <li>Upload your JPG or PNG image (photo, signature, or document scan).</li>
-                <li>Enter your target file size in kilobytes (e.g., 20KB, 50KB, or 100KB).</li>
-                <li>Our binary-search algorithm scales quality in real-time. Download the exact-size image.</li>
-              </ol>
-            </div>
-
-            <div>
-              <h3 style="font-size: 1.15rem; font-weight: 700; color: #4f46e5; margin-top: 0;">How to Cut & Trim Audio Waveforms</h3>
-              <ol style="padding-left: 1.25rem;">
-                <li>Open <strong>Audio & Video Studio</strong> and drop an MP3, WAV, or video file.</li>
-                <li>Use visual waveform markers to set precise start and end timestamps.</li>
-                <li>Apply optional fade-in, fade-out, or volume normalization effects.</li>
-                <li>Export your clean audio track at high bitrates up to 320 kbps.</li>
-              </ol>
-            </div>
-
-            <div>
-              <h3 style="font-size: 1.15rem; font-weight: 700; color: #ea580c; margin-top: 0;">How to Calculate Loan & Mortgage Amortization</h3>
-              <ol style="padding-left: 1.25rem;">
-                <li>Open <strong>Calculators</strong> and choose <strong>Mortgage</strong> or <strong>Loan EMI</strong>.</li>
-                <li>Input your principal loan amount, annual interest rate, and term duration.</li>
-                <li>View monthly breakdown including principal, interest, taxes, and total interest paid.</li>
-                <li>Explore the comprehensive year-by-year amortization schedule for payoff planning.</li>
-              </ol>
-            </div>
-          </div>
-        </section>
-
-        <!-- Privacy & Architecture Section -->
-        <section style="margin-bottom: 3rem; background: #ffffff; padding: 2rem; border-radius: 1rem; border: 1px solid #e2e8f0;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 0;">
-            Architecture & Privacy-First Security Guarantee
-          </h2>
-          <p>
-            Traditional online utilities compromise user confidentiality by uploading personal files to third-party cloud servers. At <strong>rajvarshith.com</strong>, all core computations execute directly inside your browser sandbox using <strong>WebAssembly (Wasm)</strong>, <strong>Web Audio API</strong>, and <strong>HTML5 Canvas</strong> technologies.
+      <!-- Theme-Aware Semantic Pre-rendered Content for Instant Smooth First Paint & Search/AdSense Crawlers -->
+      <div class="seo-shell">
+        <div class="seo-nav">
+          <div class="seo-nav-brand">rajvarshith<span style="color:#f97316">.com</span></div>
+        </div>
+        <header style="max-width: 1280px; margin: 0 auto; padding: 3rem 1.5rem 2rem; text-align: center;">
+          <h1 class="seo-heading" style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">
+            Everything You Need to Edit, Convert &amp; Compute
+          </h1>
+          <p style="font-size: 0.95rem; max-width: 720px; margin: 0 auto; line-height: 1.6;">
+            PDF &amp; Office documents, client-side image processing, high-bitrate audio editing, video timelines, and precision scientific and financial calculators. 100% free, private, and client-side in your browser.
           </p>
-          <p>
-            Your PDFs, legal contracts, identity documents, and personal audio tracks never leave your local device memory. No permanent copies are ever retained, stored, or sold.
-          </p>
-        </section>
+        </header>
 
-        <!-- FAQ Section -->
-        <section style="margin-bottom: 3rem;">
-          <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
-            Frequently Asked Questions (FAQ)
-          </h2>
+        <main style="max-width: 1280px; margin: 0 auto; padding: 1rem 1.5rem; line-height: 1.6;">
+          <!-- Core Suites Section -->
+          <section style="margin-bottom: 3rem;">
+            <h2 class="seo-heading" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem;">
+              Specialized Digital Workstations
+            </h2>
 
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div style="background: #ffffff; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0;">Is rajvarshith.com completely free to use?</h3>
-              <p>Yes. All 70+ utilities are 100% free with no hidden subscriptions, paywalls, daily quotas, or registration requirements.</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+              <article class="seo-card">
+                <h3 style="font-size: 1.125rem; font-weight: 700; color: #ef4444; margin-top: 0;">1. PDF &amp; Office Workstation</h3>
+                <p>Complete suite for managing and transforming digital documents privately without third-party cloud uploads.</p>
+                <ul style="padding-left: 1.25rem; font-size: 0.875rem;">
+                  <li><strong>Merge &amp; Split PDF:</strong> Combine reports or extract pages with custom ordering.</li>
+                  <li><strong>Compress PDF:</strong> Lossless optimization preserving crisp vector typography.</li>
+                  <li><strong>Word / Excel / PPT to PDF:</strong> Convert documents with layout fidelity.</li>
+                  <li><strong>OCR &amp; AES Protect:</strong> Extract scanned text or apply 256-bit AES encryption.</li>
+                </ul>
+              </article>
+
+              <article class="seo-card">
+                <h3 style="font-size: 1.125rem; font-weight: 700; color: #10b981; margin-top: 0;">2. Image Studio &amp; Document Prep</h3>
+                <p>Graphic tools designed for biometric passports, government portals, and crisp asset editing.</p>
+                <ul style="padding-left: 1.25rem; font-size: 0.875rem;">
+                  <li><strong>Target KB Compressor:</strong> Exact 20KB, 50KB, or 100KB sizing via binary search.</li>
+                  <li><strong>Passport Photo &amp; Sign Merge:</strong> Biometric presets and combined exam cards.</li>
+                  <li><strong>Background Remover &amp; PNG Maker:</strong> Clean alpha cutouts with de-fringing.</li>
+                  <li><strong>Censor &amp; Blur:</strong> Pixelation and redaction masks for confidential records.</li>
+                </ul>
+              </article>
+
+              <article class="seo-card">
+                <h3 style="font-size: 1.125rem; font-weight: 700; color: #8b5cf6; margin-top: 0;">3. Audio &amp; Video Production Suite</h3>
+                <p>Studio-quality multimedia workstation for podcasters, musicians, and video creators.</p>
+                <ul style="padding-left: 1.25rem; font-size: 0.875rem;">
+                  <li><strong>Waveform Trimmer:</strong> Interactive zoomable cutter with millisecond precision.</li>
+                  <li><strong>320 kbps High-Bitrate Export:</strong> Convert MP3, WAV, FLAC, AAC, OPUS, and OGG.</li>
+                  <li><strong>Video Trimmer &amp; 9:16 Shorts:</strong> Crop horizontal clips for mobile feeds.</li>
+                  <li><strong>Audio Effects &amp; Merger:</strong> Normalization, soft limiting, EQ, and fades.</li>
+                </ul>
+              </article>
+
+              <article class="seo-card">
+                <h3 style="font-size: 1.125rem; font-weight: 700; color: #f97316; margin-top: 0;">4. Financial, Health &amp; Math Calculators</h3>
+                <p>High-precision calculation engines built on validated actuarial and clinical formulas.</p>
+                <ul style="padding-left: 1.25rem; font-size: 0.875rem;">
+                  <li><strong>Mortgage &amp; Loan EMI:</strong> Full amortization schedules and interest breakdowns.</li>
+                  <li><strong>Compound Interest &amp; Retirement:</strong> Long-term wealth growth projections.</li>
+                  <li><strong>BMI, Calorie &amp; Body Fat:</strong> Mifflin-St Jeor and US Navy clinical formulas.</li>
+                  <li><strong>Scientific Dual-Line LCD:</strong> Trigonometry, logarithms, fractions, and statistics.</li>
+                </ul>
+              </article>
             </div>
+          </section>
 
-            <div style="background: #ffffff; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0;">Are my files uploaded or stored on your servers?</h3>
-              <p>No. All document transformations, image compression, and audio cutting happen entirely inside your local web browser memory. Your files are never stored or logged on external servers.</p>
-            </div>
-
-            <div style="background: #ffffff; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0;">Does the Target KB compressor compress files without losing readability?</h3>
-              <p>Yes. The algorithm utilizes intelligent binary-search iterative compression to balance dimensions and quality, ensuring text and signatures remain crisp and legible while matching exact file size limits.</p>
-            </div>
-
-            <div style="background: #ffffff; padding: 1.25rem; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0;">How can I contact support?</h3>
-              <p>You can reach our engineering team directly via email at rajvarshithreddy@gmail.com for feedback, assistance, and feature requests.</p>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; border-top: 1px solid #e2e8f0; font-size: 0.875rem; color: #64748b; text-align: center;">
-        <p>© 2026 rajvarshith.com. All rights reserved. Developed by Raj Varshith.</p>
-        <p>Official contact & engineering inquiries: <a href="mailto:rajvarshithreddy@gmail.com" style="color: #ea580c; text-decoration: underline;">rajvarshithreddy@gmail.com</a></p>
-        <p>Client-side private processing • Enterprise Security & Encryption • No permanent file storage • Fully compliant with Google AdSense program policies.</p>
-      </footer>
+          <section class="seo-card" style="margin-bottom: 2.5rem;">
+            <h2 class="seo-heading" style="font-size: 1.25rem; font-weight: 700; margin-top: 0;">
+              Architecture &amp; Privacy-First Security Guarantee
+            </h2>
+            <p style="font-size: 0.9rem;">
+              At <strong class="seo-heading">rajvarshith.com</strong>, all core computations execute inside your browser sandbox using <strong class="seo-heading">WebAssembly (Wasm)</strong>, <strong class="seo-heading">Web Audio API</strong>, and <strong class="seo-heading">HTML5 Canvas</strong>. Your PDFs, legal contracts, identity photos, and audio tracks never upload to permanent storage.
+            </p>
+            <p style="font-size: 0.9rem; margin-bottom: 0;">
+              Official engineering &amp; support contact: <a href="mailto:rajvarshithreddy@gmail.com" style="color: #f97316; text-decoration: underline;">rajvarshithreddy@gmail.com</a>
+            </p>
+          </section>
+        </main>
+      </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
