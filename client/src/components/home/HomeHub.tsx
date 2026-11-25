@@ -22,6 +22,7 @@ import {
 import { PdfToolKey } from '../pdf/types';
 import { CalculatorKey } from '../calculator/types';
 import { ImageToolKey } from '../image/types';
+import { EditorialContent } from './EditorialContent';
 
 interface HomeHubProps {
   onOpenPdf: (specificTool?: PdfToolKey) => void;
@@ -339,6 +340,9 @@ export const HomeHub: React.FC<HomeHubProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Editorial Content, Tool Overviews & FAQs for Users and Search Engines */}
+      <EditorialContent />
     </div>
   );
 };

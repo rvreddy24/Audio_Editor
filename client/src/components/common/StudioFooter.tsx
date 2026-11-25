@@ -23,7 +23,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
   onOpenMedia,
   onNavigateHome,
 }) => {
-  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | null>(null);
+  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'about' | 'contact' | null>(null);
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -273,8 +273,20 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             <span>© {new Date().getFullYear()} rajvarshith.com. All rights reserved.</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <span>Client-side Private Processing</span>
-            <span>No Permanent File Storage</span>
+            <button
+              type="button"
+              onClick={() => setActiveModal('about')}
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+            >
+              About Us
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveModal('contact')}
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+            >
+              Contact Us
+            </button>
             <button
               type="button"
               onClick={() => setActiveModal('privacy')}
@@ -293,14 +305,20 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
         </div>
       </div>
 
-      {/* Legal Modal (Privacy Policy & Terms of Service for Google AdSense compliance) */}
+      {/* Legal & Informational Modals (About, Contact, Privacy, Terms for Google AdSense compliance) */}
       {activeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl text-slate-300">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
               <h3 className="text-base font-bold text-white">
-                {activeModal === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
+                {activeModal === 'privacy'
+                  ? 'Privacy Policy'
+                  : activeModal === 'terms'
+                  ? 'Terms of Service'
+                  : activeModal === 'about'
+                  ? 'About rajvarshith.com'
+                  : 'Contact Us'}
               </h3>
               <button
                 type="button"
@@ -314,7 +332,40 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
 
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto space-y-4 text-xs leading-relaxed text-slate-300">
-              {activeModal === 'privacy' ? (
+              {activeModal === 'about' ? (
+                <>
+                  <h4 className="text-white font-semibold text-sm">About rajvarshith.com</h4>
+                  <p>
+                    <strong>rajvarshith.com</strong> is a multi-disciplinary online productivity workstation suite developed and maintained by independent software engineer <strong>Raj Varshith</strong>.
+                  </p>
+                  <p>
+                    Our mission is to democratize high-grade digital utilities—ranging from PDF manipulation and biometric passport photo preparation to multitrack audio cutting and financial modeling—without forcing users into monthly paywalls, intrusive tracking, or mandatory user accounts.
+                  </p>
+                  <h4 className="text-white font-semibold text-sm">Why We Built It</h4>
+                  <p>
+                    Most online file conversion tools force users to upload sensitive personal documents, contracts, tax files, and private photos to unknown remote servers. rajvarshith.com was engineered from the ground up to execute all primary tasks <strong>100% locally in your browser memory</strong> using modern WebAssembly (Wasm) and HTML5 client APIs.
+                  </p>
+                  <p>
+                    Your files never leave your computer or mobile phone. We believe privacy should be the default standard, not an expensive premium feature.
+                  </p>
+                </>
+              ) : activeModal === 'contact' ? (
+                <>
+                  <h4 className="text-white font-semibold text-sm">Get in Touch</h4>
+                  <p>
+                    We welcome feedback, suggestions for new workstation tools, collaboration inquiries, and bug reports from users around the world.
+                  </p>
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <p className="text-white font-semibold">Engineering & Support Email:</p>
+                    <p className="text-orange-400 font-mono text-sm">support@rajvarshith.com</p>
+                    <p className="text-slate-400">Direct Inquiries: <span className="text-slate-200 font-mono">rajvarshithreddy@gmail.com</span></p>
+                  </div>
+                  <h4 className="text-white font-semibold text-sm">Response Time</h4>
+                  <p>
+                    Our team typically responds to all inquiries within 24 to 48 business hours. For urgent bug reports regarding tool rendering or calculation discrepancies, please include your device model, browser version, and a brief description of the issue.
+                  </p>
+                </>
+              ) : activeModal === 'privacy' ? (
                 <>
                   <p className="text-slate-400">
                     Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
