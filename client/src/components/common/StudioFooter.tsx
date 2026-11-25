@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PdfToolKey } from '../pdf/types';
 import { CalculatorKey } from '../calculator/types';
 import { ImageToolKey } from '../image/types';
-import { X } from 'lucide-react';
+import { X, ShieldCheck } from 'lucide-react';
 
 interface StudioFooterProps {
   onSelectPdfTool: (tool: PdfToolKey) => void;
@@ -23,7 +23,7 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
   onOpenMedia,
   onNavigateHome,
 }) => {
-  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'about' | 'contact' | null>(null);
+  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'about' | 'contact' | 'security' | null>(null);
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -301,6 +301,13 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
             >
               Terms of Service
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveModal('security')}
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer underline underline-offset-2"
+            >
+              Security
+            </button>
           </div>
         </div>
       </div>
@@ -318,6 +325,8 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
                   ? 'Terms of Service'
                   : activeModal === 'about'
                   ? 'About rajvarshith.com'
+                  : activeModal === 'security'
+                  ? 'Security & Data Protection'
                   : 'Contact Us'}
               </h3>
               <button
@@ -415,6 +424,44 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
                   <p>
                     If you have questions regarding this privacy policy or our data practices, contact us at{' '}
                     <span className="text-indigo-400 font-mono">rajvarshithreddy@gmail.com</span>.
+                  </p>
+                </>
+              ) : activeModal === 'security' ? (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                    <h4 className="text-white font-semibold text-sm">Security & Data Protection Architecture</h4>
+                  </div>
+                  <p>
+                    At <strong className="text-white">rajvarshith.com</strong>, security and confidentiality are foundational architecture principles. Unlike traditional cloud services that upload files to remote servers, our workstation executes all operations <strong>100% locally inside your browser sandbox</strong>.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm mt-3">1. Zero Server Storage & Client-Side Sandbox</h4>
+                  <p>
+                    Your PDFs, identity documents, private photos, and audio files never leave your device. All processing happens in volatile browser memory using WebAssembly (Wasm) and HTML5 client APIs. When you close or refresh your tab, all memory is immediately wiped and garbage-collected.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm mt-3">2. AES-256 Bit Encryption</h4>
+                  <p>
+                    Security utilities such as our PDF Protect engine utilize industry-standard AES-256 bit encryption directly in memory. Password keys are never sent over any network.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm mt-3">3. Transport Security (TLS 1.3 / HTTPS)</h4>
+                  <p>
+                    All connections to rajvarshith.com are encrypted end-to-end with TLS 1.3 over Cloudflare&apos;s global secure edge network, enforcing strict HTTP Strict Transport Security (HSTS) headers.
+                  </p>
+
+                  <h4 className="text-white font-semibold text-sm mt-3">4. Security Vulnerability Reporting</h4>
+                  <p>
+                    We welcome responsible disclosure from security researchers and users. To report a security issue, contact our engineering team directly at{' '}
+                    <a
+                      href="https://mail.google.com/mail/?view=cm&fs=1&to=rajvarshithreddy@gmail.com&su=Security%20Vulnerability%20Report"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-orange-400 hover:underline font-mono"
+                    >
+                      rajvarshithreddy@gmail.com
+                    </a>. All reports receive immediate priority attention.
                   </p>
                 </>
               ) : (
