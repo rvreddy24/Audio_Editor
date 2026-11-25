@@ -357,7 +357,12 @@ export const StudioFooter: React.FC<StudioFooterProps> = ({
                   </p>
                   <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
                     <p className="text-white font-semibold">Engineering & Official Contact Email:</p>
-                    <p className="text-orange-400 font-mono text-sm">rajvarshithreddy@gmail.com</p>
+                    <a
+                      href="mailto:rajvarshithreddy@gmail.com"
+                      className="text-orange-400 hover:underline font-mono text-sm block"
+                    >
+                      rajvarshithreddy@gmail.com
+                    </a>
                   </div>
                   <h4 className="text-white font-semibold text-sm">Response Time</h4>
                   <p>
